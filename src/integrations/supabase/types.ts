@@ -112,6 +112,7 @@ export type Database = {
         Row: {
           기업명: string | null
           등록일자: string | null
+          부서명: string | null
           비밀번호: string | null
           아이디: string
           연락처: string | null
@@ -122,6 +123,7 @@ export type Database = {
         Insert: {
           기업명?: string | null
           등록일자?: string | null
+          부서명?: string | null
           비밀번호?: string | null
           아이디: string
           연락처?: string | null
@@ -132,6 +134,7 @@ export type Database = {
         Update: {
           기업명?: string | null
           등록일자?: string | null
+          부서명?: string | null
           비밀번호?: string | null
           아이디?: string
           연락처?: string | null

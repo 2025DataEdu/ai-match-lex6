@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,7 +53,7 @@ const Index = () => {
                 공급기업 등록하기
               </Link>
             </Button>
-            <Button size="lg" asChild variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 min-w-[200px]">
+            <Button size="lg" asChild className="bg-green-600 text-white hover:bg-green-700 min-w-[200px]">
               <Link to="/demand-registration" className="flex items-center gap-2">
                 <Plus className="w-5 h-5" />
                 수요기관 등록하기
