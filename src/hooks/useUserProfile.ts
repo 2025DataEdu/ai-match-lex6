@@ -6,14 +6,14 @@ export const useUserProfile = () => {
     try {
       console.log('Checking user profile for:', userId);
       
-      // 사용자 프로필이 존재하는지 확인
+      // 사용자 프로필이 존재하는지 확인 - 직접적인 방법 사용
       const { data: existingProfile, error: checkError } = await supabase
         .from('회원관리')
-        .select('아이디(PK)')
+        .select('*')
         .eq('아이디(PK)', userId)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError) {
         console.error('Profile check error:', checkError);
         throw checkError;
       }
