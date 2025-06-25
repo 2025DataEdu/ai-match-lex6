@@ -68,8 +68,8 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
           emailRedirectTo: redirectUrl,
           data: {
             name: signupData.name,
-            company: signupData.company,
-            phone: signupData.phone,
+            company: signupData.company || '',
+            phone: signupData.phone || '',
             type: signupData.type
           }
         }
@@ -85,34 +85,6 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
       } else if (data.user) {
         console.log('User created successfully:', data.user.id);
         
-        // 아이디는 이메일의 @ 앞부분
-        const userId = signupData.email.split('@')[0];
-        
-        // 잠시 대기 후 회원관리 테이블에 추가 정보 업데이트
-        setTimeout(async () => {
-          try {
-            console.log('Updating user profile for userId:', userId);
-            
-            const { error: updateError } = await supabase
-              .from('회원관리')
-              .update({
-                '이름': signupData.name,
-                '기업명': signupData.company || null,
-                '연락처': signupData.phone || null,
-                '유형': signupData.type
-              })
-              .eq('아이디', userId);
-
-            if (updateError) {
-              console.error('Profile update error:', updateError);
-            } else {
-              console.log('Profile updated successfully');
-            }
-          } catch (updateErr) {
-            console.error('Profile update catch error:', updateErr);
-          }
-        }, 2000);
-
         toast({
           title: "회원가입 성공",
           description: "이메일을 확인해주세요.",

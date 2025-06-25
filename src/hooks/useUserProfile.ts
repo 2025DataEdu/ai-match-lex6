@@ -22,7 +22,7 @@ export const useUserProfile = () => {
       if (!existingProfile) {
         console.log('Profile not found, creating new profile for userId:', userId);
         
-        // 프로필이 없으면 생성
+        // 프로필이 없으면 생성 (트리거에서 이미 생성되었을 것이므로 이 경우는 거의 없을 것임)
         const { error: insertError } = await supabase
           .from('회원관리')
           .insert({
