@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
-import Navbar from "@/components/Navbar";
 
 const Auth = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -100,6 +99,24 @@ const Auth = () => {
       return;
     }
 
+    if (!signupData.type) {
+      toast({
+        title: "유형 선택 필요",
+        description: "수요기관 또는 공급기업을 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!signupData.name.trim()) {
+      toast({
+        title: "이름 입력 필요",
+        description: "이름을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -163,14 +180,21 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">AI매치허브</CardTitle>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-2xl">M</span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI매치허브</h1>
+          <p className="text-gray-600">공공기관과 민간기업을 연결하는 플랫폼</p>
+        </div>
+        
+        <Card className="shadow-xl border-0">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-xl font-bold">시작하기</CardTitle>
             <CardDescription>
-              공공기관과 민간기업을 연결하는 플랫폼
+              계정이 있으시면 로그인하고, 없으시면 회원가입해주세요
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -180,7 +204,7 @@ const Auth = () => {
                 <TabsTrigger value="signup">회원가입</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="login">
+              <TabsContent value="login" className="mt-6">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">이메일</Label>
@@ -210,10 +234,10 @@ const Auth = () => {
                 </form>
               </TabsContent>
               
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="mt-6">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">이메일</Label>
+                    <Label htmlFor="signup-email">이메일 *</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -224,7 +248,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">비밀번호</Label>
+                    <Label htmlFor="signup-password">비밀번호 *</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -235,7 +259,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">비밀번호 확인</Label>
+                    <Label htmlFor="confirm-password">비밀번호 확인 *</Label>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -246,7 +270,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="name">이름</Label>
+                    <Label htmlFor="name">이름 *</Label>
                     <Input
                       id="name"
                       type="text"
@@ -256,12 +280,35 @@ const Auth = () => {
                       required
                     />
                   </div>
+                  <div className="space-y-3">
+                    <Label>유형 * (필수 선택)</Label>
+                    <RadioGroup
+                      value={signupData.type}
+                      onValueChange={(value) => setSignupData({ ...signupData, type: value })}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
+                        <RadioGroupItem value="공급기업" id="supplier" />
+                        <Label htmlFor="supplier" className="cursor-pointer">
+                          <div className="font-medium">공급기업</div>
+                          <div className="text-sm text-gray-500">기술/서비스 제공</div>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-gray-50">
+                        <RadioGroupItem value="수요기관" id="demand" />
+                        <Label htmlFor="demand" className="cursor-pointer">
+                          <div className="font-medium">수요기관</div>
+                          <div className="text-sm text-gray-500">기술/서비스 필요</div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="company">기업명</Label>
+                    <Label htmlFor="company">기업명/기관명</Label>
                     <Input
                       id="company"
                       type="text"
-                      placeholder="기업명을 입력하세요"
+                      placeholder="기업명 또는 기관명을 입력하세요"
                       value={signupData.company}
                       onChange={(e) => setSignupData({ ...signupData, company: e.target.value })}
                     />
@@ -275,21 +322,6 @@ const Auth = () => {
                       value={signupData.phone}
                       onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="type">유형</Label>
-                    <Select
-                      value={signupData.type}
-                      onValueChange={(value) => setSignupData({ ...signupData, type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="유형을 선택하세요" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="공급기업">공급기업</SelectItem>
-                        <SelectItem value="수요기관">수요기관</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "회원가입 중..." : "회원가입"}
