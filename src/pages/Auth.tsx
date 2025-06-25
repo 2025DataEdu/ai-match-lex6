@@ -105,7 +105,7 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: signupData.email,
         password: signupData.password,
         options: {
@@ -125,13 +125,29 @@ const Auth = () => {
           description: error.message,
           variant: "destructive",
         });
-      } else {
+      } else if (data.user) {
+        // 회원가입 성공 후 회원관리 테이블에 추가 정보 업데이트
+        const { error: updateError } = await supabase
+          .from('회원관리')
+          .update({
+            '이름': signupData.name,
+            '기업명': signupData.company,
+            '연락처': signupData.phone,
+            '유형': signupData.type
+          })
+          .eq('아이디(PK)', data.user.id);
+
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+        }
+
         toast({
           title: "회원가입 성공",
           description: "이메일을 확인해주세요.",
         });
       }
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         title: "오류 발생",
         description: "회원가입 중 오류가 발생했습니다.",
