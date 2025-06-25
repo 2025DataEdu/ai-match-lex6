@@ -56,25 +56,28 @@ const SupplierRegistration = () => {
     setIsLoading(true);
 
     try {
+      console.log('Submitting supplier data:', formData);
+      
       const { error } = await supabase
         .from('공급기업')
         .insert({
           '공급기업일련번호(PK)': crypto.randomUUID(),
           '아이디(FK)': session.user.id,
-          기업명: formData.companyName,
-          유형: formData.type,
-          업종: formData.industry,
-          보유특허: formData.patents,
-          기업홈페이지: formData.website,
-          유튜브링크: formData.youtubeLink,
-          사용자명: formData.username,
-          세부설명: formData.description,
-          등록일자: new Date().toISOString().split('T')[0],
-          관심여부: 'N',
-          문의여부: 'N'
+          '기업명': formData.companyName,
+          '유형': formData.type,
+          '업종': formData.industry,
+          '보유특허': formData.patents || null,
+          '기업홈페이지': formData.website || null,
+          '유튜브링크': formData.youtubeLink || null,
+          '사용자명': formData.username,
+          '세부설명': formData.description,
+          '등록일자': new Date().toISOString().split('T')[0],
+          '관심여부': 'N',
+          '문의여부': 'N'
         });
 
       if (error) {
+        console.error('Supplier registration error:', error);
         toast({
           title: "등록 실패",
           description: error.message,
@@ -88,6 +91,7 @@ const SupplierRegistration = () => {
         navigate("/suppliers");
       }
     } catch (error) {
+      console.error('Supplier registration catch error:', error);
       toast({
         title: "오류 발생",
         description: "등록 중 오류가 발생했습니다.",
@@ -144,6 +148,7 @@ const SupplierRegistration = () => {
                   <Select
                     value={formData.type}
                     onValueChange={(value) => setFormData({ ...formData, type: value })}
+                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="서비스 유형을 선택하세요" />
@@ -153,6 +158,7 @@ const SupplierRegistration = () => {
                       <SelectItem value="컨설팅">컨설팅</SelectItem>
                       <SelectItem value="교육/강의">교육/강의</SelectItem>
                       <SelectItem value="솔루션">솔루션</SelectItem>
+                      <SelectItem value="용역">용역</SelectItem>
                       <SelectItem value="기타">기타</SelectItem>
                     </SelectContent>
                   </Select>

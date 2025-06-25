@@ -57,25 +57,28 @@ const DemandRegistration = () => {
     setIsLoading(true);
 
     try {
+      console.log('Submitting demand data:', formData);
+      
       const { error } = await supabase
         .from('수요기관')
         .insert({
           '수요기관일련번호(PK)': crypto.randomUUID(),
           '아이디(FK)': session.user.id,
-          수요기관: formData.organization,
-          부서명: formData.department,
-          사용자명: formData.username,
-          유형: formData.type,
-          수요내용: formData.demandContent,
-          금액: formData.budget ? parseInt(formData.budget) : null,
-          시작일: formData.startDate,
-          종료일: formData.endDate,
-          기타요구사항: formData.additionalRequirements,
-          등록일자: new Date().toISOString().split('T')[0],
-          관심여부: 'N'
+          '수요기관': formData.organization,
+          '부서명': formData.department || null,
+          '사용자명': formData.username,
+          '유형': formData.type,
+          '수요내용': formData.demandContent,
+          '금액': formData.budget ? parseInt(formData.budget) : null,
+          '시작일': formData.startDate || null,
+          '종료일': formData.endDate || null,
+          '기타요구사항': formData.additionalRequirements || null,
+          '등록일자': new Date().toISOString().split('T')[0],
+          '관심여부': 'N'
         });
 
       if (error) {
+        console.error('Demand registration error:', error);
         toast({
           title: "등록 실패",
           description: error.message,
@@ -89,6 +92,7 @@ const DemandRegistration = () => {
         navigate("/demands");
       }
     } catch (error) {
+      console.error('Demand registration catch error:', error);
       toast({
         title: "오류 발생",
         description: "등록 중 오류가 발생했습니다.",
@@ -154,6 +158,7 @@ const DemandRegistration = () => {
                   <Select
                     value={formData.type}
                     onValueChange={(value) => setFormData({ ...formData, type: value })}
+                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="수요 유형을 선택하세요" />
@@ -163,6 +168,7 @@ const DemandRegistration = () => {
                       <SelectItem value="컨설팅">컨설팅</SelectItem>
                       <SelectItem value="교육/강의">교육/강의</SelectItem>
                       <SelectItem value="솔루션도입">솔루션도입</SelectItem>
+                      <SelectItem value="용역">용역</SelectItem>
                       <SelectItem value="기타">기타</SelectItem>
                     </SelectContent>
                   </Select>
