@@ -6,11 +6,11 @@ export const useUserProfile = () => {
     try {
       console.log('Checking user profile for:', userId);
       
-      // 사용자 프로필이 존재하는지 확인 - 올바른 컬럼명 사용
+      // 사용자 프로필이 존재하는지 확인 - 실제 테이블 스키마에 맞는 컬럼명 사용
       const { data: existingProfile, error: checkError } = await supabase
         .from('회원관리')
         .select('*')
-        .eq('아이디(PK)', userId)
+        .eq('아이디', userId)
         .maybeSingle();
 
       if (checkError) {
@@ -25,7 +25,7 @@ export const useUserProfile = () => {
         const { error: insertError } = await supabase
           .from('회원관리')
           .insert({
-            '아이디(PK)': userId,
+            '아이디': userId,
             '등록일자': new Date().toISOString().split('T')[0]
           });
 

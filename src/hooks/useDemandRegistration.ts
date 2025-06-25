@@ -57,10 +57,10 @@ export const useDemandRegistration = (session: Session | null) => {
       
       console.log('Submitting demand data:', formData);
       
-      // 수요기관 데이터 삽입
+      // 수요기관 데이터 삽입 - 실제 테이블 스키마에 맞는 컬럼명 사용
       const insertData = {
-        '수요기관일련번호(PK)': crypto.randomUUID(),
-        '아이디(FK)': session.user.id,
+        '수요기관일련번호': crypto.randomUUID(),
+        '아이디': session.user.id,
         '수요기관': formData.organization,
         '부서명': formData.department || null,
         '사용자명': formData.username,

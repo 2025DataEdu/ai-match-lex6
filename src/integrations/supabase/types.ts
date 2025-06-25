@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       공급기업: {
         Row: {
-          "공급기업일련번호(PK)": string
+          공급기업일련번호: string
           관심여부: string | null
           기업명: string | null
           기업홈페이지: string | null
@@ -20,13 +20,13 @@ export type Database = {
           보유특허: string | null
           사용자명: string | null
           세부설명: string | null
-          "아이디(FK)": string | null
+          아이디: string | null
           업종: string | null
           유튜브링크: string | null
           유형: string | null
         }
         Insert: {
-          "공급기업일련번호(PK)": string
+          공급기업일련번호: string
           관심여부?: string | null
           기업명?: string | null
           기업홈페이지?: string | null
@@ -35,13 +35,13 @@ export type Database = {
           보유특허?: string | null
           사용자명?: string | null
           세부설명?: string | null
-          "아이디(FK)"?: string | null
+          아이디?: string | null
           업종?: string | null
           유튜브링크?: string | null
           유형?: string | null
         }
         Update: {
-          "공급기업일련번호(PK)"?: string
+          공급기업일련번호?: string
           관심여부?: string | null
           기업명?: string | null
           기업홈페이지?: string | null
@@ -50,20 +50,12 @@ export type Database = {
           보유특허?: string | null
           사용자명?: string | null
           세부설명?: string | null
-          "아이디(FK)"?: string | null
+          아이디?: string | null
           업종?: string | null
           유튜브링크?: string | null
           유형?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "공급기업_아이디(FK)_fkey"
-            columns: ["아이디(FK)"]
-            isOneToOne: false
-            referencedRelation: "회원관리"
-            referencedColumns: ["아이디(PK)"]
-          },
-        ]
+        Relationships: []
       }
       수요기관: {
         Row: {
@@ -75,10 +67,10 @@ export type Database = {
           부서명: string | null
           사용자명: string | null
           수요기관: string | null
-          "수요기관일련번호(PK)": string
+          수요기관일련번호: string
           수요내용: string | null
           시작일: string | null
-          "아이디(FK)": string | null
+          아이디: string | null
           유형: string | null
           종료일: string | null
         }
@@ -91,10 +83,10 @@ export type Database = {
           부서명?: string | null
           사용자명?: string | null
           수요기관?: string | null
-          "수요기관일련번호(PK)": string
+          수요기관일련번호: string
           수요내용?: string | null
           시작일?: string | null
-          "아이디(FK)"?: string | null
+          아이디?: string | null
           유형?: string | null
           종료일?: string | null
         }
@@ -107,29 +99,21 @@ export type Database = {
           부서명?: string | null
           사용자명?: string | null
           수요기관?: string | null
-          "수요기관일련번호(PK)"?: string
+          수요기관일련번호?: string
           수요내용?: string | null
           시작일?: string | null
-          "아이디(FK)"?: string | null
+          아이디?: string | null
           유형?: string | null
           종료일?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "수요기관_아이디(FK)_fkey"
-            columns: ["아이디(FK)"]
-            isOneToOne: false
-            referencedRelation: "회원관리"
-            referencedColumns: ["아이디(PK)"]
-          },
-        ]
+        Relationships: []
       }
       회원관리: {
         Row: {
           기업명: string | null
           등록일자: string | null
           비밀번호: string | null
-          "아이디(PK)": string
+          아이디: string
           연락처: string | null
           유형: string | null
           이름: string | null
@@ -139,7 +123,7 @@ export type Database = {
           기업명?: string | null
           등록일자?: string | null
           비밀번호?: string | null
-          "아이디(PK)": string
+          아이디: string
           연락처?: string | null
           유형?: string | null
           이름?: string | null
@@ -149,7 +133,7 @@ export type Database = {
           기업명?: string | null
           등록일자?: string | null
           비밀번호?: string | null
-          "아이디(PK)"?: string
+          아이디?: string
           연락처?: string | null
           유형?: string | null
           이름?: string | null

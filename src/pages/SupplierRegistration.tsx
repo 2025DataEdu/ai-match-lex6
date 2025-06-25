@@ -58,11 +58,12 @@ const SupplierRegistration = () => {
     try {
       console.log('Submitting supplier data:', formData);
       
+      // 실제 테이블 스키마에 맞는 컬럼명 사용
       const { error } = await supabase
         .from('공급기업')
         .insert({
-          '공급기업일련번호(PK)': crypto.randomUUID(),
-          '아이디(FK)': session.user.id,
+          '공급기업일련번호': crypto.randomUUID(),
+          '아이디': session.user.id,
           '기업명': formData.companyName,
           '유형': formData.type,
           '업종': formData.industry,

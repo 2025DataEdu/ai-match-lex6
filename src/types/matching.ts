@@ -1,6 +1,6 @@
 
 export interface Supplier {
-  '공급기업일련번호(PK)': string;
+  '공급기업일련번호': string;
   기업명: string;
   유형: string;
   업종: string;
@@ -13,7 +13,7 @@ export interface Supplier {
 }
 
 export interface Demand {
-  '수요기관일련번호(PK)': string;
+  '수요기관일련번호': string;
   수요기관: string;
   유형: string;
   수요내용: string;
