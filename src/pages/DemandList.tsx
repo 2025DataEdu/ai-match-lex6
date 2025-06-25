@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
 interface Demand {
-  '수요기관일련번호': string;
+  수요기관일련번호: string;
   수요기관: string;
   부서명: string;
   사용자명: string;
@@ -58,12 +58,25 @@ const DemandList = () => {
         console.error('Supabase error:', error);
         toast({
           title: "데이터 로드 실패",
-          description: error.message,
+          description: `오류: ${error.message}`,
           variant: "destructive",
         });
       } else {
         console.log('Successfully fetched demands:', data);
-        setDemands(data || []);
+        const formattedData = (data || []).map(item => ({
+          수요기관일련번호: item.수요기관일련번호,
+          수요기관: item.수요기관 || '',
+          부서명: item.부서명 || '',
+          사용자명: item.사용자명 || '',
+          유형: item.유형 || '',
+          수요내용: item.수요내용 || '',
+          금액: item.금액 || 0,
+          시작일: item.시작일 || '',
+          종료일: item.종료일 || '',
+          기타요구사항: item.기타요구사항 || '',
+          등록일자: item.등록일자 || ''
+        }));
+        setDemands(formattedData);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -141,7 +154,7 @@ const DemandList = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDemands.map((demand) => (
-              <Card key={demand['수요기관일련번호']} className="hover:shadow-lg transition-shadow">
+              <Card key={demand.수요기관일련번호} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>

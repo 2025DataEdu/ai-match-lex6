@@ -4,22 +4,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Building2, Globe, Youtube, FileText } from "lucide-react";
+import { Search, Building, ExternalLink, Youtube, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
 interface Supplier {
-  '공급기업일련번호': string;
+  공급기업일련번호: string;
   기업명: string;
   유형: string;
   업종: string;
-  보유특허: string;
-  기업홈페이지: string;
-  유튜브링크: string;
-  사용자명: string;
   세부설명: string;
-  등록일자: string;
+  기업홈페이지?: string;
+  유튜브링크?: string;
+  보유특허?: string;
+  사용자명?: string;
+  등록일자?: string;
 }
 
 const SupplierList = () => {
@@ -57,12 +57,24 @@ const SupplierList = () => {
         console.error('Supabase error:', error);
         toast({
           title: "데이터 로드 실패",
-          description: error.message,
+          description: `오류: ${error.message}`,
           variant: "destructive",
         });
       } else {
         console.log('Successfully fetched suppliers:', data);
-        setSuppliers(data || []);
+        const formattedData = (data || []).map(item => ({
+          공급기업일련번호: item.공급기업일련번호,
+          기업명: item.기업명 || '',
+          유형: item.유형 || '',
+          업종: item.업종 || '',
+          세부설명: item.세부설명 || '',
+          기업홈페이지: item.기업홈페이지,
+          유튜브링크: item.유튜브링크,
+          보유특허: item.보유특허,
+          사용자명: item.사용자명,
+          등록일자: item.등록일자
+        }));
+        setSuppliers(formattedData);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -88,13 +100,13 @@ const SupplierList = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">공급기업</h1>
           <p className="text-lg text-gray-600 mb-6">
-            AI개발, 컨설팅, 교육 등 다양한 기술 서비스를 제공하는 기업들을 만나보세요
+            혁신적인 기술과 서비스를 제공하는 공급기업들을 만나보세요
           </p>
           
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="기업명, 서비스 유형, 업종으로 검색..."
+              placeholder="기업명, 업종, 기술 분야로 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -121,26 +133,28 @@ const SupplierList = () => {
           </div>
         ) : filteredSuppliers.length === 0 ? (
           <div className="text-center py-12">
-            <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchTerm ? "검색 결과가 없습니다" : "등록된 공급기업이 없습니다"}
             </h3>
             <p className="text-gray-600 mb-4">
               {searchTerm ? "다른 검색어로 시도해보세요" : "첫 번째 공급기업을 등록해보세요"}
             </p>
-            <Button asChild>
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
               <a href="/supplier-registration">공급기업 등록하기</a>
             </Button>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSuppliers.map((supplier) => (
-              <Card key={supplier['공급기업일련번호']} className="hover:shadow-lg transition-shadow">
+              <Card key={supplier.공급기업일련번호} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-lg">{supplier.기업명 || '기업명 없음'}</CardTitle>
-                      <CardDescription>{supplier.사용자명 || '담당자명 없음'}</CardDescription>
+                      <CardDescription>
+                        {supplier.업종} {supplier.사용자명 && `· ${supplier.사용자명}`}
+                      </CardDescription>
                     </div>
                     {supplier.유형 && (
                       <Badge variant="secondary">{supplier.유형}</Badge>
@@ -149,13 +163,6 @@ const SupplierList = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {supplier.업종 && (
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Building2 className="w-4 h-4" />
-                        <span>{supplier.업종}</span>
-                      </div>
-                    )}
-                    
                     {supplier.세부설명 && (
                       <p className="text-sm text-gray-700 line-clamp-3">
                         {supplier.세부설명}
@@ -164,9 +171,9 @@ const SupplierList = () => {
                     
                     {supplier.보유특허 && (
                       <div className="text-sm">
-                        <div className="flex items-center space-x-2 text-blue-600 mb-1">
-                          <FileText className="w-4 h-4" />
-                          <span className="font-medium">보유특허/인증</span>
+                        <div className="font-medium text-gray-700 mb-1 flex items-center">
+                          <FileText className="w-4 h-4 mr-1" />
+                          보유특허
                         </div>
                         <p className="text-gray-600 text-xs line-clamp-2">
                           {supplier.보유특허}
@@ -174,27 +181,21 @@ const SupplierList = () => {
                       </div>
                     )}
 
-                    <div className="flex space-x-2 pt-2">
+                    <div className="flex flex-wrap gap-2">
                       {supplier.기업홈페이지 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(supplier.기업홈페이지, '_blank')}
-                          className="flex items-center space-x-1"
-                        >
-                          <Globe className="w-3 h-3" />
-                          <span>홈페이지</span>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={supplier.기업홈페이지} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            홈페이지
+                          </a>
                         </Button>
                       )}
                       {supplier.유튜브링크 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(supplier.유튜브링크, '_blank')}
-                          className="flex items-center space-x-1"
-                        >
-                          <Youtube className="w-3 h-3" />
-                          <span>유튜브</span>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={supplier.유튜브링크} target="_blank" rel="noopener noreferrer">
+                            <Youtube className="w-3 h-3 mr-1" />
+                            유튜브
+                          </a>
                         </Button>
                       )}
                     </div>
