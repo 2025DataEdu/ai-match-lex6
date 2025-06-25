@@ -135,7 +135,7 @@ const Auth = () => {
             '연락처': signupData.phone,
             '유형': signupData.type
           })
-          .eq('아이디(PK)', data.user.id);
+          .eq('아이디', data.user.id);
 
         if (updateError) {
           console.error('Profile update error:', updateError);

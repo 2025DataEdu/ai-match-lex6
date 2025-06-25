@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
 interface Demand {
-  '수요기관일련번호(PK)': string;
+  '수요기관일련번호': string;
   수요기관: string;
   부서명: string;
   사용자명: string;
@@ -141,7 +141,7 @@ const DemandList = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDemands.map((demand) => (
-              <Card key={demand['수요기관일련번호(PK)']} className="hover:shadow-lg transition-shadow">
+              <Card key={demand['수요기관일련번호']} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>

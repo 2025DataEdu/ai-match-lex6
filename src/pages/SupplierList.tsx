@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
 interface Supplier {
-  '공급기업일련번호(PK)': string;
+  '공급기업일련번호': string;
   기업명: string;
   유형: string;
   업종: string;
@@ -135,7 +135,7 @@ const SupplierList = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSuppliers.map((supplier) => (
-              <Card key={supplier['공급기업일련번호(PK)']} className="hover:shadow-lg transition-shadow">
+              <Card key={supplier['공급기업일련번호']} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
