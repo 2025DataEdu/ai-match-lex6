@@ -6,7 +6,7 @@ export const useUserProfile = () => {
     try {
       console.log('Checking user profile for:', userId);
       
-      // 사용자 프로필이 존재하는지 확인 - 직접적인 방법 사용
+      // 사용자 프로필이 존재하는지 확인 - 올바른 컬럼명 사용
       const { data: existingProfile, error: checkError } = await supabase
         .from('회원관리')
         .select('*')
