@@ -2,12 +2,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Building, Calendar, DollarSign } from "lucide-react";
+import { Building, Calendar, DollarSign, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import DemandFilters from "@/components/demand/DemandFilters";
+import { useDemandFilters } from "@/hooks/useDemandFilters";
 
 interface Demand {
   수요기관일련번호: string;
@@ -25,24 +27,15 @@ interface Demand {
 
 const DemandList = () => {
   const [demands, setDemands] = useState<Demand[]>([]);
-  const [filteredDemands, setFilteredDemands] = useState<Demand[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const { filters, setFilters, filteredDemands, clearFilters } = useDemandFilters(demands);
 
   useEffect(() => {
     fetchDemands();
   }, []);
-
-  useEffect(() => {
-    const filtered = demands.filter(demand =>
-      demand.수요기관?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demand.유형?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demand.수요내용?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demand.부서명?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredDemands(filtered);
-  }, [searchTerm, demands]);
 
   const fetchDemands = async () => {
     try {
@@ -105,20 +98,27 @@ const DemandList = () => {
       <Navbar />
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">수요내용</h1>
-          <p className="text-lg text-gray-600 mb-6">
-            공공기관 및 기업체의 기술 서비스 수요를 확인해보세요
-          </p>
-          
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="기관명, 수요 유형, 내용으로 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">수요내용</h1>
+              <p className="text-lg text-gray-600">
+                공공기관 및 기업체의 기술 서비스 수요를 확인해보세요
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate('/demand-registration')}
+              className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              수요등록
+            </Button>
           </div>
+          
+          <DemandFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClearFilters={clearFilters}
+          />
         </div>
 
         {isLoading ? (
@@ -142,13 +142,16 @@ const DemandList = () => {
           <div className="text-center py-12">
             <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm ? "검색 결과가 없습니다" : "등록된 수요내용이 없습니다"}
+              {Object.values(filters).some(Boolean) ? "검색 조건에 맞는 수요내용이 없습니다" : "등록된 수요내용이 없습니다"}
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? "다른 검색어로 시도해보세요" : "첫 번째 수요를 등록해보세요"}
+              {Object.values(filters).some(Boolean) ? "다른 검색 조건으로 시도해보세요" : "첫 번째 수요를 등록해보세요"}
             </p>
-            <Button asChild className="bg-green-600 hover:bg-green-700">
-              <a href="/demand-registration">수요기관 등록하기</a>
+            <Button 
+              onClick={() => navigate('/demand-registration')}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              수요기관 등록하기
             </Button>
           </div>
         ) : (
