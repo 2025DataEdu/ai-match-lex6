@@ -108,6 +108,54 @@ export type Database = {
         }
         Relationships: []
       }
+      제안이력: {
+        Row: {
+          검토일자: string | null
+          공급기업일련번호: string
+          등록일자: string | null
+          수요기관일련번호: string
+          수정일자: string | null
+          응답내용: string | null
+          제안금액: number | null
+          제안내용: string | null
+          제안상태: string | null
+          제안일련번호: string
+          제안일자: string | null
+          제안제목: string | null
+          첨부파일: string | null
+        }
+        Insert: {
+          검토일자?: string | null
+          공급기업일련번호: string
+          등록일자?: string | null
+          수요기관일련번호: string
+          수정일자?: string | null
+          응답내용?: string | null
+          제안금액?: number | null
+          제안내용?: string | null
+          제안상태?: string | null
+          제안일련번호?: string
+          제안일자?: string | null
+          제안제목?: string | null
+          첨부파일?: string | null
+        }
+        Update: {
+          검토일자?: string | null
+          공급기업일련번호?: string
+          등록일자?: string | null
+          수요기관일련번호?: string
+          수정일자?: string | null
+          응답내용?: string | null
+          제안금액?: number | null
+          제안내용?: string | null
+          제안상태?: string | null
+          제안일련번호?: string
+          제안일자?: string | null
+          제안제목?: string | null
+          첨부파일?: string | null
+        }
+        Relationships: []
+      }
       회원관리: {
         Row: {
           기업명: string | null

@@ -20,6 +20,7 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
     confirmPassword: "",
     name: "",
     company: "",
+    department: "",
     phone: "",
     type: ""
   });
@@ -69,6 +70,7 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
           data: {
             name: signupData.name,
             company: signupData.company || '',
+            department: signupData.department || '',
             phone: signupData.phone || '',
             type: signupData.type
           }
@@ -179,6 +181,16 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
           placeholder="기업명 또는 기관명을 입력하세요"
           value={signupData.company}
           onChange={(e) => setSignupData({ ...signupData, company: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="department">부서명</Label>
+        <Input
+          id="department"
+          type="text"
+          placeholder="부서명을 입력하세요"
+          value={signupData.department}
+          onChange={(e) => setSignupData({ ...signupData, department: e.target.value })}
         />
       </div>
       <div className="space-y-2">
