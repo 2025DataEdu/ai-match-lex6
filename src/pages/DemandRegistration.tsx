@@ -1,34 +1,17 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
+import DemandRegistrationForm from "@/components/demand/DemandRegistrationForm";
+import { useDemandRegistration } from "@/hooks/useDemandRegistration";
 
 const DemandRegistration = () => {
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const [formData, setFormData] = useState({
-    organization: "",
-    department: "",
-    username: "",
-    type: "",
-    demandContent: "",
-    budget: "",
-    startDate: "",
-    endDate: "",
-    additionalRequirements: ""
-  });
+  const { formData, setFormData, isLoading, handleSubmit } = useDemandRegistration(session);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,106 +33,6 @@ const DemandRegistration = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const ensureUserProfile = async (userId: string) => {
-    try {
-      console.log('Checking user profile for:', userId);
-      
-      // 사용자 프로필이 존재하는지 확인
-      const { data: existingProfile, error: checkError } = await supabase
-        .from('회원관리')
-        .select('아이디(PK)')
-        .eq('아이디(PK)', userId)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Profile check error:', checkError);
-        throw checkError;
-      }
-
-      if (!existingProfile) {
-        console.log('Profile not found, creating new profile for user:', userId);
-        
-        // 프로필이 없으면 생성
-        const { error: insertError } = await supabase
-          .from('회원관리')
-          .insert({
-            '아이디(PK)': userId,
-            '등록일자': new Date().toISOString().split('T')[0]
-          });
-
-        if (insertError) {
-          console.error('Profile creation error:', insertError);
-          throw insertError;
-        }
-        
-        console.log('Profile created successfully for user:', userId);
-      } else {
-        console.log('Profile already exists for user:', userId);
-      }
-    } catch (error) {
-      console.error('Error ensuring user profile:', error);
-      throw error;
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session) return;
-
-    setIsLoading(true);
-
-    try {
-      console.log('Starting demand registration for user:', session.user.id);
-      
-      // 먼저 사용자 프로필이 존재하는지 확인하고 없으면 생성
-      await ensureUserProfile(session.user.id);
-      
-      console.log('Submitting demand data:', formData);
-      
-      const { error } = await supabase
-        .from('수요기관')
-        .insert({
-          '수요기관일련번호(PK)': crypto.randomUUID(),
-          '아이디(FK)': session.user.id,
-          '수요기관': formData.organization,
-          '부서명': formData.department || null,
-          '사용자명': formData.username,
-          '유형': formData.type,
-          '수요내용': formData.demandContent,
-          '금액': formData.budget ? parseInt(formData.budget) : null,
-          '시작일': formData.startDate || null,
-          '종료일': formData.endDate || null,
-          '기타요구사항': formData.additionalRequirements || null,
-          '등록일자': new Date().toISOString().split('T')[0],
-          '관심여부': 'N'
-        });
-
-      if (error) {
-        console.error('Demand registration error:', error);
-        toast({
-          title: "등록 실패",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "등록 성공",
-          description: "수요기관이 성공적으로 등록되었습니다.",
-        });
-        navigate("/demands");
-      }
-    } catch (error) {
-      console.error('Demand registration catch error:', error);
-      toast({
-        title: "오류 발생",
-        description: "등록 중 오류가 발생했습니다.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (!session) {
     return null;
   }
@@ -166,131 +49,12 @@ const DemandRegistration = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="organization">기관명 *</Label>
-                  <Input
-                    id="organization"
-                    placeholder="기관명을 입력하세요"
-                    value={formData.organization}
-                    onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">부서명</Label>
-                  <Input
-                    id="department"
-                    placeholder="부서명을 입력하세요"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="username">담당자명 *</Label>
-                  <Input
-                    id="username"
-                    placeholder="담당자명을 입력하세요"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="type">수요 유형 *</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) => setFormData({ ...formData, type: value })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="수요 유형을 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AI개발">AI개발</SelectItem>
-                      <SelectItem value="컨설팅">컨설팅</SelectItem>
-                      <SelectItem value="교육/강의">교육/강의</SelectItem>
-                      <SelectItem value="솔루션도입">솔루션도입</SelectItem>
-                      <SelectItem value="용역">용역</SelectItem>
-                      <SelectItem value="기타">기타</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="demandContent">수요내용 *</Label>
-                <Textarea
-                  id="demandContent"
-                  placeholder="필요한 기술 서비스에 대한 상세한 설명을 입력하세요"
-                  value={formData.demandContent}
-                  onChange={(e) => setFormData({ ...formData, demandContent: e.target.value })}
-                  rows={5}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="budget">예산 (만원)</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="예산을 입력하세요 (만원 단위)"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">시작일</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">종료일</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="additionalRequirements">기타 요구사항</Label>
-                <Textarea
-                  id="additionalRequirements"
-                  placeholder="추가적인 요구사항이나 특이사항을 입력하세요"
-                  value={formData.additionalRequirements}
-                  onChange={(e) => setFormData({ ...formData, additionalRequirements: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex gap-4 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/")}
-                  className="flex-1"
-                >
-                  취소
-                </Button>
-                <Button type="submit" disabled={isLoading} className="flex-1">
-                  {isLoading ? "등록 중..." : "등록하기"}
-                </Button>
-              </div>
-            </form>
+            <DemandRegistrationForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+            />
           </CardContent>
         </Card>
       </div>
