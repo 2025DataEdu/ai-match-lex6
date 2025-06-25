@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,19 +50,22 @@ const SupplierRegistration = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) return;
+    if (!session?.user?.email) return;
 
     setIsLoading(true);
 
     try {
-      console.log('Submitting supplier data:', formData);
+      const userEmail = session.user.email;
+      const userId = userEmail.split('@')[0]; // 이메일의 @ 앞부분을 아이디로 사용
       
-      // 실제 테이블 스키마에 맞는 컬럼명 사용
+      console.log('Submitting supplier data for userId:', userId, formData);
+      
+      // 공급기업 데이터 삽입
       const { error } = await supabase
         .from('공급기업')
         .insert({
           '공급기업일련번호': crypto.randomUUID(),
-          '아이디': session.user.id,
+          '아이디': userId,
           '기업명': formData.companyName,
           '유형': formData.type,
           '업종': formData.industry,

@@ -2,11 +2,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const useUserProfile = () => {
-  const ensureUserProfile = async (userId: string) => {
+  const ensureUserProfile = async (userEmail: string) => {
     try {
-      console.log('Checking user profile for:', userId);
+      const userId = userEmail.split('@')[0]; // 이메일의 @ 앞부분을 아이디로 사용
+      console.log('Checking user profile for userId:', userId);
       
-      // 사용자 프로필이 존재하는지 확인 - 올바른 컬럼명 사용
+      // 사용자 프로필이 존재하는지 확인
       const { data: existingProfile, error: checkError } = await supabase
         .from('회원관리')
         .select('*')
@@ -19,13 +20,14 @@ export const useUserProfile = () => {
       }
 
       if (!existingProfile) {
-        console.log('Profile not found, creating new profile for user:', userId);
+        console.log('Profile not found, creating new profile for userId:', userId);
         
         // 프로필이 없으면 생성
         const { error: insertError } = await supabase
           .from('회원관리')
           .insert({
             아이디: userId,
+            이메일: userEmail,
             등록일자: new Date().toISOString().split('T')[0]
           });
 
@@ -34,9 +36,9 @@ export const useUserProfile = () => {
           throw insertError;
         }
         
-        console.log('Profile created successfully for user:', userId);
+        console.log('Profile created successfully for userId:', userId);
       } else {
-        console.log('Profile already exists for user:', userId);
+        console.log('Profile already exists for userId:', userId);
       }
     } catch (error) {
       console.error('Error ensuring user profile:', error);

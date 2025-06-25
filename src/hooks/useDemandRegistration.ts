@@ -38,7 +38,7 @@ export const useDemandRegistration = (session: Session | null) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       toast({
         title: "인증 오류",
         description: "로그인이 필요합니다.",
@@ -50,17 +50,20 @@ export const useDemandRegistration = (session: Session | null) => {
     setIsLoading(true);
 
     try {
-      console.log('Starting demand registration for user:', session.user.id);
+      const userEmail = session.user.email;
+      const userId = userEmail.split('@')[0]; // 이메일의 @ 앞부분을 아이디로 사용
+      
+      console.log('Starting demand registration for userId:', userId);
       
       // 먼저 사용자 프로필이 존재하는지 확인하고 없으면 생성
-      await ensureUserProfile(session.user.id);
+      await ensureUserProfile(userEmail);
       
       console.log('Submitting demand data:', formData);
       
-      // 수요기관 데이터 삽입 - 올바른 컬럼명 사용
+      // 수요기관 데이터 삽입
       const insertData = {
         수요기관일련번호: crypto.randomUUID(),
-        아이디: session.user.id,
+        아이디: userId,
         수요기관: formData.organization,
         부서명: formData.department || null,
         사용자명: formData.username,

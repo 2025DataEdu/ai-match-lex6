@@ -59,6 +59,8 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
+      console.log('Starting signup process for:', signupData.email);
+      
       const { data, error } = await supabase.auth.signUp({
         email: signupData.email,
         password: signupData.password,
@@ -74,26 +76,42 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
       });
 
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: "회원가입 실패",
           description: error.message,
           variant: "destructive",
         });
       } else if (data.user) {
-        // 회원가입 성공 후 회원관리 테이블에 추가 정보 업데이트
-        const { error: updateError } = await supabase
-          .from('회원관리')
-          .update({
-            '이름': signupData.name,
-            '기업명': signupData.company,
-            '연락처': signupData.phone,
-            '유형': signupData.type
-          })
-          .eq('아이디', data.user.id);
+        console.log('User created successfully:', data.user.id);
+        
+        // 아이디는 이메일의 @ 앞부분
+        const userId = signupData.email.split('@')[0];
+        
+        // 잠시 대기 후 회원관리 테이블에 추가 정보 업데이트
+        setTimeout(async () => {
+          try {
+            console.log('Updating user profile for userId:', userId);
+            
+            const { error: updateError } = await supabase
+              .from('회원관리')
+              .update({
+                '이름': signupData.name,
+                '기업명': signupData.company || null,
+                '연락처': signupData.phone || null,
+                '유형': signupData.type
+              })
+              .eq('아이디', userId);
 
-        if (updateError) {
-          console.error('Profile update error:', updateError);
-        }
+            if (updateError) {
+              console.error('Profile update error:', updateError);
+            } else {
+              console.log('Profile updated successfully');
+            }
+          } catch (updateErr) {
+            console.error('Profile update catch error:', updateErr);
+          }
+        }, 2000);
 
         toast({
           title: "회원가입 성공",
@@ -101,7 +119,7 @@ const SignupForm = ({ isLoading, setIsLoading }: SignupFormProps) => {
         });
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error('Signup catch error:', error);
       toast({
         title: "오류 발생",
         description: "회원가입 중 오류가 발생했습니다.",
