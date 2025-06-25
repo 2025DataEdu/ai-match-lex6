@@ -1,41 +1,13 @@
+
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Sparkles, Building2, Users, ArrowRight, RefreshCw, Calendar, Globe, Youtube, FileText, Phone, Mail } from "lucide-react";
+import { Sparkles, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
-
-interface Supplier {
-  '공급기업일련번호(PK)': string;
-  기업명: string;
-  유형: string;
-  업종: string;
-  세부설명: string;
-  기업홈페이지?: string;
-  유튜브링크?: string;
-  보유특허?: string;
-  사용자명?: string;
-  등록일자?: string;
-}
-
-interface Demand {
-  '수요기관일련번호(PK)': string;
-  수요기관: string;
-  유형: string;
-  수요내용: string;
-  금액: number;
-  등록일자?: string;
-}
-
-interface Match {
-  supplier: Supplier;
-  demand: Demand;
-  matchScore: number;
-  matchReason: string;
-}
+import MatchingStats from "@/components/ai-matching/MatchingStats";
+import MatchingCard from "@/components/ai-matching/MatchingCard";
+import { Supplier, Demand, Match } from "@/types/matching";
 
 const AIMatching = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -43,7 +15,6 @@ const AIMatching = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMatching, setIsMatching] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -166,43 +137,11 @@ const AIMatching = () => {
         </div>
 
         {/* 통계 카드 */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Building2 className="w-8 h-8 text-blue-600 mr-3" />
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{suppliers.length}</p>
-                  <p className="text-sm text-gray-600">등록된 공급기업</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Users className="w-8 h-8 text-green-600 mr-3" />
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{demands.length}</p>
-                  <p className="text-sm text-gray-600">등록된 수요기관</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Sparkles className="w-8 h-8 text-purple-600 mr-3" />
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{matches.length}</p>
-                  <p className="text-sm text-gray-600">AI 매칭 결과</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <MatchingStats 
+          suppliersCount={suppliers.length}
+          demandsCount={demands.length}
+          matchesCount={matches.length}
+        />
 
         {/* 매칭 시작 버튼 */}
         <div className="text-center mb-8">
@@ -231,208 +170,13 @@ const AIMatching = () => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">매칭 결과</h2>
             {matches.map((match, index) => (
-              <Card key={`${match.supplier['공급기업일련번호(PK)']}-${match.demand['수요기관일련번호(PK)']}`} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">매칭 #{index + 1}</CardTitle>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${getScoreColor(match.matchScore)}`}></div>
-                      <Badge variant="secondary">
-                        매칭도: {match.matchScore}% ({getScoreText(match.matchScore)})
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardDescription>
-                    {match.matchReason}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* 공급기업 정보 */}
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-                        <Building2 className="w-4 h-4 mr-2" />
-                        공급기업
-                      </h4>
-                      <div className="space-y-2">
-                        <p className="font-medium">{match.supplier.기업명}</p>
-                        <Badge variant="outline">{match.supplier.유형}</Badge>
-                        {match.supplier.업종 && (
-                          <p className="text-sm text-gray-600">업종: {match.supplier.업종}</p>
-                        )}
-                        <p className="text-sm text-gray-700 line-clamp-2">
-                          {match.supplier.세부설명}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* 수요기관 정보 */}
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-green-900 mb-2 flex items-center">
-                        <Users className="w-4 h-4 mr-2" />
-                        수요기관
-                      </h4>
-                      <div className="space-y-2">
-                        <p className="font-medium">{match.demand.수요기관}</p>
-                        <Badge variant="outline">{match.demand.유형}</Badge>
-                        {match.demand.금액 && (
-                          <p className="text-sm text-gray-600">
-                            예산: {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-700 line-clamp-2">
-                          {match.demand.수요내용}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex justify-center">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="flex items-center space-x-2">
-                          <span>상세 매칭 정보</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>매칭 상세 정보</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-6">
-                          {/* 매칭 점수 */}
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <h4 className="font-semibold mb-2">매칭 분석</h4>
-                            <div className="flex items-center space-x-4 mb-2">
-                              <div className={`w-4 h-4 rounded-full ${getScoreColor(match.matchScore)}`}></div>
-                              <span className="font-medium">매칭도: {match.matchScore}%</span>
-                            </div>
-                            <p className="text-sm text-gray-600">{match.matchReason}</p>
-                          </div>
-
-                          <div className="grid md:grid-cols-2 gap-6">
-                            {/* 공급기업 상세 정보 */}
-                            <div className="bg-blue-50 p-6 rounded-lg">
-                              <h4 className="font-semibold text-blue-900 mb-4 flex items-center">
-                                <Building2 className="w-5 h-5 mr-2" />
-                                공급기업 상세 정보
-                              </h4>
-                              <div className="space-y-3">
-                                <div>
-                                  <p className="font-medium text-lg">{match.supplier.기업명}</p>
-                                  <div className="flex gap-2 mt-1">
-                                    <Badge variant="outline">{match.supplier.유형}</Badge>
-                                    {match.supplier.업종 && (
-                                      <Badge variant="secondary">{match.supplier.업종}</Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {match.supplier.세부설명 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                                      <FileText className="w-4 h-4 mr-1" />
-                                      서비스 설명
-                                    </p>
-                                    <p className="text-sm text-gray-600">{match.supplier.세부설명}</p>
-                                  </div>
-                                )}
-
-                                {match.supplier.보유특허 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1">보유 특허</p>
-                                    <p className="text-sm text-gray-600">{match.supplier.보유특허}</p>
-                                  </div>
-                                )}
-
-                                {match.supplier.사용자명 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                                      <Mail className="w-4 h-4 mr-1" />
-                                      담당자
-                                    </p>
-                                    <p className="text-sm text-gray-600">{match.supplier.사용자명}</p>
-                                  </div>
-                                )}
-
-                                <div className="flex gap-2">
-                                  {match.supplier.기업홈페이지 && (
-                                    <Button size="sm" variant="outline" asChild>
-                                      <a href={match.supplier.기업홈페이지} target="_blank" rel="noopener noreferrer">
-                                        <Globe className="w-4 h-4 mr-1" />
-                                        홈페이지
-                                      </a>
-                                    </Button>
-                                  )}
-                                  {match.supplier.유튜브링크 && (
-                                    <Button size="sm" variant="outline" asChild>
-                                      <a href={match.supplier.유튜브링크} target="_blank" rel="noopener noreferrer">
-                                        <Youtube className="w-4 h-4 mr-1" />
-                                        유튜브
-                                      </a>
-                                    </Button>
-                                  )}
-                                </div>
-
-                                {match.supplier.등록일자 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                                      <Calendar className="w-4 h-4 mr-1" />
-                                      등록일
-                                    </p>
-                                    <p className="text-sm text-gray-600">{match.supplier.등록일자}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* 수요기관 상세 정보 */}
-                            <div className="bg-green-50 p-6 rounded-lg">
-                              <h4 className="font-semibold text-green-900 mb-4 flex items-center">
-                                <Users className="w-5 h-5 mr-2" />
-                                수요기관 상세 정보
-                              </h4>
-                              <div className="space-y-3">
-                                <div>
-                                  <p className="font-medium text-lg">{match.demand.수요기관}</p>
-                                  <Badge variant="outline" className="mt-1">{match.demand.유형}</Badge>
-                                </div>
-                                
-                                <div>
-                                  <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                                    <FileText className="w-4 h-4 mr-1" />
-                                    수요 내용
-                                  </p>
-                                  <p className="text-sm text-gray-600">{match.demand.수요내용}</p>
-                                </div>
-
-                                {match.demand.금액 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1">예산</p>
-                                    <p className="text-sm text-gray-600 font-medium">
-                                      {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원
-                                    </p>
-                                  </div>
-                                )}
-
-                                {match.demand.등록일자 && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                                      <Calendar className="w-4 h-4 mr-1" />
-                                      등록일
-                                    </p>
-                                    <p className="text-sm text-gray-600">{match.demand.등록일자}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardContent>
-              </Card>
+              <MatchingCard
+                key={`${match.supplier['공급기업일련번호(PK)']}-${match.demand['수요기관일련번호(PK)']}`}
+                match={match}
+                index={index}
+                getScoreColor={getScoreColor}
+                getScoreText={getScoreText}
+              />
             ))}
           </div>
         )}
