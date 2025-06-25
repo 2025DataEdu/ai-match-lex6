@@ -45,21 +45,27 @@ const SupplierList = () => {
 
   const fetchSuppliers = async () => {
     try {
+      console.log('Fetching suppliers from Supabase...');
       const { data, error } = await supabase
         .from('공급기업')
         .select('*')
         .order('등록일자', { ascending: false });
 
+      console.log('Supabase response:', { data, error });
+
       if (error) {
+        console.error('Supabase error:', error);
         toast({
           title: "데이터 로드 실패",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Successfully fetched suppliers:', data);
         setSuppliers(data || []);
       }
     } catch (error) {
+      console.error('Fetch error:', error);
       toast({
         title: "오류 발생",
         description: "데이터를 불러오는 중 오류가 발생했습니다.",
@@ -68,6 +74,11 @@ const SupplierList = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('ko-KR');
   };
 
   return (
@@ -114,9 +125,12 @@ const SupplierList = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchTerm ? "검색 결과가 없습니다" : "등록된 공급기업이 없습니다"}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               {searchTerm ? "다른 검색어로 시도해보세요" : "첫 번째 공급기업을 등록해보세요"}
             </p>
+            <Button asChild>
+              <a href="/supplier-registration">공급기업 등록하기</a>
+            </Button>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -125,8 +139,8 @@ const SupplierList = () => {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg">{supplier.기업명}</CardTitle>
-                      <CardDescription>{supplier.사용자명}</CardDescription>
+                      <CardTitle className="text-lg">{supplier.기업명 || '기업명 없음'}</CardTitle>
+                      <CardDescription>{supplier.사용자명 || '담당자명 없음'}</CardDescription>
                     </div>
                     {supplier.유형 && (
                       <Badge variant="secondary">{supplier.유형}</Badge>
@@ -184,6 +198,12 @@ const SupplierList = () => {
                         </Button>
                       )}
                     </div>
+
+                    {supplier.등록일자 && (
+                      <div className="pt-2 text-xs text-gray-500">
+                        등록일: {formatDate(supplier.등록일자)}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

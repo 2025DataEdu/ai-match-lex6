@@ -46,21 +46,27 @@ const DemandList = () => {
 
   const fetchDemands = async () => {
     try {
+      console.log('Fetching demands from Supabase...');
       const { data, error } = await supabase
         .from('수요기관')
         .select('*')
         .order('등록일자', { ascending: false });
 
+      console.log('Supabase response:', { data, error });
+
       if (error) {
+        console.error('Supabase error:', error);
         toast({
           title: "데이터 로드 실패",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Successfully fetched demands:', data);
         setDemands(data || []);
       }
     } catch (error) {
+      console.error('Fetch error:', error);
       toast({
         title: "오류 발생",
         description: "데이터를 불러오는 중 오류가 발생했습니다.",
@@ -72,6 +78,7 @@ const DemandList = () => {
   };
 
   const formatCurrency = (amount: number) => {
+    if (!amount) return '';
     return new Intl.NumberFormat('ko-KR').format(amount) + ' 만원';
   };
 
@@ -124,9 +131,12 @@ const DemandList = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchTerm ? "검색 결과가 없습니다" : "등록된 수요내용이 없습니다"}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               {searchTerm ? "다른 검색어로 시도해보세요" : "첫 번째 수요를 등록해보세요"}
             </p>
+            <Button asChild className="bg-green-600 hover:bg-green-700">
+              <a href="/demand-registration">수요기관 등록하기</a>
+            </Button>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -135,9 +145,9 @@ const DemandList = () => {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg">{demand.수요기관}</CardTitle>
+                      <CardTitle className="text-lg">{demand.수요기관 || '기관명 없음'}</CardTitle>
                       <CardDescription>
-                        {demand.부서명 && `${demand.부서명} · `}{demand.사용자명}
+                        {demand.부서명 && `${demand.부서명} · `}{demand.사용자명 || '담당자명 없음'}
                       </CardDescription>
                     </div>
                     {demand.유형 && (
@@ -180,9 +190,11 @@ const DemandList = () => {
                       </div>
                     )}
 
-                    <div className="pt-2 text-xs text-gray-500">
-                      등록일: {formatDate(demand.등록일자)}
-                    </div>
+                    {demand.등록일자 && (
+                      <div className="pt-2 text-xs text-gray-500">
+                        등록일: {formatDate(demand.등록일자)}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
