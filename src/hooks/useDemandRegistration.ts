@@ -57,21 +57,21 @@ export const useDemandRegistration = (session: Session | null) => {
       
       console.log('Submitting demand data:', formData);
       
-      // 수요기관 데이터 삽입 - 실제 테이블 스키마에 맞는 컬럼명 사용
+      // 수요기관 데이터 삽입 - 올바른 컬럼명 사용
       const insertData = {
-        '수요기관일련번호': crypto.randomUUID(),
-        '아이디': session.user.id,
-        '수요기관': formData.organization,
-        '부서명': formData.department || null,
-        '사용자명': formData.username,
-        '유형': formData.type,
-        '수요내용': formData.demandContent,
-        '금액': formData.budget ? parseInt(formData.budget) : null,
-        '시작일': formData.startDate || null,
-        '종료일': formData.endDate || null,
-        '기타요구사항': formData.additionalRequirements || null,
-        '등록일자': new Date().toISOString().split('T')[0],
-        '관심여부': 'N'
+        수요기관일련번호: crypto.randomUUID(),
+        아이디: session.user.id,
+        수요기관: formData.organization,
+        부서명: formData.department || null,
+        사용자명: formData.username,
+        유형: formData.type,
+        수요내용: formData.demandContent,
+        금액: formData.budget ? parseInt(formData.budget) : null,
+        시작일: formData.startDate || null,
+        종료일: formData.endDate || null,
+        기타요구사항: formData.additionalRequirements || null,
+        등록일자: new Date().toISOString().split('T')[0],
+        관심여부: 'N'
       };
 
       console.log('Insert data:', insertData);
