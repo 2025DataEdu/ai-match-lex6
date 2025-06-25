@@ -34,50 +34,77 @@ const SupplierList = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = suppliers.filter(supplier =>
-      supplier.기업명?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.유형?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.업종?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.세부설명?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredSuppliers(filtered);
+    if (suppliers.length > 0) {
+      const filtered = suppliers.filter(supplier =>
+        supplier.기업명?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.유형?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.업종?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.세부설명?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredSuppliers(filtered);
+    }
   }, [searchTerm, suppliers]);
 
   const fetchSuppliers = async () => {
     try {
-      console.log('Fetching suppliers from Supabase...');
-      const { data, error } = await supabase
+      console.log('공급기업 데이터 조회 시작...');
+      setIsLoading(true);
+      
+      const { data, error, count } = await supabase
         .from('공급기업')
-        .select('*')
-        .order('등록일자', { ascending: false });
+        .select('*', { count: 'exact' });
 
-      console.log('Supabase response:', { data, error });
+      console.log('Supabase 응답:', { data, error, count });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase 에러:', error);
         toast({
           title: "데이터 로드 실패",
           description: `오류: ${error.message}`,
           variant: "destructive",
         });
+        
+        // RLS 정책 문제인 경우 안내
+        if (error.code === 'PGRST116' || error.message.includes('row-level security')) {
+          toast({
+            title: "권한 문제",
+            description: "데이터 접근 권한이 없습니다. 관리자에게 문의하세요.",
+            variant: "destructive",
+          });
+        }
       } else {
-        console.log('Successfully fetched suppliers:', data);
-        const formattedData = (data || []).map(item => ({
-          공급기업일련번호: item.공급기업일련번호,
-          기업명: item.기업명 || '',
-          유형: item.유형 || '',
-          업종: item.업종 || '',
-          세부설명: item.세부설명 || '',
-          기업홈페이지: item.기업홈페이지,
-          유튜브링크: item.유튜브링크,
-          보유특허: item.보유특허,
-          사용자명: item.사용자명,
-          등록일자: item.등록일자
-        }));
-        setSuppliers(formattedData);
+        console.log('조회된 공급기업 수:', data?.length || 0);
+        
+        if (data && data.length > 0) {
+          const formattedData = data.map(item => ({
+            공급기업일련번호: item.공급기업일련번호 || '',
+            기업명: item.기업명 || '기업명 없음',
+            유형: item.유형 || '유형 없음',
+            업종: item.업종 || '업종 없음',
+            세부설명: item.세부설명 || '',
+            기업홈페이지: item.기업홈페이지,
+            유튜브링크: item.유튜브링크,
+            보유특허: item.보유특허,
+            사용자명: item.사용자명,
+            등록일자: item.등록일자
+          }));
+          
+          console.log('포맷된 데이터:', formattedData);
+          setSuppliers(formattedData);
+          setFilteredSuppliers(formattedData);
+          
+          toast({
+            title: "데이터 로드 완료",
+            description: `${formattedData.length}개의 공급기업을 불러왔습니다.`,
+          });
+        } else {
+          console.log('조회된 데이터가 없습니다.');
+          setSuppliers([]);
+          setFilteredSuppliers([]);
+        }
       }
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('Fetch 에러:', error);
       toast({
         title: "오류 발생",
         description: "데이터를 불러오는 중 오류가 발생했습니다.",
@@ -90,8 +117,18 @@ const SupplierList = () => {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('ko-KR');
+    try {
+      return new Date(dateString).toLocaleDateString('ko-KR');
+    } catch {
+      return dateString;
+    }
   };
+
+  console.log('현재 상태:', { 
+    isLoading, 
+    suppliersCount: suppliers.length, 
+    filteredCount: filteredSuppliers.length 
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,14 +140,19 @@ const SupplierList = () => {
             혁신적인 기술과 서비스를 제공하는 공급기업들을 만나보세요
           </p>
           
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="기업명, 업종, 기술 분야로 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-4 items-center">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="기업명, 업종, 기술 분야로 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={fetchSuppliers} variant="outline">
+              새로고침
+            </Button>
           </div>
         </div>
 
@@ -138,20 +180,30 @@ const SupplierList = () => {
               {searchTerm ? "검색 결과가 없습니다" : "등록된 공급기업이 없습니다"}
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? "다른 검색어로 시도해보세요" : "첫 번째 공급기업을 등록해보세요"}
+              {searchTerm 
+                ? "다른 검색어로 시도해보세요" 
+                : `총 ${suppliers.length}개의 공급기업이 등록되어 있지만 표시할 수 없습니다.`
+              }
             </p>
-            <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <a href="/supplier-registration">공급기업 등록하기</a>
-            </Button>
+            <div className="space-y-2">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <a href="/supplier-registration">공급기업 등록하기</a>
+              </Button>
+              <div className="text-sm text-gray-500">
+                디버그 정보: 로딩중={isLoading.toString()}, 
+                전체공급기업={suppliers.length}, 
+                필터된공급기업={filteredSuppliers.length}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSuppliers.map((supplier) => (
-              <Card key={supplier.공급기업일련번호} className="hover:shadow-lg transition-shadow">
+            {filteredSuppliers.map((supplier, index) => (
+              <Card key={supplier.공급기업일련번호 || index} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg">{supplier.기업명 || '기업명 없음'}</CardTitle>
+                      <CardTitle className="text-lg">{supplier.기업명}</CardTitle>
                       <CardDescription>
                         {supplier.업종} {supplier.사용자명 && `· ${supplier.사용자명}`}
                       </CardDescription>
