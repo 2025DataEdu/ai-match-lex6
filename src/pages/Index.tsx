@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,14 +18,6 @@ const Index = () => {
           <p className="text-xl md:text-2xl mb-8 opacity-90">
             공공기관과 민간 기술기업을 연결하는 스마트 매칭 서비스
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild className="bg-white text-blue-600 hover:bg-gray-100">
-              <Link to="/supplier-registration">공급기업 등록</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white hover:text-blue-600">
-              <Link to="/demand-registration">수요기관 등록</Link>
-            </Button>
-          </div>
         </div>
       </section>
 
