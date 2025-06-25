@@ -36,6 +36,8 @@ export const useSuppliers = () => {
         supplier.세부설명?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredSuppliers(filtered);
+    } else {
+      setFilteredSuppliers([]);
     }
   }, [searchTerm, suppliers]);
 
@@ -57,14 +59,6 @@ export const useSuppliers = () => {
           description: `오류: ${error.message}`,
           variant: "destructive",
         });
-        
-        if (error.code === 'PGRST116' || error.message.includes('row-level security')) {
-          toast({
-            title: "권한 문제",
-            description: "데이터 접근 권한이 없습니다. 관리자에게 문의하세요.",
-            variant: "destructive",
-          });
-        }
       } else {
         console.log('조회된 공급기업 수:', data?.length || 0);
         
@@ -91,9 +85,14 @@ export const useSuppliers = () => {
             description: `${formattedData.length}개의 공급기업을 불러왔습니다.`,
           });
         } else {
-          console.log('조회된 데이터가 없습니다.');
+          console.log('조회된 데이터가 없습니다. 테이블에 데이터가 있는지 확인하세요.');
           setSuppliers([]);
           setFilteredSuppliers([]);
+          
+          toast({
+            title: "데이터 없음",
+            description: "등록된 공급기업이 없습니다.",
+          });
         }
       }
     } catch (error) {
