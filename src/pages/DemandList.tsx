@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import DemandFilters from "@/components/demand/DemandFilters";
 import DemandHeader from "@/components/demand/DemandHeader";
-import DemandLoadingGrid from "@/components/demand/DemandLoadingGrid";
 import DemandEmptyState from "@/components/demand/DemandEmptyState";
 import DemandGrid from "@/components/demand/DemandGrid";
 import FloatingChatBot from "@/components/FloatingChatBot";
@@ -103,9 +102,7 @@ const DemandList = () => {
           />
         </div>
 
-        {isLoading ? (
-          <DemandLoadingGrid />
-        ) : filteredDemands.length === 0 ? (
+        {filteredDemands.length === 0 ? (
           <DemandEmptyState hasFilters={hasActiveFilters} />
         ) : (
           <DemandGrid demands={filteredDemands} />

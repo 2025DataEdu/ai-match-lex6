@@ -2,7 +2,6 @@
 import Navbar from "@/components/Navbar";
 import SupplierCard from "@/components/supplier/SupplierCard";
 import SupplierSearch from "@/components/supplier/SupplierSearch";
-import LoadingSkeletons from "@/components/supplier/LoadingSkeletons";
 import EmptyState from "@/components/supplier/EmptyState";
 import FloatingChatBot from "@/components/FloatingChatBot";
 import { useSuppliers } from "@/hooks/useSuppliers";
@@ -42,9 +41,7 @@ const SupplierList = () => {
           />
         </div>
 
-        {isLoading ? (
-          <LoadingSkeletons />
-        ) : filteredSuppliers.length === 0 ? (
+        {filteredSuppliers.length === 0 ? (
           <EmptyState 
             searchTerm={searchTerm}
             totalSuppliers={suppliers.length}
