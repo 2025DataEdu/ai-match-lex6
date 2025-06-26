@@ -6,20 +6,87 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
-import MatchingCard from "@/components/ai-matching/MatchingCard";
-import { Supplier, Demand, Match } from "@/types/matching";
+import EnhancedMatchingCard from "@/components/ai-matching/EnhancedMatchingCard";
+import MatchingFilters from "@/components/ai-matching/MatchingFilters";
+import { Supplier, Demand } from "@/types/matching";
+import { calculateMatchingScore, DetailedMatch } from "@/utils/matchingAlgorithm";
 
 const AIMatching = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [demands, setDemands] = useState<Demand[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [matches, setMatches] = useState<DetailedMatch[]>([]);
+  const [filteredMatches, setFilteredMatches] = useState<DetailedMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMatching, setIsMatching] = useState(false);
+
+  // 필터 상태
+  const [selectedIndustry, setSelectedIndustry] = useState("all");
+  const [scoreRange, setScoreRange] = useState<[number, number]>([0, 100]);
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 999999]);
+  const [sortBy, setSortBy] = useState("matchScore");
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   const { toast } = useToast();
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // 필터링 및 정렬 적용
+  useEffect(() => {
+    let filtered = [...matches];
+
+    // 업종 필터
+    if (selectedIndustry !== "all") {
+      filtered = filtered.filter(match => match.supplier.업종 === selectedIndustry);
+    }
+
+    // 점수 범위 필터
+    filtered = filtered.filter(match => 
+      match.matchScore >= scoreRange[0] && match.matchScore <= scoreRange[1]
+    );
+
+    // 예산 범위 필터
+    filtered = filtered.filter(match => {
+      if (!match.demand.금액) return true;
+      return match.demand.금액 >= budgetRange[0] && match.demand.금액 <= budgetRange[1];
+    });
+
+    // 정렬
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case "matchScore":
+          aValue = a.matchScore;
+          bValue = b.matchScore;
+          break;
+        case "등록일자":
+          aValue = new Date(a.supplier.등록일자 || "").getTime() || 0;
+          bValue = new Date(b.supplier.등록일자 || "").getTime() || 0;
+          break;
+        case "기업명":
+          aValue = a.supplier.기업명 || "";
+          bValue = b.supplier.기업명 || "";
+          break;
+        case "capabilityScore":
+          aValue = a.capabilityScore;
+          bValue = b.capabilityScore;
+          break;
+        default:
+          aValue = a.matchScore;
+          bValue = b.matchScore;
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+
+    setFilteredMatches(filtered);
+  }, [matches, selectedIndustry, scoreRange, budgetRange, sortBy, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -52,56 +119,25 @@ const AIMatching = () => {
   const calculateMatches = () => {
     setIsMatching(true);
     
-    // 간단한 매칭 알고리즘 시뮬레이션
+    // 개선된 매칭 알고리즘 실행
     setTimeout(() => {
-      const newMatches: Match[] = [];
+      const newMatches: DetailedMatch[] = [];
       
       demands.forEach(demand => {
         suppliers.forEach(supplier => {
-          let score = 0;
-          let reasons: string[] = [];
-
-          // 유형 매칭
-          if (supplier.유형 === demand.유형) {
-            score += 40;
-            reasons.push(`서비스 유형 일치 (${supplier.유형})`);
-          }
-
-          // 키워드 매칭 (간단한 예시)
-          const demandKeywords = demand.수요내용?.toLowerCase().split(' ') || [];
-          const supplierKeywords = supplier.세부설명?.toLowerCase().split(' ') || [];
+          const match = calculateMatchingScore(demand, supplier);
           
-          const commonKeywords = demandKeywords.filter(keyword => 
-            supplierKeywords.some(sk => sk.includes(keyword) || keyword.includes(sk))
-          );
-
-          if (commonKeywords.length > 0) {
-            score += Math.min(commonKeywords.length * 10, 30);
-            reasons.push(`관련 키워드 발견 (${commonKeywords.length}개)`);
-          }
-
-          // 업종 관련성
-          if (supplier.업종 && demand.수요내용?.includes(supplier.업종)) {
-            score += 20;
-            reasons.push(`업종 관련성`);
-          }
-
-          // 일정 점수 이상일 때만 매칭 결과에 포함
-          if (score >= 30) {
-            newMatches.push({
-              supplier,
-              demand,
-              matchScore: Math.min(score, 100),
-              matchReason: reasons.join(', ')
-            });
+          // 30점 이상일 때만 매칭 결과에 포함
+          if (match.matchScore >= 30) {
+            newMatches.push(match);
           }
         });
       });
 
-      // 점수 순으로 정렬하고 상위 10개만 표시
+      // 점수 순으로 정렬하고 상위 20개만 표시
       const sortedMatches = newMatches
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 10);
+        .slice(0, 20);
 
       setMatches(sortedMatches);
       setIsMatching(false);
@@ -110,20 +146,36 @@ const AIMatching = () => {
         title: "AI 매칭 완료",
         description: `${sortedMatches.length}개의 매칭 결과를 찾았습니다.`,
       });
-    }, 2000);
+    }, 3000);
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 60) return "bg-yellow-500";
-    return "bg-red-500";
+  const handleInterestClick = (match: DetailedMatch) => {
+    toast({
+      title: "관심표시 완료",
+      description: `${match.supplier.기업명}에 관심표시를 보냈습니다.`,
+    });
   };
 
-  const getScoreText = (score: number) => {
-    if (score >= 80) return "높음";
-    if (score >= 60) return "보통";
-    return "낮음";
+  const handleInquiryClick = (match: DetailedMatch) => {
+    toast({
+      title: "문의 전송",
+      description: `${match.supplier.기업명}에 문의를 전송했습니다.`,
+    });
   };
+
+  const clearFilters = () => {
+    setSelectedIndustry("all");
+    setScoreRange([0, 100]);
+    setBudgetRange([0, 999999]);
+    setSortBy("matchScore");
+    setSortOrder("desc");
+  };
+
+  const hasActiveFilters = selectedIndustry !== "all" || 
+    scoreRange[0] !== 0 || scoreRange[1] !== 100 ||
+    budgetRange[0] !== 0 || budgetRange[1] !== 999999;
+
+  const industries = Array.from(new Set(suppliers.map(s => s.업종).filter(Boolean)));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -132,7 +184,7 @@ const AIMatching = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">AI 매칭</h1>
           <p className="text-lg text-gray-600 mb-6">
-            인공지능이 분석한 최적의 공급기업과 수요기관 매칭 결과를 확인하세요
+            개선된 인공지능 알고리즘으로 분석한 최적의 공급기업과 수요기관 매칭 결과
           </p>
         </div>
 
@@ -159,23 +211,46 @@ const AIMatching = () => {
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                AI 매칭 시작
+                개선된 AI 매칭 시작
               </>
             )}
           </Button>
         </div>
 
-        {/* 매칭 결과 */}
+        {/* 필터 및 정렬 */}
         {matches.length > 0 && (
+          <MatchingFilters
+            industries={industries}
+            selectedIndustry={selectedIndustry}
+            onIndustryChange={setSelectedIndustry}
+            scoreRange={scoreRange}
+            onScoreRangeChange={setScoreRange}
+            budgetRange={budgetRange}
+            onBudgetRangeChange={setBudgetRange}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
+        )}
+
+        {/* 매칭 결과 */}
+        {filteredMatches.length > 0 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">매칭 결과</h2>
-            {matches.map((match, index) => (
-              <MatchingCard
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                매칭 결과 ({filteredMatches.length}개)
+              </h2>
+            </div>
+            {filteredMatches.map((match, index) => (
+              <EnhancedMatchingCard
                 key={`${match.supplier['공급기업일련번호(PK)']}-${match.demand['수요기관일련번호(PK)']}`}
                 match={match}
                 index={index}
-                getScoreColor={getScoreColor}
-                getScoreText={getScoreText}
+                onInterestClick={handleInterestClick}
+                onInquiryClick={handleInquiryClick}
               />
             ))}
           </div>
@@ -186,10 +261,10 @@ const AIMatching = () => {
           <div className="text-center py-12">
             <Sparkles className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              AI 매칭을 시작해보세요
+              개선된 AI 매칭을 시작해보세요
             </h3>
             <p className="text-gray-600">
-              등록된 공급기업과 수요기관 정보를 바탕으로 최적의 매칭을 찾아드립니다
+              키워드 유사도, 기업 역량, 예산 적합성을 종합 분석하여 최적의 매칭을 찾아드립니다
             </p>
           </div>
         )}
