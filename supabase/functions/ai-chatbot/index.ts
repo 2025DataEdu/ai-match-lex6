@@ -77,29 +77,35 @@ serve(async (req) => {
     - 등록일자 (date)
     
     주의사항:
-    - 금액은 만원 단위입니다 (1억원 = 10,000)
+    - 금액은 만원 단위입니다 (1억원 = 10,000, 5억원 = 50,000)
     - LIKE 검색시 ILIKE를 사용하세요 (대소문자 구분 없음)
     - 텍스트 검색시 '%키워드%' 형태로 사용하세요
+    - 반드시 테이블명을 정확히 지정하세요
     `;
 
     // 1단계: GPT에게 SQL 생성 요청
     const sqlGenerationPrompt = `당신은 PostgreSQL SQL 생성 전문가입니다.
-    사용자의 자연어 질의를 분석하여 적절한 SQL 쿼리를 생성해주세요.
+    사용자의 자연어 질의를 분석하여 정확한 SQL 쿼리를 생성해주세요.
 
     ${schemaInfo}
 
     사용자 질의: "${message}"
 
     규칙:
-    1. 오직 SELECT 쿼리만 생성하세요
+    1. 반드시 완전한 SELECT 쿼리를 생성하세요 (테이블명 포함)
     2. 테이블명과 컬럼명을 정확히 사용하세요
     3. 한국어 검색시 ILIKE '%키워드%' 사용
-    4. 금액 관련 질의시 만원 단위임을 고려하세요
-    5. 복잡한 질의는 JOIN을 활용하세요
-    6. LIMIT을 적절히 사용하여 결과를 제한하세요
+    4. 금액 관련 질의시 만원 단위임을 고려하세요 (5억원 = 50,000)
+    5. 복잡한 질의는 적절한 WHERE 조건을 사용하세요
+    6. LIMIT을 적절히 사용하여 결과를 제한하세요 (기본 20개)
+    7. "5억 이상"과 같은 금액 질의는 수요기관 테이블의 금액 컬럼을 사용하세요
 
-    응답 형식: 
-    SQL: [생성된 SQL 쿼리만]
+    예시:
+    - "5억 이상 수요": SELECT * FROM 수요기관 WHERE 금액 >= 50000 LIMIT 20
+    - "특허가 있는 공급기업": SELECT * FROM 공급기업 WHERE 보유특허 IS NOT NULL AND 보유특허 != '' LIMIT 20
+    - "AI 관련 공급기업": SELECT * FROM 공급기업 WHERE 세부설명 ILIKE '%AI%' OR 업종 ILIKE '%AI%' LIMIT 20
+
+    오직 SQL 쿼리만 응답하세요. 설명은 포함하지 마세요.
     `;
 
     const sqlResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -114,24 +120,14 @@ serve(async (req) => {
           { role: 'user', content: sqlGenerationPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 500,
+        max_tokens: 200,
       }),
     });
 
     const sqlData = await sqlResponse.json();
-    const generatedResponse = sqlData.choices[0].message.content;
+    const generatedSQL = sqlData.choices[0].message.content.trim();
     
-    // SQL 추출
-    let sqlQuery = '';
-    const sqlMatch = generatedResponse.match(/SQL:\s*(.+?)(?:\n|$)/s);
-    if (sqlMatch) {
-      sqlQuery = sqlMatch[1].trim();
-    } else {
-      // SQL: 라벨이 없으면 전체 응답을 SQL로 간주
-      sqlQuery = generatedResponse.trim();
-    }
-
-    console.log('Generated SQL:', sqlQuery);
+    console.log('Generated SQL:', generatedSQL);
 
     // 2단계: SQL 실행
     let queryResults = [];
@@ -140,7 +136,7 @@ serve(async (req) => {
     try {
       // SQL 쿼리를 RPC로 실행
       const { data, error } = await supabase.rpc('execute_dynamic_query', {
-        query_text: sqlQuery
+        query_text: generatedSQL
       });
 
       if (error) {
@@ -161,7 +157,7 @@ serve(async (req) => {
     if (queryError) {
       finalPrompt = `SQL 쿼리 실행 중 오류가 발생했습니다.
       사용자 질의: "${message}"
-      생성된 SQL: ${sqlQuery}
+      생성된 SQL: ${generatedSQL}
       오류: ${queryError.message}
       
       사용자에게 친근하고 도움이 되는 방식으로 오류를 설명하고, 다른 방법으로 질문해달라고 안내해주세요.`;
@@ -216,7 +212,7 @@ serve(async (req) => {
         message: message,
         response: aiResponse,
         context: {
-          sql_query: sqlQuery,
+          sql_query: generatedSQL,
           results_count: queryResults.length,
           has_error: !!queryError
         },
@@ -232,7 +228,7 @@ serve(async (req) => {
       JSON.stringify({ 
         response: aiResponse,
         context: {
-          sql_query: sqlQuery,
+          sql_query: generatedSQL,
           results_count: queryResults.length
         }
       }), 
