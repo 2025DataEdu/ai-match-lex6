@@ -7,7 +7,6 @@ export interface DetailedMatch {
   matchScore: number;
   keywordScore: number;
   capabilityScore: number;
-  budgetScore: number;
   matchedKeywords: string[];
   matchReason: string;
 }
@@ -20,7 +19,7 @@ const KOREAN_KEYWORDS = [
   '교육', '이러닝', '게임', 'VR', 'AR', '가상현실', '증강현실',
   '핀테크', '블록체인', '보안', '클라우드', '네트워크',
   '의료', '헬스케어', '바이오', '환경', '에너지',
-  '로봇', '자동화', '제조', '물류', '유통'
+  '로봇', '자동화', '제조', '물류', '유통', '챗봇', '자연어처리'
 ];
 
 // 키워드 추출 함수
@@ -33,9 +32,9 @@ export function extractKeywords(text: string): string[] {
     normalizedText.includes(keyword)
   );
   
-  // 추가 키워드 추출 (공백으로 분리된 단어 중 3글자 이상)
+  // 추가 키워드 추출 (공백으로 분리된 단어 중 2글자 이상)
   const words = text.split(/\s+/).filter(word => 
-    word.length >= 3 && !/^\d+$/.test(word)
+    word.length >= 2 && !/^\d+$/.test(word) && !['은', '는', '이', '가', '을', '를', '의', '에', '로', '와', '과', '도', '만', '부터', '까지', '에서', '으로', '에게', '한테', '께', '에서부터'].includes(word)
   );
   
   return [...new Set([...foundKeywords, ...words])];
@@ -43,7 +42,7 @@ export function extractKeywords(text: string): string[] {
 
 // 자카드 유사도 계산
 export function calculateJaccardSimilarity(keywords1: string[], keywords2: string[]): number {
-  if (keywords1.length === 0 && keywords2.length === 0) return 1;
+  if (keywords1.length === 0 && keywords2.length === 0) return 0;
   if (keywords1.length === 0 || keywords2.length === 0) return 0;
   
   const set1 = new Set(keywords1.map(k => k.toLowerCase()));
@@ -52,6 +51,7 @@ export function calculateJaccardSimilarity(keywords1: string[], keywords2: strin
   const intersection = new Set([...set1].filter(x => set2.has(x)));
   const union = new Set([...set1, ...set2]);
   
+  if (union.size === 0) return 0;
   return intersection.size / union.size;
 }
 
@@ -63,6 +63,11 @@ export function calculateKeywordSimilarity(demandText: string, supplierText: str
   const demandKeywords = extractKeywords(demandText);
   const supplierKeywords = extractKeywords(supplierText);
   
+  console.log('키워드 분석:', {
+    demandKeywords: demandKeywords.slice(0, 10),
+    supplierKeywords: supplierKeywords.slice(0, 10)
+  });
+  
   const matchedKeywords = demandKeywords.filter(keyword =>
     supplierKeywords.some(sk => 
       sk.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -70,26 +75,36 @@ export function calculateKeywordSimilarity(demandText: string, supplierText: str
     )
   );
   
-  const score = calculateJaccardSimilarity(demandKeywords, supplierKeywords);
+  const jaccardScore = calculateJaccardSimilarity(demandKeywords, supplierKeywords);
+  
+  // 직접 매칭 키워드가 있으면 가산점
+  const directMatchBonus = matchedKeywords.length > 0 ? 0.3 : 0;
+  const finalScore = Math.min((jaccardScore + directMatchBonus) * 100, 100);
+  
+  console.log('키워드 매칭 결과:', {
+    jaccardScore,
+    matchedKeywords,
+    finalScore
+  });
   
   return {
-    score: Math.min(score * 100, 100),
+    score: finalScore,
     matchedKeywords: matchedKeywords.slice(0, 5)
   };
 }
 
 // 기업 역량 점수 계산
 export function calculateCapabilityScore(supplier: Supplier): number {
-  let score = 50; // 기본 점수
+  let score = 40; // 기본 점수
   
   // 보유 특허가 있으면 가점
   if (supplier.보유특허 && supplier.보유특허.length > 10) {
-    score += 20;
+    score += 25;
   }
   
   // 홈페이지가 있으면 가점 (신뢰도)
   if (supplier.기업홈페이지) {
-    score += 10;
+    score += 15;
   }
   
   // 유튜브 링크가 있으면 가점 (마케팅 역량)
@@ -105,42 +120,22 @@ export function calculateCapabilityScore(supplier: Supplier): number {
   return Math.min(score, 100);
 }
 
-// 예산 적합성 점수 계산
-export function calculateBudgetScore(demandBudget: number, supplierType: string): number {
-  if (!demandBudget) return 70; // 예산 미지정시 중간 점수
-  
-  // 공급기업 유형별 예산 구간 설정
-  const budgetRanges: { [key: string]: { min: number; max: number } } = {
-    '소프트웨어개발': { min: 1000, max: 10000 },
-    'AI솔루션': { min: 2000, max: 20000 },
-    '시스템구축': { min: 5000, max: 50000 },
-    '컨설팅': { min: 500, max: 5000 },
-    '교육서비스': { min: 300, max: 3000 }
-  };
-  
-  const range = budgetRanges[supplierType] || { min: 1000, max: 10000 };
-  
-  if (demandBudget >= range.min && demandBudget <= range.max) {
-    return 100;
-  } else if (demandBudget < range.min) {
-    return Math.max(30, 100 - ((range.min - demandBudget) / range.min) * 70);
-  } else {
-    return Math.max(50, 100 - ((demandBudget - range.max) / range.max) * 50);
-  }
-}
-
-// 종합 매칭 점수 계산
+// 종합 매칭 점수 계산 (예산 점수 제거, 키워드와 역량만 고려)
 export function calculateMatchingScore(demand: Demand, supplier: Supplier): DetailedMatch {
+  console.log('매칭 계산 시작:', {
+    demand: demand.수요기관,
+    supplier: supplier.기업명
+  });
+
   const keywordResult = calculateKeywordSimilarity(
-    demand.수요내용,
-    `${supplier.세부설명} ${supplier.업종} ${supplier.유형}`
+    demand.수요내용 || '',
+    `${supplier.세부설명 || ''} ${supplier.업종 || ''} ${supplier.유형 || ''}`
   );
   
   const capabilityScore = calculateCapabilityScore(supplier);
-  const budgetScore = calculateBudgetScore(demand.금액, supplier.유형);
   
-  // 가중 평균 계산 (키워드 60%, 역량 30%, 예산 10%)
-  const totalScore = (keywordResult.score * 0.6) + (capabilityScore * 0.3) + (budgetScore * 0.1);
+  // 가중 평균 계산 (키워드 70%, 역량 30%)
+  const totalScore = (keywordResult.score * 0.7) + (capabilityScore * 0.3);
   
   // 매칭 이유 생성
   const reasons = [];
@@ -150,21 +145,27 @@ export function calculateMatchingScore(demand: Demand, supplier: Supplier): Deta
   if (capabilityScore > 70) {
     reasons.push('우수한 기업 역량');
   }
-  if (budgetScore > 80) {
-    reasons.push('예산 범위 적합');
-  }
   if (supplier.유형 === demand.유형) {
     reasons.push('서비스 유형 일치');
   }
   
-  return {
+  const result = {
     supplier,
     demand,
     matchScore: Math.round(totalScore),
     keywordScore: Math.round(keywordResult.score),
     capabilityScore: Math.round(capabilityScore),
-    budgetScore: Math.round(budgetScore),
     matchedKeywords: keywordResult.matchedKeywords,
     matchReason: reasons.length > 0 ? reasons.join(', ') : '기본 매칭'
   };
+  
+  console.log('매칭 결과:', {
+    기업명: supplier.기업명,
+    매칭점수: result.matchScore,
+    키워드점수: result.keywordScore,
+    역량점수: result.capabilityScore,
+    매칭키워드: result.matchedKeywords
+  });
+  
+  return result;
 }

@@ -11,8 +11,6 @@ interface MatchingFiltersProps {
   onIndustryChange: (industry: string) => void;
   scoreRange: [number, number];
   onScoreRangeChange: (range: [number, number]) => void;
-  budgetRange: [number, number];
-  onBudgetRangeChange: (range: [number, number]) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
   sortOrder: 'asc' | 'desc';
@@ -27,8 +25,6 @@ const MatchingFilters = ({
   onIndustryChange,
   scoreRange,
   onScoreRangeChange,
-  budgetRange,
-  onBudgetRangeChange,
   sortBy,
   onSortChange,
   sortOrder,
@@ -41,14 +37,6 @@ const MatchingFilters = ({
     { label: "80% 이상 (높음)", value: [80, 100] as [number, number] },
     { label: "60-79% (보통)", value: [60, 79] as [number, number] },
     { label: "60% 미만 (낮음)", value: [0, 59] as [number, number] }
-  ];
-
-  const budgetRanges = [
-    { label: "전체", value: [0, 999999] as [number, number] },
-    { label: "1천만원 미만", value: [0, 1000] as [number, number] },
-    { label: "1천만원-5천만원", value: [1000, 5000] as [number, number] },
-    { label: "5천만원-1억원", value: [5000, 10000] as [number, number] },
-    { label: "1억원 이상", value: [10000, 999999] as [number, number] }
   ];
 
   return (
@@ -71,7 +59,7 @@ const MatchingFilters = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 업종별 필터 */}
           <div className="space-y-2">
             <label className="text-sm font-medium">업종</label>
@@ -105,29 +93,6 @@ const MatchingFilters = ({
               </SelectTrigger>
               <SelectContent>
                 {scoreRanges.map((range) => (
-                  <SelectItem key={`${range.value[0]}-${range.value[1]}`} value={`${range.value[0]}-${range.value[1]}`}>
-                    {range.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 예산 범위별 필터 */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">예산 범위</label>
-            <Select 
-              value={`${budgetRange[0]}-${budgetRange[1]}`} 
-              onValueChange={(value) => {
-                const range = budgetRanges.find(r => `${r.value[0]}-${r.value[1]}` === value);
-                if (range) onBudgetRangeChange(range.value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {budgetRanges.map((range) => (
                   <SelectItem key={`${range.value[0]}-${range.value[1]}`} value={`${range.value[0]}-${range.value[1]}`}>
                     {range.label}
                   </SelectItem>
@@ -175,11 +140,6 @@ const MatchingFilters = ({
             {(scoreRange[0] !== 0 || scoreRange[1] !== 100) && (
               <Badge variant="secondary">
                 점수: {scoreRange[0]}%-{scoreRange[1]}%
-              </Badge>
-            )}
-            {(budgetRange[0] !== 0 || budgetRange[1] !== 999999) && (
-              <Badge variant="secondary">
-                예산: {budgetRange[0] === 0 ? '1천만원 미만' : `${budgetRange[0]}만원-${budgetRange[1] === 999999 ? '이상' : budgetRange[1] + '만원'}`}
               </Badge>
             )}
           </div>

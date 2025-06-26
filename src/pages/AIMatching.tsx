@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,10 +20,9 @@ const AIMatching = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMatching, setIsMatching] = useState(false);
 
-  // 필터 상태
+  // 필터 상태 (예산 관련 제거)
   const [selectedIndustry, setSelectedIndustry] = useState("all");
   const [scoreRange, setScoreRange] = useState<[number, number]>([0, 100]);
-  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 999999]);
   const [sortBy, setSortBy] = useState("matchScore");
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -32,24 +32,40 @@ const AIMatching = () => {
     fetchData();
   }, []);
 
-  // 필터링 및 정렬 적용
+  // 필터링 및 정렬 적용 (예산 필터 제거)
   useEffect(() => {
+    console.log('필터링 시작:', {
+      매칭결과수: matches.length,
+      선택된업종: selectedIndustry,
+      점수범위: scoreRange
+    });
+
     let filtered = [...matches];
 
     // 업종 필터
     if (selectedIndustry !== "all") {
-      filtered = filtered.filter(match => match.supplier.업종 === selectedIndustry);
+      filtered = filtered.filter(match => {
+        const matchResult = match.supplier.업종 === selectedIndustry;
+        console.log('업종 필터 결과:', {
+          기업명: match.supplier.기업명,
+          업종: match.supplier.업종,
+          선택된업종: selectedIndustry,
+          매칭여부: matchResult
+        });
+        return matchResult;
+      });
     }
 
     // 점수 범위 필터
-    filtered = filtered.filter(match => 
-      match.matchScore >= scoreRange[0] && match.matchScore <= scoreRange[1]
-    );
-
-    // 예산 범위 필터
     filtered = filtered.filter(match => {
-      if (!match.demand.금액) return true;
-      return match.demand.금액 >= budgetRange[0] && match.demand.금액 <= budgetRange[1];
+      const matchResult = match.matchScore >= scoreRange[0] && match.matchScore <= scoreRange[1];
+      console.log('점수 필터 결과:', {
+        기업명: match.supplier.기업명,
+        매칭점수: match.matchScore,
+        점수범위: scoreRange,
+        매칭여부: matchResult
+      });
+      return matchResult;
     });
 
     // 정렬
@@ -85,8 +101,13 @@ const AIMatching = () => {
       }
     });
 
+    console.log('필터링 완료:', {
+      필터링전: matches.length,
+      필터링후: filtered.length
+    });
+
     setFilteredMatches(filtered);
-  }, [matches, selectedIndustry, scoreRange, budgetRange, sortBy, sortOrder]);
+  }, [matches, selectedIndustry, scoreRange, sortBy, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -97,10 +118,16 @@ const AIMatching = () => {
 
       console.log('데이터 로드 결과:', {
         suppliers: suppliersResponse.data?.length || 0,
-        demands: demandsResponse.data?.length || 0
+        demands: demandsResponse.data?.length || 0,
+        suppliersData: suppliersResponse.data?.slice(0, 2),
+        demandsData: demandsResponse.data?.slice(0, 2)
       });
 
       if (suppliersResponse.error || demandsResponse.error) {
+        console.error('데이터 로드 오류:', {
+          suppliersError: suppliersResponse.error,
+          demandsError: demandsResponse.error
+        });
         toast({
           title: "데이터 로드 실패",
           description: "데이터를 불러오는 중 오류가 발생했습니다.",
@@ -111,6 +138,7 @@ const AIMatching = () => {
         setDemands(demandsResponse.data || []);
       }
     } catch (error) {
+      console.error('데이터 fetch 오류:', error);
       toast({
         title: "오류 발생",
         description: "데이터를 불러오는 중 오류가 발생했습니다.",
@@ -124,7 +152,12 @@ const AIMatching = () => {
   const calculateMatches = () => {
     setIsMatching(true);
     
-    console.log('매칭 계산 시작:', { suppliers: suppliers.length, demands: demands.length });
+    console.log('매칭 계산 시작:', { 
+      suppliers: suppliers.length, 
+      demands: demands.length,
+      samplesSuppliers: suppliers.slice(0, 2),
+      sampleDemands: demands.slice(0, 2)
+    });
     
     // 개선된 매칭 알고리즘 실행
     setTimeout(() => {
@@ -134,19 +167,26 @@ const AIMatching = () => {
         suppliers.forEach(supplier => {
           const match = calculateMatchingScore(demand, supplier);
           
-          // 30점 이상일 때만 매칭 결과에 포함
-          if (match.matchScore >= 30) {
+          // 20점 이상일 때만 매칭 결과에 포함 (기준 낮춤)
+          if (match.matchScore >= 20) {
             newMatches.push(match);
           }
         });
       });
 
-      console.log('매칭 계산 완료:', { totalMatches: newMatches.length });
+      console.log('매칭 계산 완료:', { 
+        totalMatches: newMatches.length,
+        sampleMatches: newMatches.slice(0, 3).map(m => ({
+          기업명: m.supplier.기업명,
+          수요기관: m.demand.수요기관,
+          매칭점수: m.matchScore
+        }))
+      });
 
-      // 점수 순으로 정렬하고 상위 20개만 표시
+      // 점수 순으로 정렬하고 상위 50개 표시 (더 많은 결과 표시)
       const sortedMatches = newMatches
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 20);
+        .slice(0, 50);
 
       setMatches(sortedMatches);
       setIsMatching(false);
@@ -155,7 +195,7 @@ const AIMatching = () => {
         title: "AI 매칭 완료",
         description: `${sortedMatches.length}개의 매칭 결과를 찾았습니다.`,
       });
-    }, 3000);
+    }, 2000);
   };
 
   const handleInterestClick = (match: DetailedMatch) => {
@@ -175,14 +215,12 @@ const AIMatching = () => {
   const clearFilters = () => {
     setSelectedIndustry("all");
     setScoreRange([0, 100]);
-    setBudgetRange([0, 999999]);
     setSortBy("matchScore");
     setSortOrder("desc");
   };
 
   const hasActiveFilters = selectedIndustry !== "all" || 
-    scoreRange[0] !== 0 || scoreRange[1] !== 100 ||
-    budgetRange[0] !== 0 || budgetRange[1] !== 999999;
+    scoreRange[0] !== 0 || scoreRange[1] !== 100;
 
   const industries = Array.from(new Set(suppliers.map(s => s.업종).filter(Boolean)));
 
@@ -192,7 +230,8 @@ const AIMatching = () => {
     matches: matches.length,
     filteredMatches: filteredMatches.length,
     suppliers: suppliers.length,
-    demands: demands.length
+    demands: demands.length,
+    industries: industries.length
   });
 
   return (
@@ -235,17 +274,18 @@ const AIMatching = () => {
           </Button>
         </div>
 
-        {/* 디버깅 정보 (개발 중에만 표시) */}
+        {/* 디버깅 정보 */}
         {process.env.NODE_ENV === 'development' && (
           <div className="mb-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
               디버깅 정보: 공급기업 {suppliers.length}개, 수요기관 {demands.length}개, 
-              매칭결과 {matches.length}개, 필터링된 결과 {filteredMatches.length}개
+              매칭결과 {matches.length}개, 필터링된 결과 {filteredMatches.length}개, 
+              업종 {industries.length}개
             </p>
           </div>
         )}
 
-        {/* 필터 및 정렬 */}
+        {/* 필터 및 정렬 (예산 필터 제거) */}
         {matches.length > 0 && (
           <MatchingFilters
             industries={industries}
@@ -253,8 +293,6 @@ const AIMatching = () => {
             onIndustryChange={setSelectedIndustry}
             scoreRange={scoreRange}
             onScoreRangeChange={setScoreRange}
-            budgetRange={budgetRange}
-            onBudgetRangeChange={setBudgetRange}
             sortBy={sortBy}
             onSortChange={setSortBy}
             sortOrder={sortOrder}
@@ -264,7 +302,7 @@ const AIMatching = () => {
           />
         )}
 
-        {/* 매칭 결과 - 스크롤 영역 추가 */}
+        {/* 매칭 결과 - 스크롤 영역 */}
         {filteredMatches.length > 0 && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -297,7 +335,7 @@ const AIMatching = () => {
               개선된 AI 매칭을 시작해보세요
             </h3>
             <p className="text-gray-600">
-              키워드 유사도, 기업 역량, 예산 적합성을 종합 분석하여 최적의 매칭을 찾아드립니다
+              키워드 유사도와 기업 역량을 종합 분석하여 최적의 매칭을 찾아드립니다
             </p>
           </div>
         )}
