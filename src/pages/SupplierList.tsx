@@ -4,6 +4,9 @@ import SupplierCard from "@/components/supplier/SupplierCard";
 import SupplierSearch from "@/components/supplier/SupplierSearch";
 import EmptyState from "@/components/supplier/EmptyState";
 import FloatingChatBot from "@/components/FloatingChatBot";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSuppliers } from "@/hooks/useSuppliers";
 
 const SupplierList = () => {
@@ -25,10 +28,20 @@ const SupplierList = () => {
       <Navbar />
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">공급기업</h1>
-          <p className="text-lg text-gray-600 mb-6">
-            혁신적인 기술과 서비스를 제공하는 공급기업들을 만나보세요
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">공급기업</h1>
+              <p className="text-lg text-gray-600">
+                혁신적인 기술과 서비스를 제공하는 공급기업들을 만나보세요
+              </p>
+            </div>
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Link to="/supplier-registration" className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                공급기업 등록하기
+              </Link>
+            </Button>
+          </div>
           
           <SupplierSearch 
             searchTerm={searchTerm}
