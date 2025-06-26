@@ -261,6 +261,10 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      execute_dynamic_query: {
+        Args: { query_text: string }
+        Returns: Json
+      }
       halfvec_avg: {
         Args: { "": number[] }
         Returns: unknown
