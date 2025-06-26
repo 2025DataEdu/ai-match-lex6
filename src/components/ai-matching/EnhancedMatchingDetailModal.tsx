@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, Users, ArrowRight, Calendar, Globe, Youtube, FileText, Mail, Award, BarChart, Phone, User } from "lucide-react";
+import { Building2, Users, ArrowRight, Calendar, Globe, Youtube, FileText, Mail, Award, BarChart, Phone, User, DollarSign } from "lucide-react";
 import { DetailedMatch } from "@/utils/matchingAlgorithm";
 
 interface EnhancedMatchingDetailModalProps {
@@ -220,9 +220,12 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
 
                 {match.demand.금액 && (
                   <div>
-                    <div className="text-sm font-medium text-gray-700 mb-1">예산</div>
+                    <div className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                      <DollarSign className="w-4 h-4" />
+                      예산
+                    </div>
                     <div className="text-lg font-semibold text-green-600">
-                      {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원
+                      {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원
                     </div>
                   </div>
                 )}

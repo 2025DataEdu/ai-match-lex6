@@ -132,9 +132,12 @@ const MatchingDetailModal = ({ match, getScoreColor }: MatchingDetailModalProps)
 
                 {match.demand.금액 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">예산</p>
+                    <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <DollarSign className="w-4 h-4 mr-1" />
+                      예산
+                    </p>
                     <p className="text-sm text-gray-600 font-medium">
-                      {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원
+                      {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원
                     </p>
                   </div>
                 )}

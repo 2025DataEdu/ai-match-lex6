@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Building2, Users, Heart, MessageCircle, Award, Globe, Youtube } from "lucide-react";
+import { Building2, Users, Heart, MessageCircle, Award, Globe, Youtube, DollarSign } from "lucide-react";
 import { DetailedMatch } from "@/utils/matchingAlgorithm";
 import EnhancedMatchingDetailModal from "./EnhancedMatchingDetailModal";
 import { useInterest } from "@/hooks/useInterest";
@@ -132,7 +132,8 @@ const EnhancedMatchingCard = ({
               {match.demand.금액 && (
                 <>
                   <span>•</span>
-                  <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원</span>
+                  <DollarSign className="w-4 h-4 text-green-600" />
+                  <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원</span>
                 </>
               )}
             </div>

@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users } from "lucide-react";
+import { Building2, Users, DollarSign } from "lucide-react";
 import { Match } from "@/types/matching";
 import MatchingDetailModal from "./MatchingDetailModal";
 
@@ -59,8 +59,9 @@ const MatchingCard = ({ match, index, getScoreColor, getScoreText }: MatchingCar
               <p className="font-medium">{match.demand.수요기관}</p>
               <Badge variant="outline">{match.demand.유형}</Badge>
               {match.demand.금액 && (
-                <p className="text-sm text-gray-600">
-                  예산: {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원
+                <p className="text-sm text-gray-600 flex items-center">
+                  <DollarSign className="w-4 h-4 mr-1" />
+                  예산: {new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원
                 </p>
               )}
               <p className="text-sm text-gray-700 line-clamp-2">
