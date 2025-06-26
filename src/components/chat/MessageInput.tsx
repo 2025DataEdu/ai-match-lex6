@@ -29,7 +29,9 @@ const MessageInput = ({ value, onChange, onSend, isLoading }: MessageInputProps)
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSend();
+      if (value.trim() && !isLoading) {
+        onSend();
+      }
     }
   };
 
@@ -37,9 +39,15 @@ const MessageInput = ({ value, onChange, onSend, isLoading }: MessageInputProps)
     onChange(e.target.value);
   };
 
+  const handleSendClick = () => {
+    if (value.trim() && !isLoading) {
+      onSend();
+    }
+  };
+
   return (
-    <div className="p-4 border-t bg-white">
-      <div className="flex gap-2">
+    <div className="p-4">
+      <div className="flex gap-2 items-center">
         <Input
           ref={inputRef}
           value={value}
@@ -50,7 +58,7 @@ const MessageInput = ({ value, onChange, onSend, isLoading }: MessageInputProps)
           className="flex-1"
         />
         <Button 
-          onClick={onSend} 
+          onClick={handleSendClick} 
           disabled={isLoading || !value.trim()}
           size="icon"
           className="flex-shrink-0"
