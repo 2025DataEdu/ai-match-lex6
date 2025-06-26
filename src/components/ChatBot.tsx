@@ -28,6 +28,7 @@ const ChatBot = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -43,6 +44,13 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // 컴포넌트가 마운트될 때 입력 필드에 포커스
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -54,6 +62,7 @@ const ChatBot = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsLoading(true);
 
@@ -67,7 +76,7 @@ const ChatBot = () => {
 
       const { data, error } = await supabase.functions.invoke('ai-chatbot', {
         body: {
-          message: inputValue,
+          message: currentInput,
           userId: userId,
         },
       });
@@ -103,6 +112,10 @@ const ChatBot = () => {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      // 메시지 전송 후 입력 필드에 다시 포커스
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
 
@@ -113,15 +126,13 @@ const ChatBot = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5" />
-          AI 매치허브 챗봇
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0">
+    <div className="h-[600px] flex flex-col">
+      <div className="flex-1 flex flex-col">
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           <div className="space-y-4">
             {messages.map((message) => (
@@ -135,7 +146,7 @@ const ChatBot = () => {
                   }`}
                 >
                   <div
-                    className={`p-2 rounded-full ${
+                    className={`p-2 rounded-full flex-shrink-0 ${
                       message.isUser ? 'bg-blue-500' : 'bg-gray-200'
                     }`}
                   >
@@ -174,11 +185,13 @@ const ChatBot = () => {
             )}
           </div>
         </ScrollArea>
-        <div className="p-4 border-t">
+        
+        <div className="p-4 border-t bg-white">
           <div className="flex gap-2">
             <Input
+              ref={inputRef}
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               placeholder="메시지를 입력하세요..."
               disabled={isLoading}
@@ -188,13 +201,14 @@ const ChatBot = () => {
               onClick={sendMessage} 
               disabled={isLoading || !inputValue.trim()}
               size="icon"
+              className="flex-shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
