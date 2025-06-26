@@ -22,13 +22,13 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
   const barData = [
     { name: '공급기업', count: stats.suppliersCount, color: '#3B82F6' },
     { name: '수요기관', count: stats.demandsCount, color: '#10B981' },
-    { name: 'AI매칭', count: stats.matchesCount, color: '#8B5CF6' }
+    { name: '예상매칭', count: stats.matchesCount, color: '#8B5CF6' }
   ];
 
   const chartConfig = {
     suppliers: { label: "공급기업", color: "#3B82F6" },
     demands: { label: "수요기관", color: "#10B981" },
-    matches: { label: "AI매칭", color: "#8B5CF6" }
+    matches: { label: "예상매칭", color: "#8B5CF6" }
   };
 
   return (
@@ -136,7 +136,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">성공적인 매칭</p>
+                  <p className="text-sm text-gray-600">예상 매칭 수</p>
                   <p className="text-2xl font-bold text-purple-600">{stats.matchesCount}</p>
                 </div>
                 <Sparkles className="w-8 h-8 text-purple-500" />

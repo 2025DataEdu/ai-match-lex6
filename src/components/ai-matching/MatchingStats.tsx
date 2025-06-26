@@ -41,7 +41,7 @@ const MatchingStats = ({ suppliersCount, demandsCount, matchesCount }: MatchingS
             <Sparkles className="w-8 h-8 text-purple-600 mr-3" />
             <div>
               <p className="text-2xl font-bold text-gray-900">{matchesCount}</p>
-              <p className="text-sm text-gray-600">AI 매칭 결과</p>
+              <p className="text-sm text-gray-600">예상 매칭 수</p>
             </div>
           </div>
         </CardContent>
