@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,7 @@ export const useAIMatching = () => {
   const [sortBy, setSortBy] = useState("matchScore");
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [matchingPerspective, setMatchingPerspective] = useState<'demand' | 'supplier'>('demand');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { toast } = useToast();
 
@@ -31,7 +33,8 @@ export const useAIMatching = () => {
       매칭결과수: matches.length,
       선택된업종: selectedIndustry,
       점수범위: scoreRange,
-      매칭관점: matchingPerspective
+      매칭관점: matchingPerspective,
+      검색어: searchTerm
     });
 
     let filtered = [...matches];
@@ -46,6 +49,18 @@ export const useAIMatching = () => {
       match.matchScore >= scoreRange[0] && match.matchScore <= scoreRange[1]
     );
 
+    // 검색 필터
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(match => {
+        if (matchingPerspective === 'demand') {
+          return match.demand.수요기관?.toLowerCase().includes(searchLower);
+        } else {
+          return match.supplier.기업명?.toLowerCase().includes(searchLower);
+        }
+      });
+    }
+
     // 관점별 그룹화 및 정렬 적용
     const sortedAndGrouped = groupAndSortMatches(filtered, matchingPerspective, sortBy, sortOrder);
 
@@ -53,11 +68,12 @@ export const useAIMatching = () => {
       필터링전: matches.length,
       필터링후: filtered.length,
       최종결과: sortedAndGrouped.length,
-      매칭관점: matchingPerspective
+      매칭관점: matchingPerspective,
+      검색어: searchTerm
     });
 
     setFilteredMatches(sortedAndGrouped);
-  }, [matches, selectedIndustry, scoreRange, sortBy, sortOrder, matchingPerspective]);
+  }, [matches, selectedIndustry, scoreRange, sortBy, sortOrder, matchingPerspective, searchTerm]);
 
   const fetchData = async () => {
     try {
@@ -116,7 +132,7 @@ export const useAIMatching = () => {
         suppliers.forEach(supplier => {
           const match = calculateMatchingScore(demand, supplier);
           
-          // 20점 이상일 때만 매칭 결과에 포함 (기준 낮춤)
+          // 20점 이상일 때만 매칭 결과에 포함
           if (match.matchScore >= 20) {
             newMatches.push(match);
           }
@@ -132,10 +148,10 @@ export const useAIMatching = () => {
         }))
       });
 
-      // 점수 순으로 정렬하고 상위 50개 표시
+      // 점수 순으로 정렬하고 상위 100개 표시
       const sortedMatches = newMatches
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 50);
+        .slice(0, 100);
 
       setMatches(sortedMatches);
       setIsMatching(false);
@@ -153,11 +169,13 @@ export const useAIMatching = () => {
     setSortBy("matchScore");
     setSortOrder("desc");
     setMatchingPerspective("demand");
+    setSearchTerm("");
   };
 
   const hasActiveFilters = selectedIndustry !== "all" || 
     scoreRange[0] !== 0 || scoreRange[1] !== 100 ||
-    matchingPerspective !== "demand";
+    matchingPerspective !== "demand" ||
+    searchTerm.trim() !== "";
 
   const industries = Array.from(new Set(suppliers.map(s => s.업종).filter(Boolean)));
 
@@ -178,6 +196,8 @@ export const useAIMatching = () => {
     setSortOrder,
     matchingPerspective,
     setMatchingPerspective,
+    searchTerm,
+    setSearchTerm,
     calculateMatches,
     clearFilters,
     hasActiveFilters,

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Filter, X, ArrowUpDown, Search } from "lucide-react";
 
 interface MatchingFiltersProps {
   industries: string[];
@@ -17,6 +18,8 @@ interface MatchingFiltersProps {
   onSortOrderChange: (order: 'asc' | 'desc') => void;
   matchingPerspective: 'demand' | 'supplier';
   onMatchingPerspectiveChange: (perspective: 'demand' | 'supplier') => void;
+  searchTerm: string;
+  onSearchTermChange: (term: string) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }
@@ -33,6 +36,8 @@ const MatchingFilters = ({
   onSortOrderChange,
   matchingPerspective,
   onMatchingPerspectiveChange,
+  searchTerm,
+  onSearchTermChange,
   onClearFilters,
   hasActiveFilters
 }: MatchingFiltersProps) => {
@@ -42,6 +47,12 @@ const MatchingFilters = ({
     { label: "60-79% (보통)", value: [60, 79] as [number, number] },
     { label: "60% 미만 (낮음)", value: [0, 59] as [number, number] }
   ];
+
+  const getSearchPlaceholder = () => {
+    return matchingPerspective === 'demand' 
+      ? '수요기관명으로 검색...' 
+      : '공급기업명으로 검색...';
+  };
 
   return (
     <Card className="mb-6">
@@ -63,7 +74,7 @@ const MatchingFilters = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* 매칭 관점 선택 */}
           <div className="space-y-2">
             <label className="text-sm font-medium">매칭 관점</label>
@@ -76,6 +87,22 @@ const MatchingFilters = ({
                 <SelectItem value="supplier">공급기업 중심</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* 검색 필터 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              {matchingPerspective === 'demand' ? '수요기관 검색' : '공급기업 검색'}
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder={getSearchPlaceholder()}
+                value={searchTerm}
+                onChange={(e) => onSearchTermChange(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           {/* 업종별 필터 */}
@@ -155,6 +182,11 @@ const MatchingFilters = ({
             <Badge variant="secondary">
               관점: {matchingPerspective === 'demand' ? '수요기관 중심' : '공급기업 중심'}
             </Badge>
+            {searchTerm && (
+              <Badge variant="secondary">
+                검색: {searchTerm}
+              </Badge>
+            )}
             {selectedIndustry !== "all" && (
               <Badge variant="secondary">업종: {selectedIndustry}</Badge>
             )}

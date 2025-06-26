@@ -28,6 +28,8 @@ const AIMatching = () => {
     setSortOrder,
     matchingPerspective,
     setMatchingPerspective,
+    searchTerm,
+    setSearchTerm,
     calculateMatches,
     clearFilters,
     hasActiveFilters,
@@ -104,6 +106,8 @@ const AIMatching = () => {
             onSortOrderChange={setSortOrder}
             matchingPerspective={matchingPerspective}
             onMatchingPerspectiveChange={setMatchingPerspective}
+            searchTerm={searchTerm}
+            onSearchTermChange={setSearchTerm}
             onClearFilters={clearFilters}
             hasActiveFilters={hasActiveFilters}
           />
