@@ -24,18 +24,20 @@ const MessageList = ({ messages, isLoading }: MessageListProps) => {
     if (scrollAreaRef.current) {
       const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
+        setTimeout(() => {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+        }, 100);
       }
     }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-      <div className="space-y-4">
+    <ScrollArea className="h-full w-full" ref={scrollAreaRef}>
+      <div className="p-4 space-y-4 min-h-full">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
         ))}
