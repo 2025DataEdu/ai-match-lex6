@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/home/HeroSection";
 import StatisticsSection from "@/components/home/StatisticsSection";
 import ServicesSection from "@/components/home/ServicesSection";
+import FeaturesSection from "@/components/home/FeaturesSection";
 import CTASection from "@/components/home/CTASection";
 import Footer from "@/components/home/Footer";
 import FloatingChatBot from "@/components/FloatingChatBot";
@@ -16,6 +17,7 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <ServicesSection />
+      <FeaturesSection />
       <StatisticsSection stats={stats} />
       <CTASection />
       <Footer />
