@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -116,8 +115,8 @@ export const useAIMatching = () => {
           const memberInfo = membersMap.get(supplier.아이디);
           return {
             ...supplier,
-            이메일: memberInfo?.이메일 || supplier.이메일,
-            연락처: memberInfo?.연락처 || supplier.연락처,
+            이메일: memberInfo?.이메일 || null,
+            연락처: memberInfo?.연락처 || null,
             사용자명: memberInfo?.이름 || supplier.사용자명
           };
         });
