@@ -4,6 +4,7 @@ import SupplierCard from "@/components/supplier/SupplierCard";
 import SupplierSearch from "@/components/supplier/SupplierSearch";
 import LoadingSkeletons from "@/components/supplier/LoadingSkeletons";
 import EmptyState from "@/components/supplier/EmptyState";
+import FloatingChatBot from "@/components/FloatingChatBot";
 import { useSuppliers } from "@/hooks/useSuppliers";
 
 const SupplierList = () => {
@@ -54,6 +55,7 @@ const SupplierList = () => {
           </div>
         )}
       </div>
+      <FloatingChatBot />
     </div>
   );
 };

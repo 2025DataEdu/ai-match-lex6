@@ -5,6 +5,7 @@ import StatisticsSection from "@/components/home/StatisticsSection";
 import ServicesSection from "@/components/home/ServicesSection";
 import CTASection from "@/components/home/CTASection";
 import Footer from "@/components/home/Footer";
+import FloatingChatBot from "@/components/FloatingChatBot";
 import { useStats } from "@/hooks/useStats";
 
 const Index = () => {
@@ -18,6 +19,7 @@ const Index = () => {
       <ServicesSection />
       <CTASection />
       <Footer />
+      <FloatingChatBot />
     </div>
   );
 };

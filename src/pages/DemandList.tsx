@@ -8,6 +8,7 @@ import DemandHeader from "@/components/demand/DemandHeader";
 import DemandLoadingGrid from "@/components/demand/DemandLoadingGrid";
 import DemandEmptyState from "@/components/demand/DemandEmptyState";
 import DemandGrid from "@/components/demand/DemandGrid";
+import FloatingChatBot from "@/components/FloatingChatBot";
 import { useDemandFilters } from "@/hooks/useDemandFilters";
 
 interface Demand {
@@ -105,6 +106,7 @@ const DemandList = () => {
           <DemandGrid demands={filteredDemands} />
         )}
       </div>
+      <FloatingChatBot />
     </div>
   );
 };
