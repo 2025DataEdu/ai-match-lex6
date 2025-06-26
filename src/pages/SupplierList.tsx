@@ -13,6 +13,10 @@ const SupplierList = () => {
     filteredSuppliers,
     searchTerm,
     setSearchTerm,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
     isLoading,
     fetchSuppliers
   } = useSuppliers();
@@ -30,6 +34,10 @@ const SupplierList = () => {
           <SupplierSearch 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
             onRefresh={fetchSuppliers}
           />
         </div>

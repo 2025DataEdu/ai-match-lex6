@@ -20,6 +20,8 @@ export const useSuppliers = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("등록일자");
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -29,17 +31,57 @@ export const useSuppliers = () => {
 
   useEffect(() => {
     if (suppliers.length > 0) {
-      const filtered = suppliers.filter(supplier =>
+      let filtered = suppliers.filter(supplier =>
         supplier.기업명?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.유형?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.업종?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supplier.세부설명?.toLowerCase().includes(searchTerm.toLowerCase())
+        supplier.세부설명?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.사용자명?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.보유특허?.toLowerCase().includes(searchTerm.toLowerCase())
       );
+
+      // 정렬 적용
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortBy) {
+          case "기업명":
+            aValue = a.기업명 || "";
+            bValue = b.기업명 || "";
+            break;
+          case "등록일자":
+            aValue = new Date(a.등록일자 || "").getTime() || 0;
+            bValue = new Date(b.등록일자 || "").getTime() || 0;
+            break;
+          case "유형":
+            aValue = a.유형 || "";
+            bValue = b.유형 || "";
+            break;
+          case "업종":
+            aValue = a.업종 || "";
+            bValue = b.업종 || "";
+            break;
+          case "특허유무":
+            aValue = a.보유특허 ? 1 : 0;
+            bValue = b.보유특허 ? 1 : 0;
+            break;
+          default:
+            aValue = a.등록일자 || "";
+            bValue = b.등록일자 || "";
+        }
+
+        if (sortOrder === "asc") {
+          return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        } else {
+          return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+        }
+      });
+
       setFilteredSuppliers(filtered);
     } else {
       setFilteredSuppliers([]);
     }
-  }, [searchTerm, suppliers]);
+  }, [searchTerm, suppliers, sortBy, sortOrder]);
 
   const fetchSuppliers = async () => {
     try {
@@ -118,6 +160,10 @@ export const useSuppliers = () => {
     filteredSuppliers,
     searchTerm,
     setSearchTerm,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
     isLoading,
     fetchSuppliers
   };
