@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Building2, Users, Heart, MessageCircle, Award, Globe, Youtube } from "lucide-react";
 import { DetailedMatch } from "@/utils/matchingAlgorithm";
 import EnhancedMatchingDetailModal from "./EnhancedMatchingDetailModal";
+import { useInterest } from "@/hooks/useInterest";
 
 interface EnhancedMatchingCardProps {
   match: DetailedMatch;
@@ -13,6 +14,11 @@ interface EnhancedMatchingCardProps {
   onInterestClick: (match: DetailedMatch) => void;
   onInquiryClick: (match: DetailedMatch) => void;
   showGroupContext?: boolean;
+  interestData?: {
+    관심수: number;
+    사용자관심여부: boolean;
+  };
+  onToggleInterest: (공급기업일련번호: string, 수요기관일련번호: string) => void;
 }
 
 const EnhancedMatchingCard = ({ 
@@ -20,7 +26,9 @@ const EnhancedMatchingCard = ({
   index, 
   onInterestClick, 
   onInquiryClick,
-  showGroupContext = true
+  showGroupContext = true,
+  interestData,
+  onToggleInterest
 }: EnhancedMatchingCardProps) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
@@ -32,6 +40,10 @@ const EnhancedMatchingCard = ({
     if (score >= 80) return "높음";
     if (score >= 60) return "보통";
     return "낮음";
+  };
+
+  const handleInterestClick = () => {
+    onToggleInterest(match.supplier.공급기업일련번호, match.demand.수요기관일련번호);
   };
 
   return (
@@ -130,13 +142,18 @@ const EnhancedMatchingCard = ({
         {/* 액션 버튼 */}
         <div className="flex gap-2 pt-2">
           <Button
-            variant="outline"
+            variant={interestData?.사용자관심여부 ? "default" : "outline"}
             size="sm"
-            onClick={() => onInterestClick(match)}
+            onClick={handleInterestClick}
             className="flex items-center gap-1 flex-1"
           >
-            <Heart className="w-4 h-4" />
+            <Heart className={`w-4 h-4 ${interestData?.사용자관심여부 ? 'fill-current' : ''}`} />
             관심표시
+            {interestData && interestData.관심수 > 0 && (
+              <Badge variant="secondary" className="ml-1 px-1 py-0 text-xs">
+                {interestData.관심수}
+              </Badge>
+            )}
           </Button>
           <Button
             variant="default"
@@ -147,7 +164,10 @@ const EnhancedMatchingCard = ({
             <MessageCircle className="w-4 h-4" />
             문의하기
           </Button>
-          <EnhancedMatchingDetailModal match={match} />
+          <EnhancedMatchingDetailModal 
+            match={match} 
+            showContactInfo={interestData?.사용자관심여부 || false}
+          />
         </div>
       </CardContent>
     </Card>

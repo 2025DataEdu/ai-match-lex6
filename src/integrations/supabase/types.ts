@@ -117,6 +117,30 @@ export type Database = {
         }
         Relationships: []
       }
+      관심표시: {
+        Row: {
+          id: string
+          공급기업일련번호: string
+          등록일자: string
+          사용자아이디: string
+          수요기관일련번호: string
+        }
+        Insert: {
+          id?: string
+          공급기업일련번호: string
+          등록일자?: string
+          사용자아이디: string
+          수요기관일련번호: string
+        }
+        Update: {
+          id?: string
+          공급기업일련번호?: string
+          등록일자?: string
+          사용자아이디?: string
+          수요기관일련번호?: string
+        }
+        Relationships: []
+      }
       수요기관: {
         Row: {
           관심여부: string | null
@@ -254,7 +278,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      관심통계: {
+        Row: {
+          공급기업일련번호: string | null
+          관심수: number | null
+          수요기관일련번호: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       binary_quantize: {

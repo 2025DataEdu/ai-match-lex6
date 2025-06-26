@@ -39,10 +39,8 @@ const AIMatching = () => {
   const { toast } = useToast();
 
   const handleInterestClick = (match: DetailedMatch) => {
-    toast({
-      title: "관심표시 완료",
-      description: `${match.supplier.기업명}에 관심표시를 보냈습니다.`,
-    });
+    // 관심표시는 카드 내부에서 처리됨
+    console.log('관심표시 클릭:', match.supplier.기업명);
   };
 
   const handleInquiryClick = (match: DetailedMatch) => {

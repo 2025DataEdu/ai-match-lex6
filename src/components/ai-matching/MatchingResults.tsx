@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import EnhancedMatchingCard from "./EnhancedMatchingCard";
 import { DetailedMatch } from "@/utils/matchingAlgorithm";
 import { Building2, Users } from "lucide-react";
+import { useInterest } from "@/hooks/useInterest";
+import { useEffect } from "react";
 
 interface MatchingResultsProps {
   matches: DetailedMatch[];
@@ -13,6 +15,19 @@ interface MatchingResultsProps {
 }
 
 const MatchingResults = ({ matches, onInterestClick, onInquiryClick, perspective }: MatchingResultsProps) => {
+  const { fetchInterestStats, toggleInterest, getInterestData } = useInterest();
+
+  // 매칭 결과가 변경될 때 관심 통계 조회
+  useEffect(() => {
+    if (matches.length > 0) {
+      const matchPairs = matches.map(match => ({
+        공급기업일련번호: match.supplier.공급기업일련번호,
+        수요기관일련번호: match.demand.수요기관일련번호
+      }));
+      fetchInterestStats(matchPairs);
+    }
+  }, [matches, fetchInterestStats]);
+
   // 그룹별로 매칭 결과 구성
   const groupedResults = matches.reduce((acc, match, index) => {
     const groupKey = perspective === 'demand' 
@@ -84,6 +99,8 @@ const MatchingResults = ({ matches, onInterestClick, onInquiryClick, perspective
                     onInterestClick={onInterestClick}
                     onInquiryClick={onInquiryClick}
                     showGroupContext={false}
+                    interestData={getInterestData(match.supplier.공급기업일련번호, match.demand.수요기관일련번호)}
+                    onToggleInterest={toggleInterest}
                   />
                 ))}
               </div>
