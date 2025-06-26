@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, Users, ArrowRight, Calendar, Globe, Youtube, FileText, Mail } from "lucide-react";
+import { Building2, Users, ArrowRight, Calendar, Globe, Youtube, FileText, Mail, DollarSign } from "lucide-react";
 import { Match } from "@/types/matching";
 
 interface MatchingDetailModalProps {
