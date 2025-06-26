@@ -31,53 +31,22 @@ serve(async (req) => {
 
     console.log('Processing chatbot message:', message);
 
-    // 벡터 검색과 직접 데이터베이스 검색을 병렬로 수행
-    const [vectorSearchResult, directSearchResult] = await Promise.all([
-      // 벡터 검색
-      fetch(`${supabaseUrl}/functions/v1/vector-search`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: message,
-          matchCount: 5
-        }),
-      }).then(res => res.json()).catch(err => {
-        console.error('Vector search error:', err);
-        return { results: [] };
-      }),
-      
-      // 직접 데이터베이스 검색
-      searchDirectDatabase(supabase, message)
-    ]);
-
-    // 검색 결과 통합
-    const vectorResults = vectorSearchResult.results || [];
-    const directResults = directSearchResult || [];
+    // 직접 데이터베이스 검색 (키워드 기반)
+    const searchResults = await searchDirectDatabase(supabase, message);
     
-    console.log(`Vector search results: ${vectorResults.length}`);
-    console.log(`Direct search results: ${directResults.length}`);
+    console.log(`Direct search results: ${searchResults.length}`);
 
     // 컨텍스트 정보 구성
     let contextText = '';
     
-    if (vectorResults.length > 0 || directResults.length > 0) {
+    if (searchResults.length > 0) {
       contextText = '\n\n관련 정보:\n';
       
-      // 벡터 검색 결과 추가
-      vectorResults.forEach((result: any, index: number) => {
-        contextText += `${index + 1}. ${result.content}\n`;
-      });
-      
-      // 직접 검색 결과 추가
-      directResults.forEach((result: any, index: number) => {
-        const startIndex = vectorResults.length + index + 1;
+      searchResults.forEach((result, index) => {
         if (result.table_name === '공급기업') {
-          contextText += `${startIndex}. 공급기업 - 기업명: ${result.기업명}, 업종: ${result.업종}, 유형: ${result.유형}, 세부설명: ${result.세부설명}\n`;
+          contextText += `${index + 1}. [공급기업] 기업명: ${result.기업명 || '정보없음'}, 업종: ${result.업종 || '정보없음'}, 유형: ${result.유형 || '정보없음'}, 세부설명: ${result.세부설명 || '정보없음'}\n`;
         } else if (result.table_name === '수요기관') {
-          contextText += `${startIndex}. 수요기관 - 기관명: ${result.수요기관}, 부서: ${result.부서명}, 수요내용: ${result.수요내용}, 금액: ${result.금액}원\n`;
+          contextText += `${index + 1}. [수요기관] 기관명: ${result.수요기관 || '정보없음'}, 부서: ${result.부서명 || '정보없음'}, 수요내용: ${result.수요내용 || '정보없음'}, 금액: ${result.금액 ? result.금액.toLocaleString() + '원' : '정보없음'}\n`;
         }
       });
     }
@@ -94,7 +63,9 @@ serve(async (req) => {
 
 제공된 관련 정보를 바탕으로 정확하고 도움이 되는 답변을 제공하세요.
 답변은 친근하고 전문적인 톤으로 작성해주세요.
-구체적인 데이터가 있을 때는 정확한 정보를 제공하고, 없을 때는 일반적인 안내를 해주세요.`;
+구체적인 데이터가 있을 때는 정확한 정보를 제공하고, 없을 때는 일반적인 안내를 해주세요.
+
+한국어로 답변해주세요.`;
 
     const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -123,7 +94,7 @@ serve(async (req) => {
         user_id: userId,
         message: message,
         response: aiResponse,
-        context: [...vectorResults, ...directResults],
+        context: searchResults,
       });
 
     if (saveError) {
@@ -135,7 +106,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         response: aiResponse,
-        context: [...vectorResults, ...directResults]
+        context: searchResults
       }), 
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -154,19 +125,30 @@ serve(async (req) => {
   }
 });
 
-// 직접 데이터베이스 검색 함수
+// 직접 데이터베이스 검색 함수 (향상된 키워드 검색)
 async function searchDirectDatabase(supabase: any, query: string) {
   const results: any[] = [];
   
   try {
-    // 공급기업 검색
-    const { data: suppliers } = await supabase
+    // 검색어를 공백으로 분리하여 각 키워드로 검색
+    const keywords = query.split(' ').filter(keyword => keyword.length > 0);
+    const searchPattern = keywords.join('|'); // OR 패턴으로 검색
+    
+    console.log('Searching with keywords:', keywords);
+
+    // 공급기업 검색 - 더 넓은 범위로 검색
+    const { data: suppliers, error: suppliersError } = await supabase
       .from('공급기업')
       .select('*')
-      .or(`기업명.ilike.%${query}%,업종.ilike.%${query}%,유형.ilike.%${query}%,세부설명.ilike.%${query}%`)
-      .limit(5);
+      .or(keywords.map(keyword => 
+        `기업명.ilike.%${keyword}%, 업종.ilike.%${keyword}%, 유형.ilike.%${keyword}%, 세부설명.ilike.%${keyword}%`
+      ).join(','))
+      .limit(10);
     
-    if (suppliers) {
+    if (suppliersError) {
+      console.error('Suppliers search error:', suppliersError);
+    } else if (suppliers && suppliers.length > 0) {
+      console.log(`Found ${suppliers.length} suppliers`);
       suppliers.forEach((supplier: any) => {
         results.push({
           ...supplier,
@@ -175,14 +157,19 @@ async function searchDirectDatabase(supabase: any, query: string) {
       });
     }
 
-    // 수요기관 검색
-    const { data: demands } = await supabase
+    // 수요기관 검색 - 더 넓은 범위로 검색
+    const { data: demands, error: demandsError } = await supabase
       .from('수요기관')
       .select('*')
-      .or(`수요기관.ilike.%${query}%,부서명.ilike.%${query}%,수요내용.ilike.%${query}%,유형.ilike.%${query}%`)
-      .limit(5);
+      .or(keywords.map(keyword => 
+        `수요기관.ilike.%${keyword}%, 부서명.ilike.%${keyword}%, 수요내용.ilike.%${keyword}%, 유형.ilike.%${keyword}%`
+      ).join(','))
+      .limit(10);
     
-    if (demands) {
+    if (demandsError) {
+      console.error('Demands search error:', demandsError);
+    } else if (demands && demands.length > 0) {
+      console.log(`Found ${demands.length} demands`);
       demands.forEach((demand: any) => {
         results.push({
           ...demand,
@@ -190,9 +177,45 @@ async function searchDirectDatabase(supabase: any, query: string) {
         });
       });
     }
+
+    // 결과가 없으면 더 넓은 검색 시도
+    if (results.length === 0) {
+      console.log('No results found, trying broader search...');
+      
+      // 전체 데이터 샘플 가져오기
+      const { data: sampleSuppliers } = await supabase
+        .from('공급기업')
+        .select('*')
+        .limit(5);
+        
+      const { data: sampleDemands } = await supabase
+        .from('수요기관')
+        .select('*')
+        .limit(5);
+      
+      if (sampleSuppliers) {
+        sampleSuppliers.forEach((supplier: any) => {
+          results.push({
+            ...supplier,
+            table_name: '공급기업'
+          });
+        });
+      }
+      
+      if (sampleDemands) {
+        sampleDemands.forEach((demand: any) => {
+          results.push({
+            ...demand,
+            table_name: '수요기관'
+          });
+        });
+      }
+    }
+
   } catch (error) {
     console.error('Direct database search error:', error);
   }
   
+  console.log(`Total search results: ${results.length}`);
   return results;
 }
