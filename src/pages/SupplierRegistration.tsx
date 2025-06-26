@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
+import { Plus, Minus } from "lucide-react";
 
 const SupplierRegistration = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -23,7 +24,7 @@ const SupplierRegistration = () => {
     industry: "",
     patents: "",
     website: "",
-    youtubeLink: "",
+    youtubeLinks: [""],
     username: "",
     description: ""
   });
@@ -48,6 +49,34 @@ const SupplierRegistration = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const addYoutubeLink = () => {
+    if (formData.youtubeLinks.length < 3) {
+      setFormData({
+        ...formData,
+        youtubeLinks: [...formData.youtubeLinks, ""]
+      });
+    }
+  };
+
+  const removeYoutubeLink = (index: number) => {
+    if (formData.youtubeLinks.length > 1) {
+      const newLinks = formData.youtubeLinks.filter((_, i) => i !== index);
+      setFormData({
+        ...formData,
+        youtubeLinks: newLinks
+      });
+    }
+  };
+
+  const updateYoutubeLink = (index: number, value: string) => {
+    const newLinks = [...formData.youtubeLinks];
+    newLinks[index] = value;
+    setFormData({
+      ...formData,
+      youtubeLinks: newLinks
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session?.user?.email) return;
@@ -56,11 +85,14 @@ const SupplierRegistration = () => {
 
     try {
       const userEmail = session.user.email;
-      const userId = userEmail.split('@')[0]; // 이메일의 @ 앞부분을 아이디로 사용
+      const userId = userEmail.split('@')[0];
       
       console.log('Submitting supplier data for userId:', userId, formData);
       
-      // 공급기업 데이터 삽입
+      // 빈 유튜브 링크 제거 후 문자열로 결합
+      const validYoutubeLinks = formData.youtubeLinks.filter(link => link.trim() !== "");
+      const youtubeLinksString = validYoutubeLinks.join(", ");
+      
       const { error } = await supabase
         .from('공급기업')
         .insert({
@@ -71,7 +103,7 @@ const SupplierRegistration = () => {
           '업종': formData.industry,
           '보유특허': formData.patents || null,
           '기업홈페이지': formData.website || null,
-          '유튜브링크': formData.youtubeLink || null,
+          '유튜브링크': youtubeLinksString || null,
           '사용자명': formData.username,
           '세부설명': formData.description,
           '등록일자': new Date().toISOString().split('T')[0],
@@ -188,26 +220,54 @@ const SupplierRegistration = () => {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="website">기업 홈페이지</Label>
-                  <Input
-                    id="website"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  />
+              <div className="space-y-2">
+                <Label htmlFor="website">기업 홈페이지</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>유튜브 링크 (최대 3개)</Label>
+                  {formData.youtubeLinks.length < 3 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addYoutubeLink}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      추가
+                    </Button>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="youtubeLink">유튜브 링크</Label>
-                  <Input
-                    id="youtubeLink"
-                    type="url"
-                    placeholder="https://youtube.com/..."
-                    value={formData.youtubeLink}
-                    onChange={(e) => setFormData({ ...formData, youtubeLink: e.target.value })}
-                  />
+                <div className="space-y-3">
+                  {formData.youtubeLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        type="url"
+                        placeholder="https://youtube.com/..."
+                        value={link}
+                        onChange={(e) => updateYoutubeLink(index, e.target.value)}
+                        className="flex-1"
+                      />
+                      {formData.youtubeLinks.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeYoutubeLink(index)}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
