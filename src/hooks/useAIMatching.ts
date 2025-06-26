@@ -77,10 +77,15 @@ export const useAIMatching = () => {
 
   const fetchData = async () => {
     try {
-      const [suppliersResponse, demandsResponse] = await Promise.all([
-        supabase.from('공급기업').select('*'),
-        supabase.from('수요기관').select('*')
-      ]);
+      // 공급기업 데이터를 회원관리 테이블과 조인해서 가져오기
+      const suppliersResponse = await supabase
+        .from('공급기업')
+        .select(`
+          *,
+          회원관리!inner(이메일, 연락처, 이름)
+        `);
+
+      const demandsResponse = await supabase.from('수요기관').select('*');
 
       console.log('데이터 로드 결과:', {
         suppliers: suppliersResponse.data?.length || 0,
@@ -100,7 +105,17 @@ export const useAIMatching = () => {
           variant: "destructive",
         });
       } else {
-        setSuppliers(suppliersResponse.data || []);
+        // 공급기업 데이터 변환 - 회원관리 정보 포함
+        const transformedSuppliers = (suppliersResponse.data || []).map(supplier => ({
+          ...supplier,
+          이메일: supplier.회원관리?.이메일 || supplier.이메일,
+          연락처: supplier.회원관리?.연락처 || supplier.연락처,
+          사용자명: supplier.회원관리?.이름 || supplier.사용자명
+        }));
+
+        console.log('변환된 공급기업 데이터 샘플:', transformedSuppliers.slice(0, 2));
+
+        setSuppliers(transformedSuppliers);
         setDemands(demandsResponse.data || []);
       }
     } catch (error) {
