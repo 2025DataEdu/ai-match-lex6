@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -278,7 +277,7 @@ const AIMatching = () => {
               <div className="space-y-6 pr-4">
                 {filteredMatches.map((match, index) => (
                   <EnhancedMatchingCard
-                    key={`${match.supplier['공급기업일련번호(PK)']}-${match.demand['수요기관일련번호(PK)']}`}
+                    key={`${match.supplier.공급기업일련번호}-${match.demand.수요기관일련번호}`}
                     match={match}
                     index={index}
                     onInterestClick={handleInterestClick}
