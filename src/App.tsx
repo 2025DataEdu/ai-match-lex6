@@ -14,6 +14,7 @@ import SupplierList from "./pages/SupplierList";
 import DemandRegistration from "./pages/DemandRegistration";
 import DemandList from "./pages/DemandList";
 import AIMatching from "./pages/AIMatching";
+import ChatBotPage from "./pages/ChatBot";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App = () => {
                 <Route path="/demand-registration" element={<DemandRegistration />} />
                 <Route path="/demands" element={<DemandList />} />
                 <Route path="/ai-matching" element={<AIMatching />} />
+                <Route path="/chatbot" element={<ChatBotPage />} />
                 <Route path="*" element={<NotFound />} />
               </>
             )}
