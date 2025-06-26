@@ -69,6 +69,10 @@ const DemandList = () => {
           등록일자: item.등록일자 || ''
         }));
         setDemands(formattedData);
+        toast({
+          title: "데이터 새로고침 완료",
+          description: `${formattedData.length}개의 수요 정보를 불러왔습니다.`,
+        });
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -95,6 +99,7 @@ const DemandList = () => {
             filters={filters}
             onFiltersChange={setFilters}
             onClearFilters={clearFilters}
+            onRefresh={fetchDemands}
           />
         </div>
 
