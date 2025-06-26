@@ -9,6 +9,7 @@ import DemandEmptyState from "@/components/demand/DemandEmptyState";
 import DemandGrid from "@/components/demand/DemandGrid";
 import FloatingChatBot from "@/components/FloatingChatBot";
 import { useDemandFilters } from "@/hooks/useDemandFilters";
+import { useInterest } from "@/hooks/useInterest";
 
 interface Demand {
   수요기관일련번호: string;
@@ -28,12 +29,25 @@ const DemandList = () => {
   const [demands, setDemands] = useState<Demand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { fetchInterestStats } = useInterest();
   
   const { filters, setFilters, filteredDemands, clearFilters } = useDemandFilters(demands);
 
   useEffect(() => {
     fetchDemands();
   }, []);
+
+  // 수요 데이터가 로드된 후 관심 통계 초기화
+  useEffect(() => {
+    if (demands.length > 0) {
+      const dummySupplierID = "dummy-supplier-id";
+      const matchPairs = demands.map(demand => ({
+        공급기업일련번호: dummySupplierID,
+        수요기관일련번호: demand.수요기관일련번호
+      }));
+      fetchInterestStats(matchPairs);
+    }
+  }, [demands, fetchInterestStats]);
 
   const fetchDemands = async () => {
     try {

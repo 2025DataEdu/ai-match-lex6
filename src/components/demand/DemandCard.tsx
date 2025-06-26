@@ -1,7 +1,11 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Building, Calendar, DollarSign } from "lucide-react";
+import { Heart, HeartOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useInterest } from "@/hooks/useInterest";
 
 interface Demand {
   수요기관일련번호: string;
@@ -22,6 +26,19 @@ interface DemandCardProps {
 }
 
 const DemandCard = ({ demand }: DemandCardProps) => {
+  const { getInterestData, toggleInterest } = useInterest();
+  const [isInterested, setIsInterested] = useState(false);
+  const [interestCount, setInterestCount] = useState(0);
+
+  // 더미 공급기업 ID (실제로는 현재 사용자의 공급기업 ID를 사용해야 함)
+  const dummySupplierID = "dummy-supplier-id";
+
+  useEffect(() => {
+    const interestData = getInterestData(dummySupplierID, demand.수요기관일련번호);
+    setIsInterested(interestData.사용자관심여부);
+    setInterestCount(interestData.관심수);
+  }, [demand.수요기관일련번호, getInterestData]);
+
   const formatCurrency = (amount: number) => {
     if (!amount) return '';
     return new Intl.NumberFormat('ko-KR').format(amount) + ' 원';
@@ -32,11 +49,18 @@ const DemandCard = ({ demand }: DemandCardProps) => {
     return new Date(dateString).toLocaleDateString('ko-KR');
   };
 
+  const handleInterestToggle = async () => {
+    await toggleInterest(dummySupplierID, demand.수요기관일련번호);
+    const updatedData = getInterestData(dummySupplierID, demand.수요기관일련번호);
+    setIsInterested(updatedData.사용자관심여부);
+    setInterestCount(updatedData.관심수);
+  };
+
   // 1억 이상인 경우 강조 표시를 위한 스타일 결정
   const isHighBudget = demand.금액 && demand.금액 >= 100000000; // 1억원
 
   return (
-    <Card className={`hover:shadow-lg transition-shadow ${isHighBudget ? 'border-orange-300 bg-orange-50' : ''}`}>
+    <Card className={`hover:shadow-lg transition-shadow relative ${isHighBudget ? 'border-orange-300 bg-orange-50' : ''}`}>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
@@ -96,6 +120,25 @@ const DemandCard = ({ demand }: DemandCardProps) => {
               등록일: {formatDate(demand.등록일자)}
             </div>
           )}
+        </div>
+
+        {/* 관심 표시 버튼 */}
+        <div className="absolute bottom-4 right-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleInterestToggle}
+            className="p-2 hover:bg-gray-100"
+          >
+            {isInterested ? (
+              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+            ) : (
+              <HeartOff className="w-5 h-5 text-gray-400" />
+            )}
+            {interestCount > 0 && (
+              <span className="ml-1 text-xs text-gray-500">{interestCount}</span>
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>

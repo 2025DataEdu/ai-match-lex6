@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSuppliers } from "@/hooks/useSuppliers";
+import { useInterest } from "@/hooks/useInterest";
+import { useEffect } from "react";
 
 const SupplierList = () => {
   const {
@@ -22,6 +24,20 @@ const SupplierList = () => {
     isLoading,
     fetchSuppliers
   } = useSuppliers();
+
+  const { fetchInterestStats } = useInterest();
+
+  // 공급기업 데이터가 로드된 후 관심 통계 초기화
+  useEffect(() => {
+    if (suppliers.length > 0) {
+      const dummyDemandID = "dummy-demand-id";
+      const matchPairs = suppliers.map(supplier => ({
+        공급기업일련번호: supplier.공급기업일련번호,
+        수요기관일련번호: dummyDemandID
+      }));
+      fetchInterestStats(matchPairs);
+    }
+  }, [suppliers, fetchInterestStats]);
 
   return (
     <div className="min-h-screen bg-gray-50">
