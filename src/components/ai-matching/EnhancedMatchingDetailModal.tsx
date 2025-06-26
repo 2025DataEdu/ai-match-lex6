@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -11,15 +12,6 @@ interface EnhancedMatchingDetailModalProps {
 }
 
 const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: EnhancedMatchingDetailModalProps) => {
-  // 디버깅을 위한 콘솔 로그 추가
-  console.log('EnhancedMatchingDetailModal - 매칭 정보:', {
-    기업명: match.supplier.기업명,
-    사용자명: match.supplier.사용자명,
-    이메일: match.supplier.이메일,
-    연락처: match.supplier.연락처,
-    showContactInfo: showContactInfo
-  });
-
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
     if (score >= 60) return "bg-yellow-500";
@@ -168,11 +160,6 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
                     </div>
                     <div className="text-xs text-yellow-700 mt-3 bg-yellow-100 p-2 rounded">
                       💡 관심표시를 해주셔서 연락처 정보가 공개되었습니다.
-                    </div>
-                    
-                    {/* 디버깅 정보 표시 (개발용) */}
-                    <div className="text-xs text-red-600 mt-2 p-2 bg-red-50 rounded">
-                      디버그: 이메일={match.supplier.이메일 || '없음'}, 연락처={match.supplier.연락처 || '없음'}
                     </div>
                   </div>
                 )}

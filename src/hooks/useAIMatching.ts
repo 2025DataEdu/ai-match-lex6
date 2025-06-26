@@ -77,27 +77,27 @@ export const useAIMatching = () => {
 
   const fetchData = async () => {
     try {
-      // 공급기업 데이터를 회원관리 테이블과 조인해서 가져오기
-      const suppliersResponse = await supabase
-        .from('공급기업')
-        .select(`
-          *,
-          회원관리!inner(이메일, 연락처, 이름)
-        `);
-
-      const demandsResponse = await supabase.from('수요기관').select('*');
+      // 공급기업 데이터를 별도로 가져온 후 회원관리 정보와 매칭
+      const [suppliersResponse, demandsResponse, membersResponse] = await Promise.all([
+        supabase.from('공급기업').select('*'),
+        supabase.from('수요기관').select('*'),
+        supabase.from('회원관리').select('*')
+      ]);
 
       console.log('데이터 로드 결과:', {
         suppliers: suppliersResponse.data?.length || 0,
         demands: demandsResponse.data?.length || 0,
+        members: membersResponse.data?.length || 0,
         suppliersData: suppliersResponse.data?.slice(0, 2),
-        demandsData: demandsResponse.data?.slice(0, 2)
+        demandsData: demandsResponse.data?.slice(0, 2),
+        membersData: membersResponse.data?.slice(0, 2)
       });
 
-      if (suppliersResponse.error || demandsResponse.error) {
+      if (suppliersResponse.error || demandsResponse.error || membersResponse.error) {
         console.error('데이터 로드 오류:', {
           suppliersError: suppliersResponse.error,
-          demandsError: demandsResponse.error
+          demandsError: demandsResponse.error,
+          membersError: membersResponse.error
         });
         toast({
           title: "데이터 로드 실패",
@@ -105,13 +105,22 @@ export const useAIMatching = () => {
           variant: "destructive",
         });
       } else {
-        // 공급기업 데이터 변환 - 회원관리 정보 포함
-        const transformedSuppliers = (suppliersResponse.data || []).map(supplier => ({
-          ...supplier,
-          이메일: supplier.회원관리?.이메일 || supplier.이메일,
-          연락처: supplier.회원관리?.연락처 || supplier.연락처,
-          사용자명: supplier.회원관리?.이름 || supplier.사용자명
-        }));
+        // 회원관리 데이터를 맵으로 변환
+        const membersMap = new Map();
+        (membersResponse.data || []).forEach(member => {
+          membersMap.set(member.아이디, member);
+        });
+
+        // 공급기업 데이터에 회원관리 정보 매칭
+        const transformedSuppliers = (suppliersResponse.data || []).map(supplier => {
+          const memberInfo = membersMap.get(supplier.아이디);
+          return {
+            ...supplier,
+            이메일: memberInfo?.이메일 || supplier.이메일,
+            연락처: memberInfo?.연락처 || supplier.연락처,
+            사용자명: memberInfo?.이름 || supplier.사용자명
+          };
+        });
 
         console.log('변환된 공급기업 데이터 샘플:', transformedSuppliers.slice(0, 2));
 
