@@ -24,7 +24,7 @@ interface DemandCardProps {
 const DemandCard = ({ demand }: DemandCardProps) => {
   const formatCurrency = (amount: number) => {
     if (!amount) return '';
-    return new Intl.NumberFormat('ko-KR').format(amount) + ' 만원';
+    return new Intl.NumberFormat('ko-KR').format(amount) + ' 원';
   };
 
   const formatDate = (dateString: string) => {
@@ -33,7 +33,7 @@ const DemandCard = ({ demand }: DemandCardProps) => {
   };
 
   // 1억 이상인 경우 강조 표시를 위한 스타일 결정
-  const isHighBudget = demand.금액 && demand.금액 >= 10000; // 1억원 (만원 단위로 10000)
+  const isHighBudget = demand.금액 && demand.금액 >= 100000000; // 1억원
 
   return (
     <Card className={`hover:shadow-lg transition-shadow ${isHighBudget ? 'border-orange-300 bg-orange-50' : ''}`}>

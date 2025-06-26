@@ -98,11 +98,11 @@ const DemandRegistrationForm = ({ formData, setFormData, onSubmit, isLoading }: 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="budget">예산 (만원)</Label>
+        <Label htmlFor="budget">예산 (원)</Label>
         <Input
           id="budget"
           type="number"
-          placeholder="예산을 입력하세요 (만원 단위)"
+          placeholder="예산을 입력하세요 (원 단위)"
           value={formData.budget}
           onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
         />
