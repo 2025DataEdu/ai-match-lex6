@@ -67,6 +67,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
+			backgroundImage: {
+				'radial-gradient': 'radial-gradient(circle at 50% 50%, rgba(120,119,198,0.3), transparent 50%)',
+				'conic-gradient': 'conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent 50%)',
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
