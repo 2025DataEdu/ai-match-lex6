@@ -29,8 +29,8 @@ const FloatingChatBot = () => {
 
       {/* 드로어 챗봇 */}
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent className="h-[80vh] max-h-[600px]">
-          <DrawerHeader className="border-b">
+        <DrawerContent className="h-[90vh] flex flex-col">
+          <DrawerHeader className="border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <DrawerTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-blue-600" />
@@ -43,7 +43,7 @@ const FloatingChatBot = () => {
               </DrawerClose>
             </div>
           </DrawerHeader>
-          <div className="flex-1 p-0">
+          <div className="flex-1 min-h-0">
             <ChatBot />
           </div>
         </DrawerContent>
