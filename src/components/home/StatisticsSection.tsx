@@ -79,7 +79,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
+        ease: [0.25, 0.46, 0.45, 0.94]
       }
     }
   };
@@ -91,7 +91,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
       scale: 1,
       transition: {
         duration: 0.8,
-        ease: "easeOut"
+        ease: [0.25, 0.46, 0.45, 0.94]
       }
     }
   };
