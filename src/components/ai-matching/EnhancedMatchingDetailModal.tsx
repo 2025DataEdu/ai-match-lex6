@@ -127,19 +127,39 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
                 {/* 연락처 정보 - 관심 표시한 경우에만 표시 */}
                 {showContactInfo && (
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                    <div className="text-sm font-medium text-yellow-800 mb-2 flex items-center gap-1">
+                    <div className="text-sm font-medium text-yellow-800 mb-3 flex items-center gap-1">
                       <Mail className="w-4 h-4" />
                       연락처 정보
                     </div>
-                    {match.supplier.사용자명 && (
-                      <div className="text-sm text-gray-700 flex items-center gap-2 mb-2">
-                        <User className="w-4 h-4" />
-                        <span className="font-medium">담당자:</span>
-                        <span>{match.supplier.사용자명}</span>
-                      </div>
-                    )}
-                    <div className="text-xs text-yellow-700 mt-2">
-                      관심표시를 해주셔서 연락처 정보가 공개되었습니다.
+                    <div className="space-y-2">
+                      {match.supplier.사용자명 && (
+                        <div className="text-sm text-gray-700 flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          <span className="font-medium">담당자:</span>
+                          <span>{match.supplier.사용자명}</span>
+                        </div>
+                      )}
+                      {match.supplier.이메일 && (
+                        <div className="text-sm text-gray-700 flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          <span className="font-medium">이메일:</span>
+                          <a href={`mailto:${match.supplier.이메일}`} className="text-blue-600 hover:underline">
+                            {match.supplier.이메일}
+                          </a>
+                        </div>
+                      )}
+                      {match.supplier.연락처 && (
+                        <div className="text-sm text-gray-700 flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          <span className="font-medium">전화번호:</span>
+                          <a href={`tel:${match.supplier.연락처}`} className="text-blue-600 hover:underline">
+                            {match.supplier.연락처}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-xs text-yellow-700 mt-3 bg-yellow-100 p-2 rounded">
+                      💡 관심표시를 해주셔서 연락처 정보가 공개되었습니다.
                     </div>
                   </div>
                 )}
@@ -228,7 +248,7 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
                 연락처 정보 안내
               </div>
               <p className="text-sm text-yellow-700">
-                상세한 연락처 정보는 '관심표시'를 누른 후에 공개됩니다. 
+                상세한 연락처 정보(이메일, 전화번호)는 '관심표시'를 누른 후에 공개됩니다. 
                 양쪽 당사자의 동의 하에 연결됩니다.
               </p>
             </div>

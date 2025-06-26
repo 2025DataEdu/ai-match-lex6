@@ -1,4 +1,3 @@
-
 export interface Supplier {
   공급기업일련번호: string;
   기업명: string;
@@ -11,6 +10,8 @@ export interface Supplier {
   사용자명?: string;
   등록일자?: string;
   아이디?: string;
+  이메일?: string;
+  연락처?: string;
 }
 
 export interface Demand {
