@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import EnhancedMatchingCard from "./EnhancedMatchingCard";
+import CollapsibleMatchingGroup from "./CollapsibleMatchingGroup";
 import { DetailedMatch } from "@/utils/matchingAlgorithm";
 import { Building2, Users } from "lucide-react";
 import { useInterest } from "@/hooks/useInterest";
@@ -62,49 +62,18 @@ const MatchingResults = ({ matches, onInterestClick, onInquiryClick, perspective
       </div>
       
       <ScrollArea className="h-[800px] w-full">
-        <div className="space-y-8 pr-4">
+        <div className="space-y-4 pr-4">
           {Object.values(groupedResults).map((group: any, groupIndex) => (
-            <div key={groupIndex} className="space-y-4">
-              {/* 그룹 헤더 */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-l-4 border-l-blue-500">
-                <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  {perspective === 'demand' ? <Users className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
-                  {perspective === 'demand' ? 
-                    group.entity.수요기관 : 
-                    group.entity.기업명
-                  }
-                  <Badge variant="secondary" className="ml-2">
-                    {group.matches.length}개 매칭
-                  </Badge>
-                </h3>
-                {perspective === 'demand' && group.entity.수요내용 && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {group.entity.수요내용.slice(0, 100)}...
-                  </p>
-                )}
-                {perspective === 'supplier' && group.entity.세부설명 && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {group.entity.세부설명.slice(0, 100)}...
-                  </p>
-                )}
-              </div>
-              
-              {/* 그룹 내 매칭 카드들 */}
-              <div className="grid gap-4 ml-4">
-                {group.matches.map(({ match, originalIndex }: any) => (
-                  <EnhancedMatchingCard
-                    key={`${match.supplier.공급기업일련번호}-${match.demand.수요기관일련번호}`}
-                    match={match}
-                    index={originalIndex}
-                    onInterestClick={onInterestClick}
-                    onInquiryClick={onInquiryClick}
-                    showGroupContext={false}
-                    interestData={getInterestData(match.supplier.공급기업일련번호, match.demand.수요기관일련번호)}
-                    onToggleInterest={toggleInterest}
-                  />
-                ))}
-              </div>
-            </div>
+            <CollapsibleMatchingGroup
+              key={groupIndex}
+              entity={group.entity}
+              matches={group.matches}
+              perspective={perspective}
+              onInterestClick={onInterestClick}
+              onInquiryClick={onInquiryClick}
+              getInterestData={getInterestData}
+              onToggleInterest={toggleInterest}
+            />
           ))}
         </div>
       </ScrollArea>
