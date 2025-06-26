@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -95,6 +96,11 @@ const AIMatching = () => {
         supabase.from('수요기관').select('*')
       ]);
 
+      console.log('데이터 로드 결과:', {
+        suppliers: suppliersResponse.data?.length || 0,
+        demands: demandsResponse.data?.length || 0
+      });
+
       if (suppliersResponse.error || demandsResponse.error) {
         toast({
           title: "데이터 로드 실패",
@@ -119,6 +125,8 @@ const AIMatching = () => {
   const calculateMatches = () => {
     setIsMatching(true);
     
+    console.log('매칭 계산 시작:', { suppliers: suppliers.length, demands: demands.length });
+    
     // 개선된 매칭 알고리즘 실행
     setTimeout(() => {
       const newMatches: DetailedMatch[] = [];
@@ -133,6 +141,8 @@ const AIMatching = () => {
           }
         });
       });
+
+      console.log('매칭 계산 완료:', { totalMatches: newMatches.length });
 
       // 점수 순으로 정렬하고 상위 20개만 표시
       const sortedMatches = newMatches
@@ -177,6 +187,15 @@ const AIMatching = () => {
 
   const industries = Array.from(new Set(suppliers.map(s => s.업종).filter(Boolean)));
 
+  console.log('현재 상태:', {
+    isLoading,
+    isMatching,
+    matches: matches.length,
+    filteredMatches: filteredMatches.length,
+    suppliers: suppliers.length,
+    demands: demands.length
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -217,6 +236,16 @@ const AIMatching = () => {
           </Button>
         </div>
 
+        {/* 디버깅 정보 (개발 중에만 표시) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              디버깅 정보: 공급기업 {suppliers.length}개, 수요기관 {demands.length}개, 
+              매칭결과 {matches.length}개, 필터링된 결과 {filteredMatches.length}개
+            </p>
+          </div>
+        )}
+
         {/* 필터 및 정렬 */}
         {matches.length > 0 && (
           <MatchingFilters
@@ -236,7 +265,7 @@ const AIMatching = () => {
           />
         )}
 
-        {/* 매칭 결과 */}
+        {/* 매칭 결과 - 스크롤 영역 추가 */}
         {filteredMatches.length > 0 && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -244,15 +273,20 @@ const AIMatching = () => {
                 매칭 결과 ({filteredMatches.length}개)
               </h2>
             </div>
-            {filteredMatches.map((match, index) => (
-              <EnhancedMatchingCard
-                key={`${match.supplier['공급기업일련번호(PK)']}-${match.demand['수요기관일련번호(PK)']}`}
-                match={match}
-                index={index}
-                onInterestClick={handleInterestClick}
-                onInquiryClick={handleInquiryClick}
-              />
-            ))}
+            
+            <ScrollArea className="h-[800px] w-full">
+              <div className="space-y-6 pr-4">
+                {filteredMatches.map((match, index) => (
+                  <EnhancedMatchingCard
+                    key={`${match.supplier['공급기업일련번호(PK)']}-${match.demand['수요기관일련번호(PK)']}`}
+                    match={match}
+                    index={index}
+                    onInterestClick={handleInterestClick}
+                    onInquiryClick={handleInquiryClick}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         )}
 
@@ -266,6 +300,24 @@ const AIMatching = () => {
             <p className="text-gray-600">
               키워드 유사도, 기업 역량, 예산 적합성을 종합 분석하여 최적의 매칭을 찾아드립니다
             </p>
+          </div>
+        )}
+
+        {/* 필터링 후 결과가 없을 때 */}
+        {matches.length > 0 && filteredMatches.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              필터 조건에 맞는 결과가 없습니다
+            </h3>
+            <p className="text-gray-600 mb-4">
+              다른 필터 조건을 시도해보거나 필터를 초기화해보세요
+            </p>
+            <Button variant="outline" onClick={clearFilters}>
+              필터 초기화
+            </Button>
           </div>
         )}
       </div>
