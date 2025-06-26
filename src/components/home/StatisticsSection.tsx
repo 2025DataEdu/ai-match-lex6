@@ -59,25 +59,27 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                 <TrendingUp className="w-6 h-6 text-blue-600 mr-2" />
                 <h3 className="text-lg font-semibold">등록 현황 분포</h3>
               </div>
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              <div className="h-[250px] w-full">
+                <ChartContainer config={chartConfig} className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={60}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -88,16 +90,18 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                 <Target className="w-6 h-6 text-green-600 mr-2" />
                 <h3 className="text-lg font-semibold">카테고리별 현황</h3>
               </div>
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barData}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Bar dataKey="count" fill="#3B82F6" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              <div className="h-[250px] w-full">
+                <ChartContainer config={chartConfig} className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Bar dataKey="count" fill="#3B82F6" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             </CardContent>
           </Card>
         </div>
