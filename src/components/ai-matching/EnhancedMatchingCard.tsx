@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Building2, Users, Heart, MessageCircle, Award, Globe, Youtube, DollarSign } from "lucide-react";
+import { Building2, Users, Heart, Award, Globe, Youtube, DollarSign } from "lucide-react";
 import { DetailedMatch } from "@/utils/matchingAlgorithm";
 import EnhancedMatchingDetailModal from "./EnhancedMatchingDetailModal";
-import { useInterest } from "@/hooks/useInterest";
+import InquiryCommentModal from "./InquiryCommentModal";
+import { useInquiryComments } from "@/hooks/useInquiryComments";
+import { useState, useEffect } from "react";
 
 interface EnhancedMatchingCardProps {
   match: DetailedMatch;
@@ -30,6 +32,19 @@ const EnhancedMatchingCard = ({
   interestData,
   onToggleInterest
 }: EnhancedMatchingCardProps) => {
+  const [commentCount, setCommentCount] = useState(0);
+  const { getCommentCount } = useInquiryComments();
+
+  const matchingId = `${match.supplier.공급기업일련번호}_${match.demand.수요기관일련번호}`;
+
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      const count = await getCommentCount(matchingId);
+      setCommentCount(count);
+    };
+    fetchCommentCount();
+  }, [matchingId, getCommentCount]);
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
     if (score >= 60) return "bg-yellow-500";
@@ -44,6 +59,11 @@ const EnhancedMatchingCard = ({
 
   const handleInterestClick = () => {
     onToggleInterest(match.supplier.공급기업일련번호, match.demand.수요기관일련번호);
+  };
+
+  const handleCommentAdded = async () => {
+    const count = await getCommentCount(matchingId);
+    setCommentCount(count);
   };
 
   return (
@@ -156,15 +176,11 @@ const EnhancedMatchingCard = ({
               </Badge>
             )}
           </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => onInquiryClick(match)}
-            className="flex items-center gap-1 flex-1"
-          >
-            <MessageCircle className="w-4 h-4" />
-            문의하기
-          </Button>
+          <InquiryCommentModal 
+            match={match} 
+            commentCount={commentCount}
+            onCommentAdded={handleCommentAdded}
+          />
           <EnhancedMatchingDetailModal 
             match={match} 
             showContactInfo={interestData?.사용자관심여부 || false}

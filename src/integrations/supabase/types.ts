@@ -141,6 +141,59 @@ export type Database = {
         }
         Relationships: []
       }
+      문의댓글: {
+        Row: {
+          id: string
+          공급기업일련번호: string
+          기관명: string
+          댓글내용: string
+          매칭id: string
+          부모댓글id: string | null
+          수요기관일련번호: string
+          수정일자: string | null
+          작성일자: string
+          작성자명: string
+          작성자아이디: string
+          작성자유형: string
+        }
+        Insert: {
+          id?: string
+          공급기업일련번호: string
+          기관명: string
+          댓글내용: string
+          매칭id: string
+          부모댓글id?: string | null
+          수요기관일련번호: string
+          수정일자?: string | null
+          작성일자?: string
+          작성자명: string
+          작성자아이디: string
+          작성자유형: string
+        }
+        Update: {
+          id?: string
+          공급기업일련번호?: string
+          기관명?: string
+          댓글내용?: string
+          매칭id?: string
+          부모댓글id?: string | null
+          수요기관일련번호?: string
+          수정일자?: string | null
+          작성일자?: string
+          작성자명?: string
+          작성자아이디?: string
+          작성자유형?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "문의댓글_부모댓글id_fkey"
+            columns: ["부모댓글id"]
+            isOneToOne: false
+            referencedRelation: "문의댓글"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       수요기관: {
         Row: {
           관심여부: string | null
