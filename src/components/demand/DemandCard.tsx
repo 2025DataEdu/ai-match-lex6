@@ -32,8 +32,11 @@ const DemandCard = ({ demand }: DemandCardProps) => {
     return new Date(dateString).toLocaleDateString('ko-KR');
   };
 
+  // 1억 이상인 경우 강조 표시를 위한 스타일 결정
+  const isHighBudget = demand.금액 && demand.금액 >= 10000; // 1억원 (만원 단위로 10000)
+
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className={`hover:shadow-lg transition-shadow ${isHighBudget ? 'border-orange-300 bg-orange-50' : ''}`}>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
@@ -42,9 +45,14 @@ const DemandCard = ({ demand }: DemandCardProps) => {
               {demand.부서명 && `${demand.부서명} · `}{demand.사용자명 || '담당자명 없음'}
             </CardDescription>
           </div>
-          {demand.유형 && (
-            <Badge variant="secondary">{demand.유형}</Badge>
-          )}
+          <div className="flex flex-col gap-2 items-end">
+            {demand.유형 && (
+              <Badge variant="secondary">{demand.유형}</Badge>
+            )}
+            {isHighBudget && (
+              <Badge variant="destructive" className="text-xs">고액 수요</Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -56,9 +64,10 @@ const DemandCard = ({ demand }: DemandCardProps) => {
           )}
           
           {demand.금액 && (
-            <div className="flex items-center space-x-2 text-sm text-green-600">
+            <div className={`flex items-center space-x-2 text-sm ${isHighBudget ? 'text-orange-600 font-bold' : 'text-green-600'}`}>
               <DollarSign className="w-4 h-4" />
               <span className="font-medium">{formatCurrency(demand.금액)}</span>
+              {isHighBudget && <span className="text-xs">(1억원 이상)</span>}
             </div>
           )}
 
