@@ -36,7 +36,7 @@ const Navbar = () => {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">M</span>
             </div>
-            <span className="font-bold text-gray-900 text-2xl">수요-공급 매칭 허브</span>
+            <span className="font-bold text-gray-900 text-2xl">수요-공급 매칭 플랫폼</span>
           </Link>
 
           {/* Desktop Menu */}

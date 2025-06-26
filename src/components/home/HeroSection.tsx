@@ -1,19 +1,12 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Plus } from "lucide-react";
-
 const HeroSection = () => {
-  return (
-    <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+  return <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            AI 기술매칭 플랫폼
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
-            공공기관과 민간 기술기업을 연결하는 스마트 매칭 서비스
-          </p>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">수요-공급 매칭 플랫폼</h1>
+          <p className="text-xl md:text-2xl mb-8 opacity-90">공공기관의 수요과 민간 기술기업을 연결하는 스마트 매칭 서비스</p>
         </div>
 
         {/* Quick Registration Actions */}
@@ -38,8 +31,6 @@ const HeroSection = () => {
           </Button>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
