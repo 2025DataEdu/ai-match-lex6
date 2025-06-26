@@ -37,7 +37,7 @@ const EnhancedMatchingDetailModal = ({ match }: EnhancedMatchingDetailModalProps
           {/* 매칭 점수 상세 분석 */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
             <h4 className="font-semibold mb-4 text-lg">매칭 점수 분석</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{match.matchScore}%</div>
                 <div className="text-sm text-gray-600">총 매칭도</div>
@@ -52,11 +52,6 @@ const EnhancedMatchingDetailModal = ({ match }: EnhancedMatchingDetailModalProps
                 <div className="text-2xl font-bold text-orange-600">{match.capabilityScore}%</div>
                 <div className="text-sm text-gray-600">기업 역량</div>
                 <Progress value={match.capabilityScore} className="mt-2" />
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{match.budgetScore}%</div>
-                <div className="text-sm text-gray-600">예산 적합성</div>
-                <Progress value={match.budgetScore} className="mt-2" />
               </div>
             </div>
             <div className="mt-4 p-3 bg-white/50 rounded-lg">
