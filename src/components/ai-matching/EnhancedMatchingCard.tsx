@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,13 +68,26 @@ const EnhancedMatchingCard = ({
     setCommentCount(count);
   };
 
+  // 관점에 따라 주요 표시할 엔티티 결정
+  const mainEntity = perspective === 'demand' ? match.supplier : match.demand;
+  const counterEntity = perspective === 'demand' ? match.demand : match.supplier;
+
   return (
     <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-blue-600" />
-            {match.supplier.기업명}
+            {perspective === 'demand' ? (
+              <>
+                <Building2 className="w-5 h-5 text-blue-600" />
+                {match.supplier.기업명}
+              </>
+            ) : (
+              <>
+                <Users className="w-5 h-5 text-green-600" />
+                {match.demand.수요기관}
+              </>
+            )}
           </CardTitle>
           <div className="flex items-center gap-2">
             <div className={`w-3 h-3 rounded-full ${getScoreColor(match.matchScore)}`}></div>
@@ -83,9 +97,24 @@ const EnhancedMatchingCard = ({
           </div>
         </div>
         <CardDescription className="flex items-center gap-2">
-          <Badge variant="outline">{match.supplier.유형}</Badge>
-          <span>•</span>
-          <span>{match.supplier.업종}</span>
+          {perspective === 'demand' ? (
+            <>
+              <Badge variant="outline">{match.supplier.유형}</Badge>
+              <span>•</span>
+              <span>{match.supplier.업종}</span>
+            </>
+          ) : (
+            <>
+              <Badge variant="outline">{match.demand.유형}</Badge>
+              {match.demand.금액 && (
+                <>
+                  <span>•</span>
+                  <DollarSign className="w-4 h-4 text-green-600" />
+                  <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원</span>
+                </>
+              )}
+            </>
+          )}
         </CardDescription>
       </CardHeader>
       
@@ -113,48 +142,72 @@ const EnhancedMatchingCard = ({
           </div>
         )}
 
-        {/* 기업 소개 요약 */}
+        {/* 주요 엔티티 설명 */}
         <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700">기업 소개</div>
+          <div className="text-sm font-medium text-gray-700">
+            {perspective === 'demand' ? '기업 소개' : '수요 내용'}
+          </div>
           <p className="text-sm text-gray-600 line-clamp-2">
-            {match.supplier.세부설명?.slice(0, 100)}
-            {match.supplier.세부설명&& match.supplier.세부설명.length > 100 && '...'}
+            {perspective === 'demand' ? (
+              <>
+                {match.supplier.세부설명?.slice(0, 100)}
+                {match.supplier.세부설명 && match.supplier.세부설명.length > 100 && '...'}
+              </>
+            ) : (
+              <>
+                {match.demand.수요내용?.slice(0, 100)}
+                {match.demand.수요내용 && match.demand.수요내용.length > 100 && '...'}
+              </>
+            )}
           </p>
         </div>
 
-        {/* 기업 특징 아이콘 */}
-        <div className="flex items-center gap-3 text-sm text-gray-500">
-          {match.supplier.보유특허 && (
-            <div className="flex items-center gap-1">
-              <Award className="w-4 h-4" />
-              <span>특허보유</span>
-            </div>
-          )}
-          {match.supplier.기업홈페이지 && (
-            <div className="flex items-center gap-1">
-              <Globe className="w-4 h-4" />
-              <span>홈페이지</span>
-            </div>
-          )}
-          {match.supplier.유튜브링크 && (
-            <div className="flex items-center gap-1">
-              <Youtube className="w-4 h-4" />
-              <span>유튜브</span>
-            </div>
-          )}
-        </div>
+        {/* 특징 아이콘 - 관점에 따라 다르게 표시 */}
+        {perspective === 'demand' && (
+          <div className="flex items-center gap-3 text-sm text-gray-500">
+            {match.supplier.보유특허 && (
+              <div className="flex items-center gap-1">
+                <Award className="w-4 h-4" />
+                <span>특허보유</span>
+              </div>
+            )}
+            {match.supplier.기업홈페이지 && (
+              <div className="flex items-center gap-1">
+                <Globe className="w-4 h-4" />
+                <span>홈페이지</span>
+              </div>
+            )}
+            {match.supplier.유튜브링크 && (
+              <div className="flex items-center gap-1">
+                <Youtube className="w-4 h-4" />
+                <span>유튜브</span>
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* 수요기관 정보 간략 표시 */}
+        {/* 상대방 정보 간략 표시 */}
         {showGroupContext && (
-          <div className="bg-green-50 p-3 rounded-lg">
+          <div className={`${perspective === 'demand' ? 'bg-green-50' : 'bg-blue-50'} p-3 rounded-lg`}>
             <div className="flex items-center gap-2 text-sm">
-              <Users className="w-4 h-4 text-green-600" />
-              <span className="font-medium">{match.demand.수요기관}</span>
-              {match.demand.금액 && (
+              {perspective === 'demand' ? (
                 <>
+                  <Users className="w-4 h-4 text-green-600" />
+                  <span className="font-medium">{match.demand.수요기관}</span>
+                  {match.demand.금액 && (
+                    <>
+                      <span>•</span>
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                      <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원</span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">{match.supplier.기업명}</span>
                   <span>•</span>
-                  <DollarSign className="w-4 h-4 text-green-600" />
-                  <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 원</span>
+                  <span>{match.supplier.업종}</span>
                 </>
               )}
             </div>
