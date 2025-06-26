@@ -74,7 +74,7 @@ const CollapsibleMatchingGroup = ({
                 </p>
               )}
               
-              {/* 매칭 미리보기 */}
+              {/* 매칭 미리보기 - 관점에 따라 상대방 정보 표시 */}
               <div className="flex flex-wrap gap-1 mt-2">
                 {matches.slice(0, 3).map(({ match }, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs">
@@ -102,6 +102,7 @@ const CollapsibleMatchingGroup = ({
                   onInterestClick={onInterestClick}
                   onInquiryClick={onInquiryClick}
                   showGroupContext={false}
+                  perspective={perspective}
                   interestData={getInterestData(match.supplier.공급기업일련번호, match.demand.수요기관일련번호)}
                   onToggleInterest={onToggleInterest}
                 />
