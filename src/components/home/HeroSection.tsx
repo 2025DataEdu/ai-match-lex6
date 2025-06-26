@@ -55,31 +55,6 @@ const HeroSection = () => {
     }
   };
 
-  const floatingVariants = {
-    animate: {
-      y: [0, -20, 0],
-      x: [0, 10, 0],
-      rotate: [0, 5, -5, 0],
-      transition: {
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
-  const pulseVariants = {
-    animate: {
-      scale: [1, 1.1, 1],
-      opacity: [0.7, 1, 0.7],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
       {/* Animated Background Pattern */}
@@ -92,53 +67,99 @@ const HeroSection = () => {
       <div 
         className="absolute inset-0 opacity-30"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
         }}
       ></div>
       
       {/* Floating Elements with Enhanced Animation */}
       <motion.div 
         className="absolute top-20 left-16 text-blue-300/20"
-        variants={floatingVariants}
-        animate="animate"
+        animate={{
+          y: [0, -20, 0],
+          x: [0, 10, 0],
+          rotate: [0, 5, -5, 0],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       >
         <Building2 size={120} />
         <motion.div 
           className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full"
-          variants={pulseVariants}
-          animate="animate"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.7, 1, 0.7],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
         />
       </motion.div>
       
       <motion.div 
         className="absolute top-32 right-20 text-purple-300/20"
-        variants={floatingVariants}
-        animate="animate"
-        transition={{ delay: 1.5 }}
+        animate={{
+          y: [0, -20, 0],
+          x: [0, 10, 0],
+          rotate: [0, 5, -5, 0],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1.5
+        }}
       >
         <Users size={80} />
         <motion.div 
           className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full"
-          variants={pulseVariants}
-          animate="animate"
-          transition={{ delay: 0.5 }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.7, 1, 0.7],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5
+          }}
         />
       </motion.div>
       
       <motion.div 
         className="absolute bottom-32 left-32 text-cyan-300/20"
-        variants={floatingVariants}
-        animate="animate"
-        transition={{ delay: 3 }}
+        animate={{
+          y: [0, -20, 0],
+          x: [0, 10, 0],
+          rotate: [0, 5, -5, 0],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 3
+        }}
       >
         <Zap size={60} />
       </motion.div>
       
       <motion.div 
         className="absolute top-64 right-40 text-yellow-300/20"
-        variants={floatingVariants}
-        animate="animate"
-        transition={{ delay: 2 }}
+        animate={{
+          y: [0, -20, 0],
+          x: [0, 10, 0],
+          rotate: [0, 5, -5, 0],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2
+        }}
       >
         <Target size={70} />
       </motion.div>
