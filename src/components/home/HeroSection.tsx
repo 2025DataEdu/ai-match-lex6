@@ -2,7 +2,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Plus, ArrowRight, Building2, Users, Zap, Target, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { useStats } from "@/hooks/useStats";
+
 const HeroSection = () => {
+  const { stats, isLoading } = useStats();
+
   const containerVariants = {
     hidden: {
       opacity: 0
@@ -221,21 +225,22 @@ const HeroSection = () => {
           duration: 1
         }}>
             {[{
-            number: "500+",
+            number: isLoading ? "..." : `${stats.suppliersCount}+`,
             label: "등록된 공급기업",
             icon: Building2,
             color: "from-blue-400 to-cyan-400"
           }, {
-            number: "200+",
+            number: isLoading ? "..." : `${stats.demandsCount}+`,
             label: "수요기관",
             icon: Users,
             color: "from-purple-400 to-pink-400"
           }, {
-            number: "95%",
+            number: isLoading ? "..." : `${Math.round((stats.matchesCount / Math.max(stats.suppliersCount, 1)) * 100)}%`,
             label: "매칭 성공률",
             icon: Sparkles,
             color: "from-yellow-400 to-orange-400"
-          }].map((stat, index) => <motion.div key={index} className="relative p-8 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl group" whileHover={{
+          }].map((stat, index) => (
+            <motion.div key={index} className="relative p-8 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl group" whileHover={{
             scale: 1.05,
             y: -10,
             boxShadow: "0 25px 50px rgba(0,0,0,0.3)"
@@ -263,7 +268,8 @@ const HeroSection = () => {
                   {stat.number}
                 </motion.div>
                 <div className="text-blue-200 font-semibold text-lg">{stat.label}</div>
-              </motion.div>)}
+              </motion.div>
+            ))}
           </motion.div>
         </motion.div>
       </div>
@@ -272,4 +278,5 @@ const HeroSection = () => {
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-50 to-transparent"></div>
     </section>;
 };
+
 export default HeroSection;
