@@ -1,4 +1,3 @@
-
 import { Supplier, Demand } from "@/types/matching";
 
 export interface DetailedMatch {
@@ -9,6 +8,15 @@ export interface DetailedMatch {
   capabilityScore: number;
   matchedKeywords: string[];
   matchReason: string;
+}
+
+export interface GroupedMatches {
+  [key: string]: {
+    entity: Supplier | Demand;
+    matches: DetailedMatch[];
+    averageScore: number;
+    totalMatches: number;
+  };
 }
 
 // 한글 키워드 사전
@@ -63,11 +71,6 @@ export function calculateKeywordSimilarity(demandText: string, supplierText: str
   const demandKeywords = extractKeywords(demandText);
   const supplierKeywords = extractKeywords(supplierText);
   
-  console.log('키워드 분석:', {
-    demandKeywords: demandKeywords.slice(0, 10),
-    supplierKeywords: supplierKeywords.slice(0, 10)
-  });
-  
   const matchedKeywords = demandKeywords.filter(keyword =>
     supplierKeywords.some(sk => 
       sk.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -78,14 +81,8 @@ export function calculateKeywordSimilarity(demandText: string, supplierText: str
   const jaccardScore = calculateJaccardSimilarity(demandKeywords, supplierKeywords);
   
   // 직접 매칭 키워드가 있으면 가산점
-  const directMatchBonus = matchedKeywords.length > 0 ? 0.3 : 0;
+  const directMatchBonus = matchedKeywords.length > 0 ? 0.2 : 0;
   const finalScore = Math.min((jaccardScore + directMatchBonus) * 100, 100);
-  
-  console.log('키워드 매칭 결과:', {
-    jaccardScore,
-    matchedKeywords,
-    finalScore
-  });
   
   return {
     score: finalScore,
@@ -95,7 +92,7 @@ export function calculateKeywordSimilarity(demandText: string, supplierText: str
 
 // 기업 역량 점수 계산
 export function calculateCapabilityScore(supplier: Supplier): number {
-  let score = 40; // 기본 점수
+  let score = 30; // 기본 점수
   
   // 보유 특허가 있으면 가점
   if (supplier.보유특허 && supplier.보유특허.length > 10) {
@@ -104,12 +101,12 @@ export function calculateCapabilityScore(supplier: Supplier): number {
   
   // 홈페이지가 있으면 가점 (신뢰도)
   if (supplier.기업홈페이지) {
-    score += 15;
+    score += 20;
   }
   
   // 유튜브 링크가 있으면 가점 (마케팅 역량)
   if (supplier.유튜브링크) {
-    score += 10;
+    score += 15;
   }
   
   // 세부설명이 상세할수록 가점
@@ -120,13 +117,8 @@ export function calculateCapabilityScore(supplier: Supplier): number {
   return Math.min(score, 100);
 }
 
-// 종합 매칭 점수 계산 (예산 점수 제거, 키워드와 역량만 고려)
+// 종합 매칭 점수 계산
 export function calculateMatchingScore(demand: Demand, supplier: Supplier): DetailedMatch {
-  console.log('매칭 계산 시작:', {
-    demand: demand.수요기관,
-    supplier: supplier.기업명
-  });
-
   const keywordResult = calculateKeywordSimilarity(
     demand.수요내용 || '',
     `${supplier.세부설명 || ''} ${supplier.업종 || ''} ${supplier.유형 || ''}`
@@ -149,7 +141,7 @@ export function calculateMatchingScore(demand: Demand, supplier: Supplier): Deta
     reasons.push('서비스 유형 일치');
   }
   
-  const result = {
+  return {
     supplier,
     demand,
     matchScore: Math.round(totalScore),
@@ -158,13 +150,57 @@ export function calculateMatchingScore(demand: Demand, supplier: Supplier): Deta
     matchedKeywords: keywordResult.matchedKeywords,
     matchReason: reasons.length > 0 ? reasons.join(', ') : '기본 매칭'
   };
+}
+
+// 매칭 결과를 관점별로 그룹화하고 정렬
+export function groupAndSortMatches(
+  matches: DetailedMatch[], 
+  perspective: 'demand' | 'supplier',
+  sortBy: string = 'matchScore',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): DetailedMatch[] {
+  // 관점에 따라 그룹화
+  const grouped: GroupedMatches = {};
   
-  console.log('매칭 결과:', {
-    기업명: supplier.기업명,
-    매칭점수: result.matchScore,
-    키워드점수: result.keywordScore,
-    역량점수: result.capabilityScore,
-    매칭키워드: result.matchedKeywords
+  matches.forEach(match => {
+    const key = perspective === 'demand' 
+      ? match.demand.수요기관일련번호 
+      : match.supplier.공급기업일련번호;
+    
+    if (!grouped[key]) {
+      grouped[key] = {
+        entity: perspective === 'demand' ? match.demand : match.supplier,
+        matches: [],
+        averageScore: 0,
+        totalMatches: 0
+      };
+    }
+    
+    grouped[key].matches.push(match);
+    grouped[key].totalMatches++;
+  });
+  
+  // 각 그룹의 평균 점수 계산
+  Object.values(grouped).forEach(group => {
+    group.averageScore = group.matches.reduce((sum, match) => sum + match.matchScore, 0) / group.matches.length;
+    
+    // 그룹 내에서 매칭 점수로 정렬
+    group.matches.sort((a, b) => b.matchScore - a.matchScore);
+  });
+  
+  // 그룹을 평균 점수로 정렬
+  const sortedGroups = Object.values(grouped).sort((a, b) => {
+    if (sortOrder === 'desc') {
+      return b.averageScore - a.averageScore;
+    } else {
+      return a.averageScore - b.averageScore;
+    }
+  });
+  
+  // 정렬된 결과를 평면 배열로 변환
+  const result: DetailedMatch[] = [];
+  sortedGroups.forEach(group => {
+    result.push(...group.matches);
   });
   
   return result;

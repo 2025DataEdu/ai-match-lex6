@@ -26,6 +26,8 @@ const AIMatching = () => {
     setSortBy,
     sortOrder,
     setSortOrder,
+    matchingPerspective,
+    setMatchingPerspective,
     calculateMatches,
     clearFilters,
     hasActiveFilters,
@@ -47,16 +49,6 @@ const AIMatching = () => {
       description: `${match.supplier.기업명}에 문의를 전송했습니다.`,
     });
   };
-
-  console.log('현재 상태:', {
-    isLoading,
-    isMatching,
-    matches: matches.length,
-    filteredMatches: filteredMatches.length,
-    suppliers: suppliers.length,
-    demands: demands.length,
-    industries: industries.length
-  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,17 +90,6 @@ const AIMatching = () => {
           </Button>
         </div>
 
-        {/* 디버깅 정보 */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              디버깅 정보: 공급기업 {suppliers.length}개, 수요기관 {demands.length}개, 
-              매칭결과 {matches.length}개, 필터링된 결과 {filteredMatches.length}개, 
-              업종 {industries.length}개
-            </p>
-          </div>
-        )}
-
         {/* 필터 및 정렬 */}
         {matches.length > 0 && (
           <MatchingFilters
@@ -121,6 +102,8 @@ const AIMatching = () => {
             onSortChange={setSortBy}
             sortOrder={sortOrder}
             onSortOrderChange={setSortOrder}
+            matchingPerspective={matchingPerspective}
+            onMatchingPerspectiveChange={setMatchingPerspective}
             onClearFilters={clearFilters}
             hasActiveFilters={hasActiveFilters}
           />
@@ -132,6 +115,7 @@ const AIMatching = () => {
             matches={filteredMatches}
             onInterestClick={handleInterestClick}
             onInquiryClick={handleInquiryClick}
+            perspective={matchingPerspective}
           />
         )}
 

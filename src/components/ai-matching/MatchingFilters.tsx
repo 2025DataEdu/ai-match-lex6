@@ -15,6 +15,8 @@ interface MatchingFiltersProps {
   onSortChange: (sort: string) => void;
   sortOrder: 'asc' | 'desc';
   onSortOrderChange: (order: 'asc' | 'desc') => void;
+  matchingPerspective: 'demand' | 'supplier';
+  onMatchingPerspectiveChange: (perspective: 'demand' | 'supplier') => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }
@@ -29,6 +31,8 @@ const MatchingFilters = ({
   onSortChange,
   sortOrder,
   onSortOrderChange,
+  matchingPerspective,
+  onMatchingPerspectiveChange,
   onClearFilters,
   hasActiveFilters
 }: MatchingFiltersProps) => {
@@ -59,7 +63,21 @@ const MatchingFilters = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* 매칭 관점 선택 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">매칭 관점</label>
+            <Select value={matchingPerspective} onValueChange={onMatchingPerspectiveChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="demand">수요기관 중심</SelectItem>
+                <SelectItem value="supplier">공급기업 중심</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* 업종별 필터 */}
           <div className="space-y-2">
             <label className="text-sm font-medium">업종</label>
@@ -134,6 +152,9 @@ const MatchingFilters = ({
         {/* 활성 필터 표시 */}
         {hasActiveFilters && (
           <div className="mt-4 flex flex-wrap gap-2">
+            <Badge variant="secondary">
+              관점: {matchingPerspective === 'demand' ? '수요기관 중심' : '공급기업 중심'}
+            </Badge>
             {selectedIndustry !== "all" && (
               <Badge variant="secondary">업종: {selectedIndustry}</Badge>
             )}

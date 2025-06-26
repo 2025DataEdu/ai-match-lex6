@@ -12,13 +12,15 @@ interface EnhancedMatchingCardProps {
   index: number;
   onInterestClick: (match: DetailedMatch) => void;
   onInquiryClick: (match: DetailedMatch) => void;
+  showGroupContext?: boolean;
 }
 
 const EnhancedMatchingCard = ({ 
   match, 
   index, 
   onInterestClick, 
-  onInquiryClick 
+  onInquiryClick,
+  showGroupContext = true
 }: EnhancedMatchingCardProps) => {
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
@@ -37,7 +39,7 @@ const EnhancedMatchingCard = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <span className="text-blue-600">#{index + 1}</span>
+            <Building2 className="w-5 h-5 text-blue-600" />
             {match.supplier.기업명}
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -110,18 +112,20 @@ const EnhancedMatchingCard = ({
         </div>
 
         {/* 수요기관 정보 간략 표시 */}
-        <div className="bg-green-50 p-3 rounded-lg">
-          <div className="flex items-center gap-2 text-sm">
-            <Users className="w-4 h-4 text-green-600" />
-            <span className="font-medium">{match.demand.수요기관}</span>
-            {match.demand.금액 && (
-              <>
-                <span>•</span>
-                <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원</span>
-              </>
-            )}
+        {showGroupContext && (
+          <div className="bg-green-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="w-4 h-4 text-green-600" />
+              <span className="font-medium">{match.demand.수요기관}</span>
+              {match.demand.금액 && (
+                <>
+                  <span>•</span>
+                  <span>{new Intl.NumberFormat('ko-KR').format(match.demand.금액)} 만원</span>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 액션 버튼 */}
         <div className="flex gap-2 pt-2">
