@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ interface EnhancedMatchingCardProps {
   onInterestClick: (match: DetailedMatch) => void;
   onInquiryClick: (match: DetailedMatch) => void;
   showGroupContext?: boolean;
+  perspective?: 'demand' | 'supplier';
   interestData?: {
     관심수: number;
     사용자관심여부: boolean;
@@ -29,6 +29,7 @@ const EnhancedMatchingCard = ({
   onInterestClick, 
   onInquiryClick,
   showGroupContext = true,
+  perspective = 'demand',
   interestData,
   onToggleInterest
 }: EnhancedMatchingCardProps) => {
