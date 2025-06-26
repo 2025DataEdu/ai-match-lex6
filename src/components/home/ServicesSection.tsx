@@ -1,20 +1,15 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Users } from "lucide-react";
-
 const ServicesSection = () => {
-  return (
-    <section className="py-20 bg-white">
+  return <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             주요 서비스
           </h2>
-          <p className="text-xl text-gray-600">
-            공급기업과 수요기관을 위한 전문 서비스를 제공합니다
-          </p>
+          <p className="text-xl text-gray-600">공급기업과 수요기관을 위한 비즈니스 매칭 서비스를 제공합니다</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -63,8 +58,6 @@ const ServicesSection = () => {
           </Card>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default ServicesSection;
