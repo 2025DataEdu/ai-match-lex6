@@ -26,8 +26,10 @@ function formatSuccessResponse(query: string, analysis: KeywordAnalysis, results
   // 맞춤형 인사말 생성
   if (serviceType) {
     responseText = `🎯 **${serviceType} 전문기업**을 찾아드렸습니다!\n`;
-  } else {
+  } else if (primaryKeywords.length > 0) {
     responseText = `🔍 **'${primaryKeywords.join(', ')}' 관련 기업**을 찾아드렸습니다!\n`;
+  } else {
+    responseText = `🏢 **최신 등록 기업**을 찾아드렸습니다!\n`;
   }
   
   responseText += `총 ${results.length}개의 기업이 검색되었습니다.\n\n`;
@@ -37,11 +39,17 @@ function formatSuccessResponse(query: string, analysis: KeywordAnalysis, results
 
   sortedResults.forEach((company, index) => {
     const score = company.relevance_score || 50;
-    const matchIndicator = score >= 80 ? '🎯' : score >= 70 ? '✨' : '📋';
+    const matchIndicator = score >= 80 ? '🎯' : score >= 70 ? '✨' : score >= 60 ? '📋' : '🏢';
     
     responseText += `${matchIndicator} **${index + 1}. ${company.기업명 || '기업명 없음'}**\n`;
-    responseText += `🔸 **서비스 유형**: ${company.유형 || '정보 없음'}\n`;
-    responseText += `🔸 **업종**: ${company.업종 || '정보 없음'}\n`;
+    
+    if (company.유형) {
+      responseText += `🔸 **서비스 유형**: ${company.유형}\n`;
+    }
+    
+    if (company.업종) {
+      responseText += `🔸 **업종**: ${company.업종}\n`;
+    }
     
     if (company.세부설명) {
       const description = company.세부설명.length > 100 
@@ -81,7 +89,7 @@ function formatSuccessResponse(query: string, analysis: KeywordAnalysis, results
     responseText += '✓ 기존 시스템 연동 가능성\n';
     responseText += '✓ 다국어 지원 및 커스터마이징\n';
     responseText += '✓ 유지보수 및 업데이트 정책\n';
-  } else if (serviceType?.includes('비전') || serviceType?.includes('이미지')) {
+  } else if (serviceType?.includes('비전') || serviceType?.includes('이미지') || serviceType?.includes('CCTV')) {
     responseText += '\n💡 **AI 비전 솔루션 도입 시 확인사항**\n';
     responseText += '✓ 실시간 처리 성능 및 정확도\n';
     responseText += '✓ 하드웨어 요구사항\n';
@@ -97,25 +105,35 @@ function formatSuccessResponse(query: string, analysis: KeywordAnalysis, results
 function formatNoResultsResponse(query: string, analysis: KeywordAnalysis): string {
   const { primaryKeywords, serviceType } = analysis;
   
-  let response = `'${query}' 검색 결과를 찾을 수 없습니다.\n\n`;
+  let response = `🔍 **'${query}' 검색 결과**\n\n`;
+  response += `현재 데이터베이스에서 직접적으로 일치하는 기업을 찾지 못했습니다.\n\n`;
   
   if (serviceType) {
     response += `**${serviceType}** 관련 기업을 찾고 계시는군요!\n\n`;
   }
   
-  response += '다른 키워드로 검색해보세요:\n';
+  response += '**검색 팁**:\n';
   
   if (primaryKeywords.length > 0) {
     response += `• **현재 키워드**: ${primaryKeywords.join(', ')}\n`;
   }
   
-  response += `• **추천 키워드**: AI, 인공지능, 챗봇, CCTV, 영상분석, 음성인식\n`;
-  response += `• **서비스 유형**: 대화형AI, 컴퓨터비전, 음성AI, 자연어처리\n\n`;
-  response += '구체적인 요구사항을 말씀해주시면 더 정확한 결과를 제공해드릴 수 있습니다.';
+  response += `• **추천 검색어**: \n`;
+  response += `  - AI, 인공지능, 챗봇\n`;
+  response += `  - CCTV, 영상분석, 모니터링\n`;
+  response += `  - 음성인식, 자연어처리\n`;
+  response += `  - 데이터분석, 머신러닝\n\n`;
+  
+  response += '**다시 시도해보세요**:\n';
+  response += '• "AI 챗봇 개발업체 찾아줘"\n';
+  response += '• "영상분석 전문기업 알려줘"\n';
+  response += '• "음성인식 기술 회사 추천해줘"\n\n';
+  
+  response += '더 구체적인 요구사항을 말씀해주시면 정확한 결과를 제공해드릴 수 있습니다.';
   
   return response;
 }
 
 function formatErrorResponse(query: string, analysis: KeywordAnalysis): string {
-  return `죄송합니다. '${query}' 검색 중 일시적인 오류가 발생했습니다.\n\n다시 시도해주시거나, 다른 방식으로 질문해주세요.\n\n예시:\n• "AI 챗봇 개발할 수 있는 업체 찾아줘"\n• "CCTV 영상분석 전문업체 알려줘"\n• "음성인식 기술 보유한 기업 추천해줘"`;
+  return `죄송합니다. '${query}' 검색 중 일시적인 오류가 발생했습니다.\n\n다시 시도해주시거나, 다른 방식으로 질문해주세요.\n\n**예시**:\n• "AI 챗봇 개발할 수 있는 업체 찾아줘"\n• "CCTV 영상분석 전문업체 알려줘"\n• "음성인식 기술 보유한 기업 추천해줘"`;
 }
