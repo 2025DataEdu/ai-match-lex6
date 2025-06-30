@@ -22,6 +22,10 @@ export interface DetailedMatch extends BaseMatch {
   matchScore: number;
   supplier: Supplier;
   demand: Demand;
+  matchedServiceTypes?: string[];
+  serviceTypeScore?: number;
+  industryScore?: number;
+  bonusScore?: number;
 }
 
 export interface Match {

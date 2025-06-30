@@ -1,5 +1,5 @@
 
-// AI 서비스 유형 매칭 유틸리티
+// AI 서비스 유형 매칭 유틸리티 (개선된 버전)
 
 // AI 서비스 유형 키워드 매핑
 export const AI_SERVICE_KEYWORDS: { [key: string]: string[] } = {
@@ -15,28 +15,47 @@ export const AI_SERVICE_KEYWORDS: { [key: string]: string[] } = {
   "기타 AI 서비스": ["ai", "인공지능", "딥러닝", "머신러닝", "지능형", "스마트", "intelligent"]
 };
 
-// AI 서비스 유형 매칭 점수 계산
+// AI 서비스 유형 매칭 점수 계산 - 매칭된 서비스 유형도 반환
 export const calculateServiceTypeScore = (
   demandContent: string, 
   supplierType: string, 
   demandKeywords: string, 
   supplierKeywords: string
-): number => {
+): { score: number, matchedServiceTypes: string[] } => {
   const serviceKeywords = AI_SERVICE_KEYWORDS[supplierType] || [];
-  if (serviceKeywords.length === 0) return 0;
+  if (serviceKeywords.length === 0) return { score: 0, matchedServiceTypes: [] };
   
   const allDemandText = `${demandContent} ${demandKeywords}`.toLowerCase();
   const allSupplierText = `${supplierType} ${supplierKeywords}`.toLowerCase();
   
   let matchScore = 0;
+  const matchedServiceTypes: string[] = [];
   
+  // 공급기업의 서비스 유형이 수요 내용과 매칭되는지 확인
   serviceKeywords.forEach(serviceKeyword => {
-    if (allDemandText.includes(serviceKeyword) && allSupplierText.includes(serviceKeyword)) {
-      matchScore += 15;
-    } else if (allDemandText.includes(serviceKeyword) || allSupplierText.includes(serviceKeyword)) {
-      matchScore += 8;
+    if (allDemandText.includes(serviceKeyword)) {
+      if (allSupplierText.includes(serviceKeyword)) {
+        matchScore += 25; // 양쪽 모두에 포함된 경우 높은 점수
+      } else {
+        matchScore += 15; // 수요 내용에만 포함된 경우
+      }
+      
+      if (!matchedServiceTypes.includes(serviceKeyword)) {
+        matchedServiceTypes.push(serviceKeyword);
+      }
     }
   });
   
-  return Math.min(matchScore, 100);
+  // 서비스 유형 자체가 매칭되는 경우 추가 점수
+  if (allDemandText.includes(supplierType.toLowerCase())) {
+    matchScore += 30;
+    if (!matchedServiceTypes.includes(supplierType)) {
+      matchedServiceTypes.push(supplierType);
+    }
+  }
+  
+  return {
+    score: Math.min(matchScore, 100),
+    matchedServiceTypes
+  };
 };
