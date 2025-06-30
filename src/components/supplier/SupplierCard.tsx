@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +44,7 @@ export const SupplierCard = ({ supplier, index, onUpdate }: SupplierCardProps) =
   const [interestCount, setInterestCount] = useState(0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
-
-  // 더미 수요기관 ID (실제로는 현재 사용자의 수요기관 ID를 사용해야 함)
-  const dummyDemandID = "dummy-demand-id";
+  const [currentUserDemandId, setCurrentUserDemandId] = useState<string>("general-demand");
 
   useEffect(() => {
     const checkEditPermission = async () => {
@@ -54,20 +53,26 @@ export const SupplierCard = ({ supplier, index, onUpdate }: SupplierCardProps) =
         const currentUserId = session.user.email.split('@')[0];
         setCanEdit(currentUserId === supplier.아이디);
       }
+
+      // 실제 사용자의 수요기관 ID를 가져오거나 일반적인 ID 사용
+      if (session?.user) {
+        const userId = session.user.email?.split('@')[0] || session.user.id;
+        setCurrentUserDemandId(`demand-${userId}`);
+      }
     };
 
     checkEditPermission();
   }, [supplier.아이디]);
 
   useEffect(() => {
-    const interestData = getInterestData(supplier.공급기업일련번호, dummyDemandID);
+    const interestData = getInterestData(supplier.공급기업일련번호, currentUserDemandId);
     setIsInterested(interestData.사용자관심여부);
     setInterestCount(interestData.관심수);
-  }, [supplier.공급기업일련번호, getInterestData]);
+  }, [supplier.공급기업일련번호, currentUserDemandId, getInterestData]);
 
   const handleInterestToggle = async () => {
-    await toggleInterest(supplier.공급기업일련번호, dummyDemandID);
-    const updatedData = getInterestData(supplier.공급기업일련번호, dummyDemandID);
+    await toggleInterest(supplier.공급기업일련번호, currentUserDemandId);
+    const updatedData = getInterestData(supplier.공급기업일련번호, currentUserDemandId);
     setIsInterested(updatedData.사용자관심여부);
     setInterestCount(updatedData.관심수);
   };
@@ -159,15 +164,16 @@ export const SupplierCard = ({ supplier, index, onUpdate }: SupplierCardProps) =
               variant="ghost"
               size="sm"
               onClick={handleInterestToggle}
-              className="p-2 hover:bg-gray-100"
+              className="p-2 hover:bg-gray-100 flex items-center gap-1"
+              title={isInterested ? "관심 취소" : "관심 표시"}
             >
               {isInterested ? (
                 <Heart className="w-5 h-5 text-red-500 fill-red-500" />
               ) : (
-                <HeartOff className="w-5 h-5 text-gray-400" />
+                <Heart className="w-5 h-5 text-gray-400" />
               )}
               {interestCount > 0 && (
-                <span className="ml-1 text-xs text-gray-500">{interestCount}</span>
+                <span className="text-xs text-gray-600 font-medium">{interestCount}</span>
               )}
             </Button>
           </div>

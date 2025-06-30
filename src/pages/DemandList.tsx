@@ -40,14 +40,21 @@ const DemandList = () => {
 
   // 수요 데이터가 로드된 후 관심 통계 초기화
   useEffect(() => {
-    if (demands.length > 0) {
-      const dummySupplierID = "dummy-supplier-id";
-      const matchPairs = demands.map(demand => ({
-        공급기업일련번호: dummySupplierID,
-        수요기관일련번호: demand.수요기관일련번호
-      }));
-      fetchInterestStats(matchPairs);
-    }
+    const initializeInterestStats = async () => {
+      if (demands.length > 0) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.email?.split('@')[0] || session?.user?.id || 'anonymous';
+        const supplierId = `supplier-${userId}`;
+        
+        const matchPairs = demands.map(demand => ({
+          공급기업일련번호: supplierId,
+          수요기관일련번호: demand.수요기관일련번호
+        }));
+        fetchInterestStats(matchPairs);
+      }
+    };
+
+    initializeInterestStats();
   }, [demands, fetchInterestStats]);
 
   const fetchDemands = async () => {

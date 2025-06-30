@@ -1,8 +1,9 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building, Calendar, DollarSign, Edit } from "lucide-react";
-import { Heart, HeartOff } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useInterest } from "@/hooks/useInterest";
 import { DemandEditModal } from "./DemandEditModal";
@@ -34,9 +35,7 @@ const DemandCard = ({ demand, onUpdate }: DemandCardProps) => {
   const [interestCount, setInterestCount] = useState(0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
-
-  // 더미 공급기업 ID (실제로는 현재 사용자의 공급기업 ID를 사용해야 함)
-  const dummySupplierID = "dummy-supplier-id";
+  const [currentUserSupplierId, setCurrentUserSupplierId] = useState<string>("general-supplier");
 
   useEffect(() => {
     const checkEditPermission = async () => {
@@ -45,16 +44,22 @@ const DemandCard = ({ demand, onUpdate }: DemandCardProps) => {
         const currentUserId = session.user.email.split('@')[0];
         setCanEdit(currentUserId === demand.아이디);
       }
+
+      // 실제 사용자의 공급기업 ID를 가져오거나 일반적인 ID 사용
+      if (session?.user) {
+        const userId = session.user.email?.split('@')[0] || session.user.id;
+        setCurrentUserSupplierId(`supplier-${userId}`);
+      }
     };
 
     checkEditPermission();
   }, [demand.아이디]);
 
   useEffect(() => {
-    const interestData = getInterestData(dummySupplierID, demand.수요기관일련번호);
+    const interestData = getInterestData(currentUserSupplierId, demand.수요기관일련번호);
     setIsInterested(interestData.사용자관심여부);
     setInterestCount(interestData.관심수);
-  }, [demand.수요기관일련번호, getInterestData]);
+  }, [demand.수요기관일련번호, currentUserSupplierId, getInterestData]);
 
   const formatCurrency = (amount: number) => {
     if (!amount) return '';
@@ -67,8 +72,8 @@ const DemandCard = ({ demand, onUpdate }: DemandCardProps) => {
   };
 
   const handleInterestToggle = async () => {
-    await toggleInterest(dummySupplierID, demand.수요기관일련번호);
-    const updatedData = getInterestData(dummySupplierID, demand.수요기관일련번호);
+    await toggleInterest(currentUserSupplierId, demand.수요기관일련번호);
+    const updatedData = getInterestData(currentUserSupplierId, demand.수요기관일련번호);
     setIsInterested(updatedData.사용자관심여부);
     setInterestCount(updatedData.관심수);
   };
@@ -165,15 +170,16 @@ const DemandCard = ({ demand, onUpdate }: DemandCardProps) => {
               variant="ghost"
               size="sm"
               onClick={handleInterestToggle}
-              className="p-2 hover:bg-gray-100"
+              className="p-2 hover:bg-gray-100 flex items-center gap-1"
+              title={isInterested ? "관심 취소" : "관심 표시"}
             >
               {isInterested ? (
                 <Heart className="w-5 h-5 text-red-500 fill-red-500" />
               ) : (
-                <HeartOff className="w-5 h-5 text-gray-400" />
+                <Heart className="w-5 h-5 text-gray-400" />
               )}
               {interestCount > 0 && (
-                <span className="ml-1 text-xs text-gray-500">{interestCount}</span>
+                <span className="text-xs text-gray-600 font-medium">{interestCount}</span>
               )}
             </Button>
           </div>

@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useInterest } from "@/hooks/useInterest";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const SupplierList = () => {
   const {
@@ -29,14 +30,21 @@ const SupplierList = () => {
 
   // 공급기업 데이터가 로드된 후 관심 통계 초기화
   useEffect(() => {
-    if (suppliers.length > 0) {
-      const dummyDemandID = "dummy-demand-id";
-      const matchPairs = suppliers.map(supplier => ({
-        공급기업일련번호: supplier.공급기업일련번호,
-        수요기관일련번호: dummyDemandID
-      }));
-      fetchInterestStats(matchPairs);
-    }
+    const initializeInterestStats = async () => {
+      if (suppliers.length > 0) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.email?.split('@')[0] || session?.user?.id || 'anonymous';
+        const demandId = `demand-${userId}`;
+        
+        const matchPairs = suppliers.map(supplier => ({
+          공급기업일련번호: supplier.공급기업일련번호,
+          수요기관일련번호: demandId
+        }));
+        fetchInterestStats(matchPairs);
+      }
+    };
+
+    initializeInterestStats();
   }, [suppliers, fetchInterestStats]);
 
   return (
