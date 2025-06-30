@@ -45,6 +45,10 @@ const AIMatching = () => {
   // useCallback을 사용하여 함수 재생성 방지
   const handleMatchingSuccessRateUpdate = useCallback((totalMatches: number, qualityMatches: number) => {
     updateMatchingSuccessRate(totalMatches, qualityMatches);
+    
+    // localStorage에 매칭 성공률 저장
+    const successRate = totalMatches > 0 ? Math.round((qualityMatches / totalMatches) * 100) : 0;
+    localStorage.setItem('lastMatchingSuccessRate', successRate.toString());
   }, [updateMatchingSuccessRate]);
 
   // 매칭 결과가 변경될 때마다 실제 성공률 계산 (한 번만 실행되도록 개선)

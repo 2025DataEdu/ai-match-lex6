@@ -74,11 +74,15 @@ export const useStats = () => {
         // 매칭 수는 현재는 임시로 계산 (나중에 실제 매칭 테이블이 생기면 수정)
         const matchesCount = Math.floor((suppliersCount || 0) * (demandsCount || 0) * 0.1);
         
+        // localStorage에서 마지막 매칭 성공률 불러오기
+        const savedSuccessRate = localStorage.getItem('lastMatchingSuccessRate');
+        const matchingSuccessRate = savedSuccessRate ? parseInt(savedSuccessRate, 10) : 0;
+        
         setStats({
           suppliersCount: suppliersCount || 0,
           demandsCount: demandsCount || 0,
           matchesCount: matchesCount,
-          matchingSuccessRate: 0, // 기본값 0으로 설정
+          matchingSuccessRate: matchingSuccessRate,
           weeklyRegistrations: weeklyRegistrations
         });
       }
