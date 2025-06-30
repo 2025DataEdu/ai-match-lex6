@@ -10,32 +10,26 @@ interface MatchingScoreBreakdownProps {
 const MatchingScoreBreakdown = ({ match }: MatchingScoreBreakdownProps) => {
   const keywordScore = match.keywordScore || 0;
   const serviceTypeScore = match.serviceTypeScore || 0;
-  const industryScore = match.industryScore || 0;
   const bonusScore = match.bonusScore || 0;
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
       <h4 className="font-semibold mb-4 text-lg">매칭 점수 상세 분석 (총 {match.matchScore}점)</h4>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center">
           <div className="text-2xl font-bold text-blue-600">{keywordScore.toFixed(1)}점</div>
-          <div className="text-sm text-gray-600">키워드 매칭 (60%)</div>
+          <div className="text-sm text-gray-600">키워드 매칭 (70%)</div>
           <Progress value={keywordScore} className="mt-2" />
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-green-600">{serviceTypeScore.toFixed(1)}점</div>
-          <div className="text-sm text-gray-600">서비스 유형 (35%)</div>
+          <div className="text-sm text-gray-600">서비스 유형 (30%)</div>
           <Progress value={serviceTypeScore} className="mt-2" />
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600">{industryScore.toFixed(1)}점</div>
-          <div className="text-sm text-gray-600">업종 매칭 (5%)</div>
-          <Progress value={industryScore} className="mt-2" />
-        </div>
-        <div className="text-center">
           <div className="text-2xl font-bold text-purple-600">{bonusScore}점</div>
-          <div className="text-sm text-gray-600">보너스 점수</div>
+          <div className="text-sm text-gray-600">매칭 보너스</div>
           <Progress value={bonusScore} className="mt-2" />
         </div>
       </div>
@@ -65,6 +59,16 @@ const MatchingScoreBreakdown = ({ match }: MatchingScoreBreakdownProps) => {
               </Badge>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* 보너스 점수 설명 */}
+      {bonusScore > 0 && (
+        <div className="mb-4 p-3 bg-purple-50 rounded-lg">
+          <div className="text-sm font-medium mb-1 text-purple-800">보너스 점수 ({bonusScore}점)</div>
+          <p className="text-sm text-purple-600">
+            키워드와 서비스 유형이 모두 매칭되어 추가 점수를 받았습니다.
+          </p>
         </div>
       )}
 

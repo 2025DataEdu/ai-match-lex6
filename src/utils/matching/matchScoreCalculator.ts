@@ -2,7 +2,6 @@
 import { Supplier, Demand, DetailedMatch } from "@/types/matching";
 import { calculateKeywordSimilarity } from "./keywordSimilarity";
 import { calculateServiceTypeScore } from "./serviceTypeMatching";
-import { calculateIndustryScore } from "./industryMatching";
 
 // 개별 매칭 점수 계산 (개선된 알고리즘)
 export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplier): DetailedMatch => {
@@ -10,30 +9,31 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
   const supplierKeywords = supplier.추출키워드 || "";
   const demandContent = demand.수요내용 || "";
   
-  // 1. 키워드 기반 매칭 (60% 비중) - 정확한 매칭에 높은 점수
+  // 1. 키워드 기반 매칭 (70% 비중) - 정확한 매칭에 높은 점수
   const keywordResult = calculateKeywordSimilarity(demandKeywords, supplierKeywords);
-  const keywordScore = keywordResult.score * 0.6;
+  const keywordScore = keywordResult.score * 0.7;
   
-  // 2. AI 서비스 유형 매칭 (35% 비중) - 매칭된 서비스 유형 정보 포함
+  // 2. AI 서비스 유형 매칭 (30% 비중) - 매칭된 서비스 유형 정보 포함
   const serviceTypeResult = calculateServiceTypeScore(
     demandContent, 
     supplier.유형 || "", 
     demandKeywords, 
     supplierKeywords
   );
-  const serviceTypeScore = serviceTypeResult.score * 0.35;
+  const serviceTypeScore = serviceTypeResult.score * 0.3;
   
-  // 3. 업종 매칭 (5% 비중) - 비중 축소
-  const industryScore = calculateIndustryScore(demand.유형 || "", supplier.업종 || "") * 0.05;
-  
-  // 보너스 점수: 키워드와 서비스 유형이 모두 매칭되는 경우
+  // 개선된 보너스 점수: 키워드와 서비스 유형이 모두 매칭되는 경우
   let bonusScore = 0;
   if (keywordResult.matchedKeywords.length > 0 && serviceTypeResult.matchedServiceTypes.length > 0) {
-    bonusScore = Math.min(keywordResult.matchedKeywords.length * serviceTypeResult.matchedServiceTypes.length * 5, 30);
+    // 키워드 매칭 수에 따른 보너스 (최대 15점)
+    const keywordBonus = Math.min(keywordResult.matchedKeywords.length * 5, 15);
+    // 서비스 유형 매칭 수에 따른 보너스 (최대 10점)
+    const serviceTypeBonus = Math.min(serviceTypeResult.matchedServiceTypes.length * 5, 10);
+    bonusScore = keywordBonus + serviceTypeBonus;
   }
   
   // 총 매칭 점수 계산
-  const totalScore = keywordScore + serviceTypeScore + industryScore + bonusScore;
+  const totalScore = keywordScore + serviceTypeScore + bonusScore;
   const matchScore = Math.round(Math.max(totalScore, 0));
   
   // 매칭 이유 생성 - 구체적인 매칭 정보 포함
@@ -44,11 +44,8 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
   if (serviceTypeResult.matchedServiceTypes.length > 0) {
     reasons.push(`서비스유형 매칭: ${serviceTypeResult.matchedServiceTypes.join(', ')} (${serviceTypeScore.toFixed(1)}점)`);
   }
-  if (industryScore > 0) {
-    reasons.push(`업종 매칭 (${industryScore.toFixed(1)}점)`);
-  }
   if (bonusScore > 0) {
-    reasons.push(`키워드+서비스유형 보너스 (${bonusScore}점)`);
+    reasons.push(`매칭 보너스 (${bonusScore}점)`);
   }
   
   const matchReason = reasons.length > 0 ? reasons.join(' | ') : '기본 매칭';
@@ -69,7 +66,7 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
     score: matchScore,
     matchedKeywords: keywordResult.matchedKeywords,
     keywordScore: keywordScore,
-    capabilityScore: serviceTypeScore + industryScore,
+    capabilityScore: serviceTypeScore,
     matchScore: matchScore,
     matchReason: matchReason,
     supplier: supplier,
@@ -77,7 +74,6 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
     // 새로운 필드 추가
     matchedServiceTypes: serviceTypeResult.matchedServiceTypes,
     serviceTypeScore: serviceTypeScore,
-    industryScore: industryScore,
     bonusScore: bonusScore
   };
 };

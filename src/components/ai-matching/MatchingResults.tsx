@@ -28,7 +28,7 @@ const MatchingResults = ({ matches, onInterestClick, onInquiryClick, perspective
     }
   }, [matches, fetchInterestStats]);
 
-  // 그룹별로 매칭 결과 구성
+  // 그룹별로 매칭 결과 구성하되, 각 그룹당 최대 5개로 제한
   const groupedResults = matches.reduce((acc, match, index) => {
     const groupKey = perspective === 'demand' 
       ? match.demand.수요기관일련번호 
@@ -42,9 +42,18 @@ const MatchingResults = ({ matches, onInterestClick, onInquiryClick, perspective
       };
     }
     
-    acc[groupKey].matches.push({ match, originalIndex: index });
+    // 각 그룹당 최대 5개로 제한하고 점수 순으로 정렬
+    if (acc[groupKey].matches.length < 5) {
+      acc[groupKey].matches.push({ match, originalIndex: index });
+    }
+    
     return acc;
   }, {} as Record<string, any>);
+
+  // 각 그룹 내의 매칭을 점수 순으로 정렬
+  Object.values(groupedResults).forEach((group: any) => {
+    group.matches.sort((a: any, b: any) => b.match.matchScore - a.match.matchScore);
+  });
 
   return (
     <div className="space-y-6">
@@ -55,8 +64,8 @@ const MatchingResults = ({ matches, onInterestClick, onInquiryClick, perspective
         </h2>
         <Badge variant="outline" className="text-sm">
           {perspective === 'demand' ? 
-            `${Object.keys(groupedResults).length}개 수요기관` : 
-            `${Object.keys(groupedResults).length}개 공급기업`
+            `${Object.keys(groupedResults).length}개 수요기관 (그룹별 최대 5개)` : 
+            `${Object.keys(groupedResults).length}개 공급기업 (그룹별 최대 5개)`
           }
         </Badge>
       </div>
