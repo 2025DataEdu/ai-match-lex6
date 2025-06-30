@@ -1,120 +1,127 @@
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Filter, X, ArrowUpDown, Search } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MatchingFiltersProps {
-  industries: string[];
-  selectedIndustry: string;
-  onIndustryChange: (industry: string) => void;
-  scoreRange: [number, number];
-  onScoreRangeChange: (range: [number, number]) => void;
-  sortBy: string;
-  onSortChange: (sort: string) => void;
-  sortOrder: 'asc' | 'desc';
-  onSortOrderChange: (order: 'asc' | 'desc') => void;
-  matchingPerspective: 'demand' | 'supplier';
-  onMatchingPerspectiveChange: (perspective: 'demand' | 'supplier') => void;
-  searchTerm: string;
-  onSearchTermChange: (term: string) => void;
-  onClearFilters: () => void;
-  hasActiveFilters: boolean;
+  filters: {
+    minScore: number;
+    maxScore: number;
+    serviceType: string;
+    industry: string;
+    keyword: string;
+  };
+  onFiltersChange: (filters: any) => void;
+  onReset: () => void;
 }
 
-const MatchingFilters = ({
-  industries,
-  selectedIndustry,
-  onIndustryChange,
-  scoreRange,
-  onScoreRangeChange,
-  sortBy,
-  onSortChange,
-  sortOrder,
-  onSortOrderChange,
-  matchingPerspective,
-  onMatchingPerspectiveChange,
-  searchTerm,
-  onSearchTermChange,
-  onClearFilters,
-  hasActiveFilters
-}: MatchingFiltersProps) => {
-  const scoreRanges = [
-    { label: "전체", value: [0, 100] as [number, number] },
-    { label: "80% 이상 (높음)", value: [80, 100] as [number, number] },
-    { label: "60-79% (보통)", value: [60, 79] as [number, number] },
-    { label: "60% 미만 (낮음)", value: [0, 59] as [number, number] }
-  ];
+const AI_SERVICE_TYPES = [
+  "AI 챗봇/대화형AI",
+  "컴퓨터 비전/이미지AI", 
+  "자연어처리/텍스트AI",
+  "음성인식/음성AI",
+  "예측분석/데이터AI",
+  "추천시스템/개인화AI",
+  "로봇/자동화AI",
+  "AI 플랫폼/인프라",
+  "AI 교육/컨설팅",
+  "기타 AI 서비스"
+];
 
-  const getSearchPlaceholder = () => {
-    return matchingPerspective === 'demand' 
-      ? '수요기관명으로 검색...' 
-      : '공급기업명으로 검색...';
-  };
+const INDUSTRIES = [
+  "제조업",
+  "정보통신업",
+  "금융업",
+  "유통업",
+  "의료업",
+  "교육업",
+  "건설업",
+  "운송업",
+  "농업",
+  "서비스업",
+  "연구개발업",
+  "컨설팅업",
+  "기타"
+];
 
+const MatchingFilters = ({ filters, onFiltersChange, onReset }: MatchingFiltersProps) => {
   return (
     <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Filter className="w-5 h-5" />
-          필터 및 정렬
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearFilters}
-              className="ml-auto text-red-600 hover:text-red-700"
-            >
-              <X className="w-4 h-4 mr-1" />
-              초기화
-            </Button>
-          )}
-        </CardTitle>
+      <CardHeader>
+        <CardTitle className="text-lg">AI 매칭 필터</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          {/* 매칭 관점 선택 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">매칭 관점</label>
-            <Select value={matchingPerspective} onValueChange={onMatchingPerspectiveChange}>
+            <Label>최소 매칭 점수</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={filters.minScore}
+              onChange={(e) => onFiltersChange({ 
+                ...filters, 
+                minScore: parseInt(e.target.value) || 0 
+              })}
+              placeholder="0"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>최대 매칭 점수</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={filters.maxScore}
+              onChange={(e) => onFiltersChange({ 
+                ...filters, 
+                maxScore: parseInt(e.target.value) || 100 
+              })}
+              placeholder="100"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>AI 서비스 유형</Label>
+            <Select
+              value={filters.serviceType}
+              onValueChange={(value) => onFiltersChange({ 
+                ...filters, 
+                serviceType: value 
+              })}
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="모든 AI 서비스" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="demand">수요기관 중심</SelectItem>
-                <SelectItem value="supplier">공급기업 중심</SelectItem>
+                <SelectItem value="">모든 AI 서비스</SelectItem>
+                {AI_SERVICE_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* 검색 필터 */}
+          
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              {matchingPerspective === 'demand' ? '수요기관 검색' : '공급기업 검색'}
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder={getSearchPlaceholder()}
-                value={searchTerm}
-                onChange={(e) => onSearchTermChange(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          {/* 업종별 필터 */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">업종</label>
-            <Select value={selectedIndustry} onValueChange={onIndustryChange}>
+            <Label>업종</Label>
+            <Select
+              value={filters.industry}
+              onValueChange={(value) => onFiltersChange({ 
+                ...filters, 
+                industry: value 
+              })}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="전체 업종" />
+                <SelectValue placeholder="모든 업종" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체 업종</SelectItem>
-                {industries.map((industry) => (
+                <SelectItem value="">모든 업종</SelectItem>
+                {INDUSTRIES.map((industry) => (
                   <SelectItem key={industry} value={industry}>
                     {industry}
                   </SelectItem>
@@ -122,81 +129,26 @@ const MatchingFilters = ({
               </SelectContent>
             </Select>
           </div>
-
-          {/* 점수 구간별 필터 */}
+          
           <div className="space-y-2">
-            <label className="text-sm font-medium">매칭 점수</label>
-            <Select 
-              value={`${scoreRange[0]}-${scoreRange[1]}`} 
-              onValueChange={(value) => {
-                const range = scoreRanges.find(r => `${r.value[0]}-${r.value[1]}` === value);
-                if (range) onScoreRangeChange(range.value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {scoreRanges.map((range) => (
-                  <SelectItem key={`${range.value[0]}-${range.value[1]}`} value={`${range.value[0]}-${range.value[1]}`}>
-                    {range.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>키워드 검색</Label>
+            <Input
+              type="text"
+              value={filters.keyword}
+              onChange={(e) => onFiltersChange({ 
+                ...filters, 
+                keyword: e.target.value 
+              })}
+              placeholder="키워드 입력"
+            />
           </div>
-
-          {/* 정렬 기준 */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">정렬 기준</label>
-            <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="matchScore">매칭점수</SelectItem>
-                <SelectItem value="등록일자">등록일</SelectItem>
-                <SelectItem value="기업명">기업명</SelectItem>
-                <SelectItem value="capabilityScore">기업역량</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 정렬 순서 */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">정렬 순서</label>
-            <Button
-              variant="outline"
-              onClick={() => onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="w-full justify-start"
-            >
-              <ArrowUpDown className="w-4 h-4 mr-2" />
-              {sortOrder === 'asc' ? '오름차순' : '내림차순'}
+          
+          <div className="flex items-end">
+            <Button variant="outline" onClick={onReset} className="w-full">
+              필터 초기화
             </Button>
           </div>
         </div>
-
-        {/* 활성 필터 표시 */}
-        {hasActiveFilters && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              관점: {matchingPerspective === 'demand' ? '수요기관 중심' : '공급기업 중심'}
-            </Badge>
-            {searchTerm && (
-              <Badge variant="secondary">
-                검색: {searchTerm}
-              </Badge>
-            )}
-            {selectedIndustry !== "all" && (
-              <Badge variant="secondary">업종: {selectedIndustry}</Badge>
-            )}
-            {(scoreRange[0] !== 0 || scoreRange[1] !== 100) && (
-              <Badge variant="secondary">
-                점수: {scoreRange[0]}%-{scoreRange[1]}%
-              </Badge>
-            )}
-          </div>
-        )}
       </CardContent>
     </Card>
   );

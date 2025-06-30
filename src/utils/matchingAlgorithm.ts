@@ -1,291 +1,218 @@
 
 import { Supplier, Demand } from "@/types/matching";
 
+// AI 서비스 유형별 확장된 키워드 사전
+const AI_SERVICE_KEYWORDS = {
+  "AI 챗봇/대화형AI": [
+    "챗봇", "대화형", "대화", "AI", "자동응답", "고객상담", "음성인식", "자연어", "NLP", 
+    "conversation", "chatbot", "virtual assistant", "conversational", "dialogue"
+  ],
+  "컴퓨터 비전/이미지AI": [
+    "비전", "이미지", "영상", "컴퓨터비전", "이미지인식", "패턴인식", "객체인식", "얼굴인식", 
+    "OCR", "vision", "image", "computer vision", "object detection", "facial recognition"
+  ],
+  "자연어처리/텍스트AI": [
+    "자연어", "텍스트", "언어처리", "NLP", "번역", "텍스트분석", "감정분석", "요약", 
+    "텍스트마이닝", "natural language", "text", "translation", "sentiment", "summarization"
+  ],
+  "음성인식/음성AI": [
+    "음성", "음향", "STT", "TTS", "음성인식", "음성합성", "음성분석", "보이스", 
+    "speech", "voice", "audio", "speech recognition", "voice synthesis"
+  ],
+  "예측분석/데이터AI": [
+    "예측", "분석", "데이터", "머신러닝", "딥러닝", "통계", "예측모델", "빅데이터", 
+    "analytics", "prediction", "machine learning", "deep learning", "statistics", "forecasting"
+  ],
+  "추천시스템/개인화AI": [
+    "추천", "개인화", "맞춤", "협업필터링", "콘텐츠기반", "추천알고리즘", 
+    "recommendation", "personalization", "collaborative filtering", "content based", "customization"
+  ],
+  "로봇/자동화AI": [
+    "로봇", "자동화", "RPA", "지능형로봇", "산업로봇", "서비스로봇", "자동화시스템", 
+    "robot", "automation", "robotic", "intelligent robot", "industrial robot"
+  ],
+  "AI 플랫폼/인프라": [
+    "플랫폼", "인프라", "클라우드", "MLOps", "AI플랫폼", "인프라구축", "시스템구축", 
+    "platform", "infrastructure", "cloud", "AI platform", "system integration"
+  ],
+  "AI 교육/컨설팅": [
+    "교육", "컨설팅", "자문", "교육과정", "워크샵", "세미나", "AI교육", "기술자문", 
+    "education", "consulting", "training", "workshop", "seminar", "advisory"
+  ],
+  "기타 AI 서비스": [
+    "기타", "혼합", "복합", "통합", "다양한", "기타서비스", 
+    "other", "mixed", "integrated", "various", "miscellaneous"
+  ]
+};
+
+// 업종별 키워드 사전도 확장
+const INDUSTRY_KEYWORDS = {
+  "제조업": ["제조", "생산", "공장", "manufacturing", "production", "factory"],
+  "정보통신업": ["IT", "소프트웨어", "통신", "정보통신", "software", "telecommunication"],
+  "금융업": ["금융", "은행", "보험", "증권", "finance", "banking", "insurance"],
+  "유통업": ["유통", "물류", "배송", "retail", "distribution", "logistics"],
+  "의료업": ["의료", "병원", "헬스케어", "medical", "healthcare", "hospital"],
+  "교육업": ["교육", "학교", "대학", "education", "school", "university"],
+  "건설업": ["건설", "건축", "토목", "construction", "architecture"],
+  "운송업": ["운송", "교통", "물류", "transportation", "traffic", "delivery"],
+  "농업": ["농업", "농장", "agriculture", "farming"],
+  "서비스업": ["서비스", "고객서비스", "service", "customer service"],
+  "연구개발업": ["연구", "개발", "R&D", "research", "development"],
+  "컨설팅업": ["컨설팅", "자문", "consulting", "advisory"],
+  "기타": ["기타", "other", "miscellaneous"]
+};
+
 export interface DetailedMatch {
-  supplier: Supplier;
   demand: Demand;
+  supplier: Supplier;
   matchScore: number;
-  keywordScore: number;
-  capabilityScore: number;
-  matchedKeywords: string[];
-  matchReason: string;
-}
-
-export interface GroupedMatches {
-  [key: string]: {
-    entity: Supplier | Demand;
-    matches: DetailedMatch[];
-    averageScore: number;
-    totalMatches: number;
+  matchDetails: {
+    typeMatch: number;
+    keywordMatch: number;
+    companyCapability: number;
+    details: string[];
   };
 }
 
-// 개선된 한글 키워드 사전 - 더 구체적이고 의미있는 키워드들
-const KOREAN_KEYWORDS = [
-  // AI/머신러닝 관련
-  'AI', '인공지능', '머신러닝', '딥러닝', '자연어처리', 'NLP', '컴퓨터비전', '음성인식',
-  'ChatGPT', 'GPT', '챗봇', '대화형AI', '생성형AI', '예측모델', '추천시스템',
+// 키워드 매칭 점수 계산 (개선된 알고리즘)
+function calculateKeywordMatch(demandContent: string, supplierDescription: string, demandType: string, supplierType: string): number {
+  if (!demandContent || !supplierDescription) return 0;
   
-  // 기술 분야
-  'IoT', '사물인터넷', '빅데이터', '데이터분석', '데이터마이닝', '블록체인',
-  '클라우드', 'AWS', 'Azure', 'GCP', '마이크로서비스', 'API', 'REST',
+  const demandLower = demandContent.toLowerCase();
+  const supplierLower = supplierDescription.toLowerCase();
   
-  // 개발 관련
-  '앱개발', '웹개발', '모바일앱', '안드로이드', 'iOS', '웹사이트', '소프트웨어',
-  '시스템개발', '플랫폼개발', 'UI/UX', '프론트엔드', '백엔드', '풀스택',
+  // 유형별 특화 키워드 점수
+  let typeKeywordScore = 0;
+  const demandTypeKeywords = AI_SERVICE_KEYWORDS[demandType as keyof typeof AI_SERVICE_KEYWORDS] || [];
+  const supplierTypeKeywords = AI_SERVICE_KEYWORDS[supplierType as keyof typeof AI_SERVICE_KEYWORDS] || [];
   
-  // 산업별 특화
-  '스마트시티', '스마트팩토리', '디지털트윈', '자동화', '로봇', 'RPA',
-  '핀테크', '결제시스템', '전자상거래', 'e-커머스', '온라인쇼핑몰',
+  // 수요 유형 키워드가 공급업체 설명에 포함되는지 확인
+  const demandKeywordsInSupplier = demandTypeKeywords.filter(keyword => 
+    supplierLower.includes(keyword.toLowerCase())
+  ).length;
   
-  // 교육/콘텐츠
-  '교육', '이러닝', 'e-learning', '온라인교육', '원격교육', '교육플랫폼',
-  '게임', '메타버스', 'VR', 'AR', '가상현실', '증강현실', '3D', '시뮬레이션',
+  // 공급업체 유형 키워드가 수요 내용에 포함되는지 확인
+  const supplierKeywordsInDemand = supplierTypeKeywords.filter(keyword => 
+    demandLower.includes(keyword.toLowerCase())
+  ).length;
   
-  // 의료/헬스케어
-  '의료', '헬스케어', '원격의료', '의료정보시스템', '병원관리', '진료',
-  '바이오', '생명과학', '제약', '임상시험', '건강관리',
+  typeKeywordScore = ((demandKeywordsInSupplier + supplierKeywordsInDemand) / 
+    (demandTypeKeywords.length + supplierTypeKeywords.length)) * 100;
   
-  // 보안/인프라
-  '보안', '사이버보안', '정보보안', '네트워크보안', '암호화',
-  '네트워크', '서버', '인프라', '데이터베이스', 'DB',
+  // 일반적인 키워드 매칭 점수
+  const commonKeywords = ["AI", "인공지능", "artificial intelligence", "기술", "서비스", "솔루션", "시스템"];
+  const commonMatches = commonKeywords.filter(keyword => 
+    demandLower.includes(keyword.toLowerCase()) && supplierLower.includes(keyword.toLowerCase())
+  ).length;
   
-  // 기타 중요 키워드
-  '환경', '에너지', '신재생에너지', '그린테크', 'ESG',
-  '물류', '유통', '배송', '재고관리', 'SCM',
-  '관리시스템', 'ERP', 'CRM', 'MES', 'WMS'
-];
-
-// 개선된 키워드 추출 함수
-export function extractKeywords(text: string): string[] {
-  if (!text) return [];
+  const commonScore = (commonMatches / commonKeywords.length) * 20; // 최대 20점
   
-  const normalizedText = text.toLowerCase();
-  const foundKeywords = new Set<string>();
-  
-  // 사전 키워드 매칭 (대소문자 구분 없이)
-  KOREAN_KEYWORDS.forEach(keyword => {
-    if (normalizedText.includes(keyword.toLowerCase())) {
-      foundKeywords.add(keyword);
-    }
-  });
-  
-  // 의미있는 단어 추출 (2글자 이상, 불용어 제외)
-  const stopWords = ['은', '는', '이', '가', '을', '를', '의', '에', '로', '와', '과', '도', '만', '부터', '까지', '에서', '으로', '에게', '한테', '께', '에서부터', '하는', '있는', '되는', '같은', '통해', '위한', '위해', '통한', '관련', '기반', '중심', '전용', '전문', '특화'];
-  
-  const words = text.split(/[\s,\.\!\?\(\)\[\]\{\}]+/)
-    .filter(word => {
-      const cleanWord = word.trim();
-      return cleanWord.length >= 2 && 
-             !/^\d+$/.test(cleanWord) && 
-             !stopWords.includes(cleanWord) &&
-             !/^[a-zA-Z]{1}$/.test(cleanWord); // 단일 영문자 제외
-    });
-  
-  words.forEach(word => {
-    if (word.length >= 2) {
-      foundKeywords.add(word);
-    }
-  });
-  
-  return Array.from(foundKeywords);
+  return Math.min(typeKeywordScore + commonScore, 100);
 }
 
-// 개선된 키워드 유사도 계산
-export function calculateKeywordSimilarity(demandText: string, supplierText: string): {
-  score: number;
-  matchedKeywords: string[];
-} {
-  const demandKeywords = extractKeywords(demandText);
-  const supplierKeywords = extractKeywords(supplierText);
+// 기업 역량 점수 계산
+function calculateCompanyCapability(supplier: Supplier): number {
+  let score = 50; // 기본 점수
   
-  if (demandKeywords.length === 0 || supplierKeywords.length === 0) {
-    return { score: 0, matchedKeywords: [] };
-  }
-  
-  const matchedKeywords = new Set<string>();
-  let exactMatches = 0;
-  let partialMatches = 0;
-  
-  // 정확한 매칭과 부분 매칭을 구분하여 계산
-  demandKeywords.forEach(demandKeyword => {
-    supplierKeywords.forEach(supplierKeyword => {
-      const dKeyword = demandKeyword.toLowerCase();
-      const sKeyword = supplierKeyword.toLowerCase();
-      
-      if (dKeyword === sKeyword) {
-        exactMatches++;
-        matchedKeywords.add(demandKeyword);
-      } else if (dKeyword.includes(sKeyword) || sKeyword.includes(dKeyword)) {
-        partialMatches++;
-        matchedKeywords.add(demandKeyword);
-      }
-    });
-  });
-  
-  // 가중치를 적용한 점수 계산
-  const totalKeywords = Math.max(demandKeywords.length, supplierKeywords.length);
-  const exactScore = (exactMatches / totalKeywords) * 100;
-  const partialScore = (partialMatches / totalKeywords) * 50; // 부분 매칭은 50% 가중치
-  
-  const finalScore = Math.min(exactScore + partialScore, 100);
-  
-  return {
-    score: finalScore,
-    matchedKeywords: Array.from(matchedKeywords).slice(0, 5)
-  };
-}
-
-// 개선된 기업 역량 점수 계산
-export function calculateCapabilityScore(supplier: Supplier): number {
-  let score = 20; // 기본 점수 낮춤 (더 엄격한 평가)
-  
-  // 세부설명의 질적 평가
-  if (supplier.세부설명) {
-    const descLength = supplier.세부설명.length;
-    if (descLength > 200) score += 25; // 상세한 설명
-    else if (descLength > 100) score += 15;
-    else if (descLength > 50) score += 10;
-    
-    // 기술 키워드 포함 여부 확인
-    const techKeywords = extractKeywords(supplier.세부설명);
-    const techKeywordCount = techKeywords.filter(keyword => 
-      KOREAN_KEYWORDS.includes(keyword)
-    ).length;
-    
-    if (techKeywordCount >= 5) score += 20;
-    else if (techKeywordCount >= 3) score += 15;
-    else if (techKeywordCount >= 1) score += 10;
-  }
-  
-  // 보유 특허 평가
-  if (supplier.보유특허 && supplier.보유특허.length > 10) {
+  // 보유특허가 있으면 가점
+  if (supplier.보유특허 && supplier.보유특허.trim().length > 10) {
     score += 20;
   }
   
-  // 온라인 존재감 평가
-  if (supplier.기업홈페이지) {
-    score += 15; // 신뢰도 지표
+  // 기업홈페이지가 있으면 가점
+  if (supplier.기업홈페이지 && supplier.기업홈페이지.trim().length > 0) {
+    score += 10;
   }
   
-  if (supplier.유튜브링크) {
-    score += 10; // 마케팅 역량
+  // 유튜브링크가 있으면 가점
+  if (supplier.유튜브링크 && supplier.유튜브링크.trim().length > 0) {
+    score += 10;
   }
   
-  // 업종과 유형의 일관성 평가
-  if (supplier.업종 && supplier.유형) {
+  // 세부설명이 충실하면 가점
+  if (supplier.세부설명 && supplier.세부설명.trim().length > 50) {
     score += 10;
   }
   
   return Math.min(score, 100);
 }
 
-// 개선된 종합 매칭 점수 계산
+// 유형 일치 점수 계산
+function calculateTypeMatch(demandType: string, supplierType: string): number {
+  if (demandType === supplierType) return 100;
+  
+  // 유사한 유형들에 대한 부분 점수
+  const similarTypes = {
+    "AI 챗봇/대화형AI": ["자연어처리/텍스트AI", "음성인식/음성AI"],
+    "컴퓨터 비전/이미지AI": ["로봇/자동화AI"],
+    "자연어처리/텍스트AI": ["AI 챗봇/대화형AI", "음성인식/음성AI"],
+    "음성인식/음성AI": ["AI 챗봇/대화형AI", "자연어처리/텍스트AI"],
+    "예측분석/데이터AI": ["추천시스템/개인화AI"],
+    "추천시스템/개인화AI": ["예측분석/데이터AI"],
+    "로봇/자동화AI": ["컴퓨터 비전/이미지AI"],
+    "AI 플랫폼/인프라": ["AI 교육/컨설팅"],
+    "AI 교육/컨설팅": ["AI 플랫폼/인프라"]
+  };
+  
+  const similar = similarTypes[demandType as keyof typeof similarTypes] || [];
+  if (similar.includes(supplierType)) return 60;
+  
+  return 20; // 기본적으로 모든 AI 서비스는 어느 정도 관련성이 있음
+}
+
 export function calculateMatchingScore(demand: Demand, supplier: Supplier): DetailedMatch {
-  // 키워드 매칭 (수요내용 vs 공급기업 정보)
-  const keywordResult = calculateKeywordSimilarity(
-    demand.수요내용 || '',
-    `${supplier.세부설명 || ''} ${supplier.업종 || ''} ${supplier.유형 || ''}`
+  // 각 항목별 점수 계산
+  const typeMatch = calculateTypeMatch(demand.유형 || "", supplier.유형 || "");
+  
+  const keywordMatch = calculateKeywordMatch(
+    demand.수요내용 || "", 
+    supplier.세부설명 || "", 
+    demand.유형 || "", 
+    supplier.유형 || ""
   );
   
-  const capabilityScore = calculateCapabilityScore(supplier);
+  const companyCapability = calculateCompanyCapability(supplier);
   
-  // 유형 일치도 계산
-  let typeMatchScore = 0;
-  if (demand.유형 && supplier.유형) {
-    if (demand.유형 === supplier.유형) {
-      typeMatchScore = 30; // 유형 완전 일치 시 보너스
-    } else {
-      // 유사 유형 매칭 (예: '웹개발'과 '앱개발')
-      const demandType = demand.유형.toLowerCase();
-      const supplierType = supplier.유형.toLowerCase();
-      if (demandType.includes('개발') && supplierType.includes('개발')) {
-        typeMatchScore = 15;
-      } else if (demandType.includes('시스템') && supplierType.includes('시스템')) {
-        typeMatchScore = 15;
-      }
-    }
+  // 가중 평균으로 최종 점수 계산 (키워드 50%, 기업역량 30%, 유형일치 20%)
+  const finalScore = Math.round(
+    (keywordMatch * 0.5) + 
+    (companyCapability * 0.3) + 
+    (typeMatch * 0.2)
+  );
+  
+  // 세부 정보 생성
+  const details: string[] = [];
+  if (typeMatch === 100) {
+    details.push("서비스 유형이 정확히 일치");
+  } else if (typeMatch >= 60) {
+    details.push("서비스 유형이 유사함");
   }
   
-  // 가중 평균 계산 (키워드 50%, 역량 30%, 유형매칭 20%)
-  const totalScore = (keywordResult.score * 0.5) + (capabilityScore * 0.3) + (typeMatchScore * 0.2);
+  if (keywordMatch >= 70) {
+    details.push("키워드 매칭도가 높음");
+  } else if (keywordMatch >= 40) {
+    details.push("키워드 매칭도가 보통");
+  }
   
-  // 매칭 이유 생성
-  const reasons = [];
-  if (keywordResult.matchedKeywords.length > 0) {
-    reasons.push(`키워드 매칭 (${keywordResult.matchedKeywords.slice(0, 3).join(', ')})`);
+  if (companyCapability >= 80) {
+    details.push("기업 역량이 우수함");
+  } else if (companyCapability >= 60) {
+    details.push("기업 역량이 양호함");
   }
-  if (capabilityScore > 70) {
-    reasons.push('우수한 기업 역량');
-  }
-  if (typeMatchScore > 0) {
-    reasons.push('서비스 유형 일치');
-  }
-  if (totalScore < 40) {
-    reasons.push('기본 매칭');
+  
+  if (supplier.보유특허 && supplier.보유특허.trim().length > 10) {
+    details.push("관련 특허 보유");
   }
   
   return {
-    supplier,
     demand,
-    matchScore: Math.round(totalScore),
-    keywordScore: Math.round(keywordResult.score),
-    capabilityScore: Math.round(capabilityScore),
-    matchedKeywords: keywordResult.matchedKeywords,
-    matchReason: reasons.length > 0 ? reasons.join(', ') : '기본 매칭'
+    supplier,
+    matchScore: finalScore,
+    matchDetails: {
+      typeMatch,
+      keywordMatch: Math.round(keywordMatch),
+      companyCapability: Math.round(companyCapability),
+      details
+    }
   };
-}
-
-// 매칭 결과를 관점별로 그룹화하고 정렬
-export function groupAndSortMatches(
-  matches: DetailedMatch[], 
-  perspective: 'demand' | 'supplier',
-  sortBy: string = 'matchScore',
-  sortOrder: 'asc' | 'desc' = 'desc'
-): DetailedMatch[] {
-  // 관점에 따라 그룹화
-  const grouped: GroupedMatches = {};
-  
-  matches.forEach(match => {
-    const key = perspective === 'demand' 
-      ? match.demand.수요기관일련번호 
-      : match.supplier.공급기업일련번호;
-    
-    if (!grouped[key]) {
-      grouped[key] = {
-        entity: perspective === 'demand' ? match.demand : match.supplier,
-        matches: [],
-        averageScore: 0,
-        totalMatches: 0
-      };
-    }
-    
-    grouped[key].matches.push(match);
-    grouped[key].totalMatches++;
-  });
-  
-  // 각 그룹의 평균 점수 계산
-  Object.values(grouped).forEach(group => {
-    group.averageScore = group.matches.reduce((sum, match) => sum + match.matchScore, 0) / group.matches.length;
-    
-    // 그룹 내에서 매칭 점수로 정렬
-    group.matches.sort((a, b) => b.matchScore - a.matchScore);
-  });
-  
-  // 그룹을 평균 점수로 정렬
-  const sortedGroups = Object.values(grouped).sort((a, b) => {
-    if (sortOrder === 'desc') {
-      return b.averageScore - a.averageScore;
-    } else {
-      return a.averageScore - b.averageScore;
-    }
-  });
-  
-  // 정렬된 결과를 평면 배열로 변환
-  const result: DetailedMatch[] = [];
-  sortedGroups.forEach(group => {
-    result.push(...group.matches);
-  });
-  
-  return result;
 }
