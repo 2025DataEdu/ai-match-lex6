@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -199,13 +200,31 @@ const SupplierRegistration = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="industry">업종</Label>
-                  <Input
-                    id="industry"
-                    placeholder="업종을 입력하세요"
+                  <Label htmlFor="industry">업종 *</Label>
+                  <Select
                     value={formData.industry}
-                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, industry: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="업종을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="제조업">제조업</SelectItem>
+                      <SelectItem value="정보통신업">정보통신업</SelectItem>
+                      <SelectItem value="금융업">금융업</SelectItem>
+                      <SelectItem value="유통업">유통업</SelectItem>
+                      <SelectItem value="의료업">의료업</SelectItem>
+                      <SelectItem value="교육업">교육업</SelectItem>
+                      <SelectItem value="건설업">건설업</SelectItem>
+                      <SelectItem value="운송업">운송업</SelectItem>
+                      <SelectItem value="농업">농업</SelectItem>
+                      <SelectItem value="서비스업">서비스업</SelectItem>
+                      <SelectItem value="연구개발업">연구개발업</SelectItem>
+                      <SelectItem value="컨설팅업">컨설팅업</SelectItem>
+                      <SelectItem value="기타">기타</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
