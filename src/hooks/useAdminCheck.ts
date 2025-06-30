@@ -12,6 +12,21 @@ export const useAdminCheck = () => {
 
   const checkAdminStatus = async () => {
     try {
+      // 관리자 세션 확인
+      const adminSession = localStorage.getItem('admin_session');
+      if (adminSession) {
+        try {
+          const parsedSession = JSON.parse(adminSession);
+          if (parsedSession.user?.email === 'admin@system.com') {
+            setIsAdmin(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          localStorage.removeItem('admin_session');
+        }
+      }
+
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user?.email) {
         setIsAdmin(false);

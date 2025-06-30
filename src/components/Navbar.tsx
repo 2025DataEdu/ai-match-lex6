@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,26 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 관리자 세션 확인
+    const checkAdminSession = () => {
+      const adminSession = localStorage.getItem('admin_session');
+      if (adminSession) {
+        try {
+          const parsedSession = JSON.parse(adminSession);
+          setSession(parsedSession as Session);
+          setUserName(parsedSession.user?.user_metadata?.name || "관리자");
+          return true;
+        } catch (error) {
+          localStorage.removeItem('admin_session');
+        }
+      }
+      return false;
+    };
+
+    if (checkAdminSession()) {
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user?.email) {
@@ -23,6 +44,9 @@ const Navbar = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('admin_session');
+      }
       setSession(session);
       if (session?.user?.email) {
         fetchUserName(session.user.email.split('@')[0]);
@@ -51,6 +75,15 @@ const Navbar = () => {
   };
 
   const handleSignOut = async () => {
+    // 관리자 세션 확인
+    const adminSession = localStorage.getItem('admin_session');
+    if (adminSession) {
+      localStorage.removeItem('admin_session');
+      navigate("/");
+      window.location.reload();
+      return;
+    }
+
     await supabase.auth.signOut();
     navigate("/");
   };
@@ -128,7 +161,7 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* 나머지 모바일 메뉴 코드는 동일 */}
             <div className="md:hidden">
               <Button
                 variant="ghost"

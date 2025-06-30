@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -54,6 +55,27 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 관리자 세션 확인
+    const checkAdminSession = () => {
+      const adminSession = localStorage.getItem('admin_session');
+      if (adminSession) {
+        try {
+          const parsedSession = JSON.parse(adminSession);
+          setSession(parsedSession as Session);
+          setLoading(false);
+          return true;
+        } catch (error) {
+          localStorage.removeItem('admin_session');
+        }
+      }
+      return false;
+    };
+
+    // 먼저 관리자 세션 확인
+    if (checkAdminSession()) {
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -63,6 +85,10 @@ const App = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // 로그아웃 시 관리자 세션도 제거
+        if (event === 'SIGNED_OUT') {
+          localStorage.removeItem('admin_session');
+        }
         setSession(session);
         setLoading(false);
       }
@@ -83,7 +109,7 @@ const App = () => {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
