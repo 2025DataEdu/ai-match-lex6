@@ -2,7 +2,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import CollapsibleMatchingGroup from "./CollapsibleMatchingGroup";
-import { DetailedMatch } from "@/utils/matchingAlgorithm";
+import { DetailedMatch } from "@/types/matching";
 import { Building2, Users } from "lucide-react";
 import { useInterest } from "@/hooks/useInterest";
 import { useEffect } from "react";

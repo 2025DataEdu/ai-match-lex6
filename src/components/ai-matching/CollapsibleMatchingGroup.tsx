@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Users, ChevronDown, ChevronUp } from "lucide-react";
-import { DetailedMatch } from "@/utils/matchingAlgorithm";
+import { DetailedMatch } from "@/types/matching";
 import EnhancedMatchingCard from "./EnhancedMatchingCard";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 

@@ -1,10 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Building2, Users, ArrowRight, Calendar, Globe, Youtube, FileText, Mail, Award, BarChart, Phone, User, DollarSign } from "lucide-react";
-import { DetailedMatch } from "@/utils/matchingAlgorithm";
+import { DetailedMatch } from "@/types/matching";
 
 interface EnhancedMatchingDetailModalProps {
   match: DetailedMatch;

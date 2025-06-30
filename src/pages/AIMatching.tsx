@@ -8,7 +8,7 @@ import MatchingFilters from "@/components/ai-matching/MatchingFilters";
 import MatchingResults from "@/components/ai-matching/MatchingResults";
 import MatchingEmptyState from "@/components/ai-matching/MatchingEmptyState";
 import { useAIMatching } from "@/hooks/useAIMatching";
-import { DetailedMatch } from "@/utils/matchingAlgorithm";
+import { DetailedMatch } from "@/types/matching";
 
 const AIMatching = () => {
   const {
@@ -93,7 +93,6 @@ const AIMatching = () => {
         {/* 필터 및 정렬 */}
         {matches.length > 0 && (
           <MatchingFilters
-            industries={industries}
             selectedIndustry={selectedIndustry}
             onIndustryChange={setSelectedIndustry}
             scoreRange={scoreRange}

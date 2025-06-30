@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Building2, Users, Heart, Award, Globe, Youtube, DollarSign } from "lucide-react";
-import { DetailedMatch } from "@/utils/matchingAlgorithm";
+import { DetailedMatch } from "@/types/matching";
 import EnhancedMatchingDetailModal from "./EnhancedMatchingDetailModal";
 import InquiryCommentModal from "./InquiryCommentModal";
 import { useInquiryComments } from "@/hooks/useInquiryComments";
