@@ -1,35 +1,37 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Menu, X } from "lucide-react";
+import { User, LogOut, Menu, X, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
+
 const Navbar = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+
   useEffect(() => {
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
+
     const {
-      data: {
-        subscription
-      }
+      data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
     });
+
     return () => subscription.unsubscribe();
   }, []);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
-  return <nav className="bg-white shadow-md border-b">
+
+  return (
+    <nav className="bg-white shadow-md border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
@@ -41,53 +43,105 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/suppliers" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link
+              to="/suppliers"
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+            >
               공급기업
             </Link>
-            <Link to="/demands" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link
+              to="/demands"
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+            >
               수요내용
             </Link>
-            <Link to="/ai-matching" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link
+              to="/ai-matching"
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+            >
               AI매치
             </Link>
           </div>
 
           {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {session ? <div className="flex items-center space-x-3">
+            {session ? (
+              <div className="flex items-center space-x-3">
+                <Link to="/mypage">
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+                    <UserCircle className="w-4 h-4" />
+                    <span>마이페이지</span>
+                  </Button>
+                </Link>
                 <div className="flex items-center space-x-2">
                   <User className="w-5 h-5 text-gray-600" />
                   <span className="text-sm text-gray-700">{session.user.email}</span>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleSignOut} className="flex items-center space-x-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1"
+                >
                   <LogOut className="w-4 h-4" />
                   <span>로그아웃</span>
                 </Button>
-              </div> : <Button asChild>
+              </div>
+            ) : (
+              <Button asChild>
                 <Link to="/auth">로그인</Link>
-              </Button>}
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isMenuOpen && <div className="md:hidden py-4 space-y-2">
-            <Link to="/suppliers" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md" onClick={() => setIsMenuOpen(false)}>
+        {isMenuOpen && (
+          <div className="md:hidden py-4 space-y-2">
+            <Link
+              to="/suppliers"
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md"
+              onClick={() => setIsMenuOpen(false)}
+            >
               공급기업
             </Link>
-            <Link to="/demands" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md" onClick={() => setIsMenuOpen(false)}>
+            <Link
+              to="/demands"
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md"
+              onClick={() => setIsMenuOpen(false)}
+            >
               수요내용
             </Link>
-            <Link to="/ai-matching" className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md" onClick={() => setIsMenuOpen(false)}>
+            <Link
+              to="/ai-matching"
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md"
+              onClick={() => setIsMenuOpen(false)}
+            >
               AI매치
             </Link>
-            {session ? <div className="px-4 pt-2 border-t">
+            {session ? (
+              <div className="px-4 pt-2 border-t">
+                <Link
+                  to="/mypage"
+                  className="block py-2 text-gray-700 hover:bg-gray-50 rounded-md mb-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="flex items-center space-x-2">
+                    <UserCircle className="w-4 h-4" />
+                    <span>마이페이지</span>
+                  </div>
+                </Link>
                 <div className="flex items-center space-x-2 mb-2">
                   <User className="w-4 h-4 text-gray-600" />
                   <span className="text-sm text-gray-700">{session.user.email}</span>
@@ -95,13 +149,19 @@ const Navbar = () => {
                 <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
                   로그아웃
                 </Button>
-              </div> : <div className="px-4 pt-2 border-t">
+              </div>
+            ) : (
+              <div className="px-4 pt-2 border-t">
                 <Button asChild className="w-full">
                   <Link to="/auth">로그인</Link>
                 </Button>
-              </div>}
-          </div>}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;

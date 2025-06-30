@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import DemandRegistration from "./pages/DemandRegistration";
 import DemandList from "./pages/DemandList";
 import AIMatching from "./pages/AIMatching";
 import ChatBotPage from "./pages/ChatBot";
+import MyPage from "./pages/MyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +39,7 @@ const AppContent = ({ session }: { session: Session | null }) => {
             <Route path="/demands" element={<DemandList />} />
             <Route path="/ai-matching" element={<AIMatching />} />
             <Route path="/chatbot" element={<ChatBotPage />} />
+            <Route path="/mypage" element={<MyPage />} />
             <Route path="*" element={<NotFound />} />
           </>
         )}
