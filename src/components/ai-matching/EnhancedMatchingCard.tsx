@@ -119,13 +119,20 @@ const EnhancedMatchingCard = ({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* 매칭 점수 진행률 바 */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>매칭도</span>
-            <span className="font-medium">{getScoreText(match.matchScore)}</span>
+        {/* 매칭 점수 구성 요소 */}
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          <div className="text-center">
+            <div className="font-semibold text-blue-600">{match.keywordScore?.toFixed(0) || 0}</div>
+            <div className="text-xs text-gray-500">키워드</div>
           </div>
-          <Progress value={match.matchScore} className="h-2" />
+          <div className="text-center">
+            <div className="font-semibold text-green-600">{((match.capabilityScore || 0) * 0.75).toFixed(0)}</div>
+            <div className="text-xs text-gray-500">서비스유형</div>
+          </div>
+          <div className="text-center">
+            <div className="font-semibold text-orange-600">{((match.capabilityScore || 0) * 0.25).toFixed(0)}</div>
+            <div className="text-xs text-gray-500">업종</div>
+          </div>
         </div>
 
         {/* 매칭된 키워드 하이라이트 */}

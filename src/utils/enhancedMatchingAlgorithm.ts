@@ -76,7 +76,7 @@ const calculateServiceTypeScore = (demandContent: string, supplierType: string, 
     }
   });
   
-  return Math.min(matchScore, 50);
+  return Math.min(matchScore, 100);
 };
 
 // 업종 매칭 점수
@@ -86,8 +86,8 @@ const calculateIndustryScore = (demandType: string, supplierIndustry: string): n
   const demandLower = demandType.toLowerCase();
   const industryLower = supplierIndustry.toLowerCase();
   
-  if (demandLower === industryLower) return 20;
-  if (demandLower.includes(industryLower) || industryLower.includes(demandLower)) return 15;
+  if (demandLower === industryLower) return 100;
+  if (demandLower.includes(industryLower) || industryLower.includes(demandLower)) return 70;
   
   return 0;
 };
@@ -97,24 +97,24 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
   const supplierKeywords = supplier.추출키워드 || "";
   const demandContent = demand.수요내용 || "";
   
-  // 1. 추출된 키워드 기반 매칭 (60점) - 가장 중요
+  // 1. 추출된 키워드 기반 매칭 (60% 비중)
   let keywordScore = 0;
   if (demandKeywords && supplierKeywords) {
     keywordScore = calculateKeywordSimilarity(demandKeywords, supplierKeywords) * 0.6;
   }
   
-  // 2. AI 서비스 유형 매칭 (25점)
+  // 2. AI 서비스 유형 매칭 (30% 비중)
   const serviceTypeScore = calculateServiceTypeScore(
     demandContent, 
     supplier.유형 || "", 
     demandKeywords, 
     supplierKeywords
-  ) * 0.5;
+  ) * 0.3;
   
-  // 3. 업종 매칭 (15점)
-  const industryScore = calculateIndustryScore(demand.유형 || "", supplier.업종 || "") * 0.75;
+  // 3. 업종 매칭 (10% 비중)
+  const industryScore = calculateIndustryScore(demand.유형 || "", supplier.업종 || "") * 0.1;
   
-  // 총 매칭 점수 계산 (텍스트 백업 제거)
+  // 총 매칭 점수 계산 (기업역량 제거)
   const totalScore = keywordScore + serviceTypeScore + industryScore;
   const matchScore = Math.round(Math.max(totalScore, 0));
   
@@ -161,7 +161,7 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
     score: matchScore,
     matchedKeywords: matchedKeywords,
     keywordScore: keywordScore,
-    capabilityScore: totalScore,
+    capabilityScore: serviceTypeScore + industryScore,
     matchScore: matchScore,
     matchReason: matchReason,
     supplier: supplier,

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +17,11 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
     if (score >= 60) return "bg-yellow-500";
     return "bg-red-500";
   };
+
+  // 점수 구성요소 계산
+  const keywordScore = match.keywordScore || 0;
+  const serviceTypeScore = (match.capabilityScore || 0) * 0.75; // 서비스유형 점수 추정
+  const industryScore = (match.capabilityScore || 0) * 0.25; // 업종 점수 추정
 
   return (
     <Dialog>
@@ -36,22 +42,22 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
         <div className="space-y-6">
           {/* 매칭 점수 상세 분석 */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
-            <h4 className="font-semibold mb-4 text-lg">매칭 점수 분석</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <h4 className="font-semibold mb-4 text-lg">매칭 점수 구성 (총 {match.matchScore}점)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{match.matchScore}%</div>
-                <div className="text-sm text-gray-600">총 매칭도</div>
-                <Progress value={match.matchScore} className="mt-2" />
+                <div className="text-2xl font-bold text-blue-600">{keywordScore.toFixed(1)}점</div>
+                <div className="text-sm text-gray-600">키워드 매칭 (60%)</div>
+                <Progress value={keywordScore} className="mt-2" />
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{match.keywordScore}%</div>
-                <div className="text-sm text-gray-600">키워드 유사도</div>
-                <Progress value={match.keywordScore} className="mt-2" />
+                <div className="text-2xl font-bold text-green-600">{serviceTypeScore.toFixed(1)}점</div>
+                <div className="text-sm text-gray-600">서비스 유형 (30%)</div>
+                <Progress value={serviceTypeScore} className="mt-2" />
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{match.capabilityScore}%</div>
-                <div className="text-sm text-gray-600">기업 역량</div>
-                <Progress value={match.capabilityScore} className="mt-2" />
+                <div className="text-2xl font-bold text-orange-600">{industryScore.toFixed(1)}점</div>
+                <div className="text-sm text-gray-600">업종 매칭 (10%)</div>
+                <Progress value={industryScore} className="mt-2" />
               </div>
             </div>
             <div className="mt-4 p-3 bg-white/50 rounded-lg">
@@ -108,6 +114,23 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
                     <p className="text-sm text-gray-600 bg-white p-3 rounded border">
                       {match.supplier.세부설명}
                     </p>
+                  </div>
+                )}
+
+                {/* 추출된 키워드 표시 */}
+                {match.supplier.추출키워드 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                      <Award className="w-4 h-4" />
+                      AI 추출 키워드
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {match.supplier.추출키워드.split(',').map((keyword, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {keyword.trim()}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -216,6 +239,23 @@ const EnhancedMatchingDetailModal = ({ match, showContactInfo = false }: Enhance
                     {match.demand.수요내용}
                   </p>
                 </div>
+
+                {/* 추출된 키워드 표시 */}
+                {match.demand.추출키워드 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                      <Award className="w-4 h-4" />
+                      AI 추출 키워드
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {match.demand.추출키워드.split(',').map((keyword, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {keyword.trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {match.demand.금액 && (
                   <div>
