@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Youtube, FileText, Edit } from "lucide-react";
-import { Heart, HeartOff } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useInterest } from "@/hooks/useInterest";
 import { SupplierEditModal } from "./SupplierEditModal";
