@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Users, Target, TrendingUp } from "lucide-react";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
@@ -187,57 +188,6 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </motion.div>
-
-        {/* Growth Indicators */}
-        <motion.div 
-          className="mt-12 grid md:grid-cols-3 gap-6"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants} whileHover={{ scale: 1.05 }}>
-            <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">이번 달 신규 공급기업</p>
-                    <p className="text-2xl font-bold text-blue-600">+{Math.floor(stats.suppliersCount * 0.2)}</p>
-                  </div>
-                  <Building2 className="w-8 h-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          
-          <motion.div variants={itemVariants} whileHover={{ scale: 1.05 }}>
-            <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">이번 달 신규 수요기관</p>
-                    <p className="text-2xl font-bold text-green-600">+{Math.floor(stats.demandsCount * 0.15)}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          
-          <motion.div variants={itemVariants} whileHover={{ scale: 1.05 }}>
-            <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">고품질 매칭 성공률</p>
-                    <p className="text-2xl font-bold text-purple-600">{stats.matchingSuccessRate || 0}%</p>
-                  </div>
-                  <Target className="w-8 h-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>
