@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Users, Target, TrendingUp } from "lucide-react";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
@@ -12,8 +11,8 @@ interface StatisticsProps {
     demandsCount: number;
     matchesCount: number;
     matchingSuccessRate: number;
-    dailyRegistrations: Array<{
-      date: string;
+    weeklyRegistrations: Array<{
+      week: string;
       공급기업: number;
       수요기관: number;
     }>;
@@ -153,22 +152,22 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
             </Card>
           </motion.div>
 
-          {/* Area Chart - 누적 등록 건수 */}
+          {/* Area Chart - 주별 누적 등록 건수 */}
           <motion.div variants={chartVariants}>
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <Target className="w-6 h-6 text-green-600 mr-2" />
-                  <h3 className="text-lg font-semibold">날짜별 누적 등록 건수</h3>
+                  <h3 className="text-lg font-semibold">최근 8주간 주별 등록 건수</h3>
                 </div>
                 <div className="h-[250px] w-full">
                   <ChartContainer config={chartConfig} className="h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart 
-                        data={stats.dailyRegistrations} 
+                        data={stats.weeklyRegistrations} 
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                       >
-                        <XAxis dataKey="date" />
+                        <XAxis dataKey="week" />
                         <YAxis />
                         <Area 
                           type="monotone" 
