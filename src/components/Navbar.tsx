@@ -94,7 +94,9 @@ const Navbar = () => {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
                   <User className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm text-gray-700">{userName || session.user.email}</span>
+                  <span className="text-sm text-gray-700">
+                    {userName || session.user.email?.split('@')[0] || "사용자"}
+                  </span>
                 </div>
                 <Link to="/mypage">
                   <Button variant="ghost" size="sm" className="flex items-center space-x-1">
@@ -159,7 +161,9 @@ const Navbar = () => {
               <div className="px-4 pt-2 border-t">
                 <div className="flex items-center space-x-2 mb-2">
                   <User className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm text-gray-700">{userName || session.user.email}</span>
+                  <span className="text-sm text-gray-700">
+                    {userName || session.user.email?.split('@')[0] || "사용자"}
+                  </span>
                 </div>
                 <Link
                   to="/mypage"
