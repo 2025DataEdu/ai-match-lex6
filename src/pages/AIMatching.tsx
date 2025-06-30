@@ -50,6 +50,13 @@ const AIMatching = () => {
     });
   };
 
+  // 매칭 성공률 계산 (60점 이상 매칭의 비율)
+  const calculateMatchingSuccessRate = () => {
+    if (matches.length === 0) return 0;
+    const qualityMatches = matches.filter(match => match.matchScore >= 60);
+    return Math.round((qualityMatches.length / matches.length) * 100);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -65,7 +72,7 @@ const AIMatching = () => {
         <MatchingStats 
           suppliersCount={suppliers.length}
           demandsCount={demands.length}
-          matchesCount={matches.length}
+          matchingSuccessRate={calculateMatchingSuccessRate()}
         />
 
         {/* 매칭 시작 버튼 */}
