@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import SupplierCard from "@/components/supplier/SupplierCard";
 import SupplierSearch from "@/components/supplier/SupplierSearch";
 import EmptyState from "@/components/supplier/EmptyState";
-import FloatingChatBot from "@/components/FloatingChatBot";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -98,7 +97,6 @@ const SupplierList = () => {
           </div>
         )}
       </div>
-      <FloatingChatBot />
     </div>
   );
 };

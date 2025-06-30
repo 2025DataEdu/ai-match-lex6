@@ -3,11 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import FloatingChatBot from "@/components/FloatingChatBot";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SupplierRegistration from "./pages/SupplierRegistration";
@@ -15,16 +14,12 @@ import SupplierList from "./pages/SupplierList";
 import DemandRegistration from "./pages/DemandRegistration";
 import DemandList from "./pages/DemandList";
 import AIMatching from "./pages/AIMatching";
-import ChatBotPage from "./pages/ChatBot";
 import MyPage from "./pages/MyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AppContent = ({ session }: { session: Session | null }) => {
-  const location = useLocation();
-  const showFloatingChatBot = session && location.pathname === '/ai-matching';
-
   return (
     <>
       <Routes>
@@ -39,13 +34,11 @@ const AppContent = ({ session }: { session: Session | null }) => {
             <Route path="/demand-registration" element={<DemandRegistration />} />
             <Route path="/demands" element={<DemandList />} />
             <Route path="/ai-matching" element={<AIMatching />} />
-            <Route path="/chatbot" element={<ChatBotPage />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="*" element={<NotFound />} />
           </>
         )}
       </Routes>
-      {showFloatingChatBot && <FloatingChatBot />}
     </>
   );
 };

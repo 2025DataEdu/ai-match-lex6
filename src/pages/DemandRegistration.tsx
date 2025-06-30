@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import DemandRegistrationForm from "@/components/demand/DemandRegistrationForm";
-import FloatingChatBot from "@/components/FloatingChatBot";
 import { useDemandRegistration } from "@/hooks/useDemandRegistration";
 
 const DemandRegistration = () => {
@@ -59,7 +58,6 @@ const DemandRegistration = () => {
           </CardContent>
         </Card>
       </div>
-      <FloatingChatBot />
     </div>
   );
 };

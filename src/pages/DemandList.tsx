@@ -7,7 +7,6 @@ import DemandFilters from "@/components/demand/DemandFilters";
 import DemandHeader from "@/components/demand/DemandHeader";
 import DemandEmptyState from "@/components/demand/DemandEmptyState";
 import DemandGrid from "@/components/demand/DemandGrid";
-import FloatingChatBot from "@/components/FloatingChatBot";
 import { useDemandFilters } from "@/hooks/useDemandFilters";
 import { useInterest } from "@/hooks/useInterest";
 
@@ -131,7 +130,6 @@ const DemandList = () => {
           <DemandGrid demands={filteredDemands} onUpdate={fetchDemands} />
         )}
       </div>
-      <FloatingChatBot />
     </div>
   );
 };
