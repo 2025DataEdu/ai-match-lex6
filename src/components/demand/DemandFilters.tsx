@@ -48,7 +48,7 @@ const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: 
                 <SelectValue placeholder="모든 AI 서비스" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">모든 AI 서비스</SelectItem>
+                <SelectItem value="all">모든 AI 서비스</SelectItem>
                 {AI_SERVICE_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}

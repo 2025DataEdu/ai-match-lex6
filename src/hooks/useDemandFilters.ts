@@ -28,7 +28,7 @@ interface FilterOptions {
 export const useDemandFilters = (demands: Demand[]) => {
   const [filters, setFilters] = useState<FilterOptions>({
     searchTerm: "",
-    demandType: "",
+    demandType: "all",
     minBudget: "",
     maxBudget: "",
     organization: "",
@@ -62,8 +62,8 @@ export const useDemandFilters = (demands: Demand[]) => {
       );
     }
 
-    // 수요 유형 필터
-    if (filters.demandType) {
+    // 수요 유형 필터 (all이 아닌 경우에만 필터링)
+    if (filters.demandType && filters.demandType !== "all") {
       filtered = filtered.filter(demand => demand.유형 === filters.demandType);
     }
 
@@ -120,7 +120,7 @@ export const useDemandFilters = (demands: Demand[]) => {
   const clearFilters = () => {
     setFilters({
       searchTerm: "",
-      demandType: "",
+      demandType: "all",
       minBudget: "",
       maxBudget: "",
       organization: "",
