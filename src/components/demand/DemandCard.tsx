@@ -1,11 +1,12 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building, Calendar, DollarSign } from "lucide-react";
+import { Building, Calendar, DollarSign, Edit } from "lucide-react";
 import { Heart, HeartOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useInterest } from "@/hooks/useInterest";
+import { DemandEditModal } from "./DemandEditModal";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Demand {
   수요기관일련번호: string;
@@ -19,19 +20,35 @@ interface Demand {
   종료일: string;
   기타요구사항: string;
   등록일자: string;
+  아이디?: string;
 }
 
 interface DemandCardProps {
   demand: Demand;
+  onUpdate?: () => void;
 }
 
-const DemandCard = ({ demand }: DemandCardProps) => {
+const DemandCard = ({ demand, onUpdate }: DemandCardProps) => {
   const { getInterestData, toggleInterest } = useInterest();
   const [isInterested, setIsInterested] = useState(false);
   const [interestCount, setInterestCount] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
 
   // 더미 공급기업 ID (실제로는 현재 사용자의 공급기업 ID를 사용해야 함)
   const dummySupplierID = "dummy-supplier-id";
+
+  useEffect(() => {
+    const checkEditPermission = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email && demand.아이디) {
+        const currentUserId = session.user.email.split('@')[0];
+        setCanEdit(currentUserId === demand.아이디);
+      }
+    };
+
+    checkEditPermission();
+  }, [demand.아이디]);
 
   useEffect(() => {
     const interestData = getInterestData(dummySupplierID, demand.수요기관일련번호);
@@ -56,92 +73,120 @@ const DemandCard = ({ demand }: DemandCardProps) => {
     setInterestCount(updatedData.관심수);
   };
 
+  const handleEditComplete = () => {
+    if (onUpdate) {
+      onUpdate();
+    }
+  };
+
   // 1억 이상인 경우 강조 표시를 위한 스타일 결정
   const isHighBudget = demand.금액 && demand.금액 >= 100000000; // 1억원
 
   return (
-    <Card className={`hover:shadow-lg transition-shadow relative ${isHighBudget ? 'border-orange-300 bg-orange-50' : ''}`}>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">{demand.수요기관 || '기관명 없음'}</CardTitle>
-            <CardDescription>
-              {demand.부서명 && `${demand.부서명} · `}{demand.사용자명 || '담당자명 없음'}
-            </CardDescription>
-          </div>
-          <div className="flex flex-col gap-2 items-end">
-            {demand.유형 && (
-              <Badge variant="secondary">{demand.유형}</Badge>
-            )}
-            {isHighBudget && (
-              <Badge variant="destructive" className="text-xs">고액 수요</Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {demand.수요내용 && (
-            <p className="text-sm text-gray-700 line-clamp-3">
-              {demand.수요내용}
-            </p>
-          )}
-          
-          {demand.금액 && (
-            <div className={`flex items-center space-x-2 text-sm ${isHighBudget ? 'text-orange-600 font-bold' : 'text-green-600'}`}>
-              <DollarSign className="w-4 h-4" />
-              <span className="font-medium">{formatCurrency(demand.금액)}</span>
-              {isHighBudget && <span className="text-xs">(1억원 이상)</span>}
+    <>
+      <Card className={`hover:shadow-lg transition-shadow relative ${isHighBudget ? 'border-orange-300 bg-orange-50' : ''}`}>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg">{demand.수요기관 || '기관명 없음'}</CardTitle>
+              <CardDescription>
+                {demand.부서명 && `${demand.부서명} · `}{demand.사용자명 || '담당자명 없음'}
+              </CardDescription>
             </div>
-          )}
-
-          {(demand.시작일 || demand.종료일) && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Calendar className="w-4 h-4" />
-              <span>
-                {demand.시작일 && formatDate(demand.시작일)}
-                {demand.시작일 && demand.종료일 && ' ~ '}
-                {demand.종료일 && formatDate(demand.종료일)}
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 items-end">
+                {demand.유형 && (
+                  <Badge variant="secondary">{demand.유형}</Badge>
+                )}
+                {isHighBudget && (
+                  <Badge variant="destructive" className="text-xs">고액 수요</Badge>
+                )}
+              </div>
+              {canEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="p-2 hover:bg-gray-100"
+                  title="편집"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              )}
             </div>
-          )}
-          
-          {demand.기타요구사항 && (
-            <div className="text-sm">
-              <div className="font-medium text-gray-700 mb-1">기타 요구사항</div>
-              <p className="text-gray-600 text-xs line-clamp-2">
-                {demand.기타요구사항}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {demand.수요내용 && (
+              <p className="text-sm text-gray-700 line-clamp-3">
+                {demand.수요내용}
               </p>
-            </div>
-          )}
-
-          {demand.등록일자 && (
-            <div className="pt-2 text-xs text-gray-500">
-              등록일: {formatDate(demand.등록일자)}
-            </div>
-          )}
-        </div>
-
-        {/* 관심 표시 버튼 */}
-        <div className="absolute bottom-4 right-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleInterestToggle}
-            className="p-2 hover:bg-gray-100"
-          >
-            {isInterested ? (
-              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-            ) : (
-              <HeartOff className="w-5 h-5 text-gray-400" />
             )}
-            {interestCount > 0 && (
-              <span className="ml-1 text-xs text-gray-500">{interestCount}</span>
+            
+            {demand.금액 && (
+              <div className={`flex items-center space-x-2 text-sm ${isHighBudget ? 'text-orange-600 font-bold' : 'text-green-600'}`}>
+                <DollarSign className="w-4 h-4" />
+                <span className="font-medium">{formatCurrency(demand.금액)}</span>
+                {isHighBudget && <span className="text-xs">(1억원 이상)</span>}
+              </div>
             )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+            {(demand.시작일 || demand.종료일) && (
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  {demand.시작일 && formatDate(demand.시작일)}
+                  {demand.시작일 && demand.종료일 && ' ~ '}
+                  {demand.종료일 && formatDate(demand.종료일)}
+                </span>
+              </div>
+            )}
+            
+            {demand.기타요구사항 && (
+              <div className="text-sm">
+                <div className="font-medium text-gray-700 mb-1">기타 요구사항</div>
+                <p className="text-gray-600 text-xs line-clamp-2">
+                  {demand.기타요구사항}
+                </p>
+              </div>
+            )}
+
+            {demand.등록일자 && (
+              <div className="pt-2 text-xs text-gray-500">
+                등록일: {formatDate(demand.등록일자)}
+              </div>
+            )}
+          </div>
+
+          {/* 관심 표시 버튼 */}
+          <div className="absolute bottom-4 right-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleInterestToggle}
+              className="p-2 hover:bg-gray-100"
+            >
+              {isInterested ? (
+                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+              ) : (
+                <HeartOff className="w-5 h-5 text-gray-400" />
+              )}
+              {interestCount > 0 && (
+                <span className="ml-1 text-xs text-gray-500">{interestCount}</span>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <DemandEditModal
+        demand={demand}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdate={handleEditComplete}
+      />
+    </>
   );
 };
 

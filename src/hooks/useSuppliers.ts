@@ -14,6 +14,7 @@ interface Supplier {
   보유특허?: string;
   사용자명?: string;
   등록일자?: string;
+  아이디?: string;
 }
 
 export const useSuppliers = () => {
@@ -115,7 +116,8 @@ export const useSuppliers = () => {
             유튜브링크: item.유튜브링크,
             보유특허: item.보유특허,
             사용자명: item.사용자명,
-            등록일자: item.등록일자
+            등록일자: item.등록일자,
+            아이디: item.아이디
           }));
           
           console.log('포맷된 데이터:', formattedData);

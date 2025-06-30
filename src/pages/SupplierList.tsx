@@ -84,6 +84,7 @@ const SupplierList = () => {
                 key={supplier.공급기업일련번호 || index}
                 supplier={supplier}
                 index={index}
+                onUpdate={fetchSuppliers}
               />
             ))}
           </div>

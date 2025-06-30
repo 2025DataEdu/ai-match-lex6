@@ -13,17 +13,19 @@ interface Demand {
   종료일: string;
   기타요구사항: string;
   등록일자: string;
+  아이디?: string;
 }
 
 interface DemandGridProps {
   demands: Demand[];
+  onUpdate?: () => void;
 }
 
-const DemandGrid = ({ demands }: DemandGridProps) => {
+const DemandGrid = ({ demands, onUpdate }: DemandGridProps) => {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {demands.map((demand) => (
-        <DemandCard key={demand.수요기관일련번호} demand={demand} />
+        <DemandCard key={demand.수요기관일련번호} demand={demand} onUpdate={onUpdate} />
       ))}
     </div>
   );

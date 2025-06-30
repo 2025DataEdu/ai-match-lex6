@@ -23,6 +23,7 @@ interface Demand {
   종료일: string;
   기타요구사항: string;
   등록일자: string;
+  아이디?: string;
 }
 
 const DemandList = () => {
@@ -79,7 +80,8 @@ const DemandList = () => {
           시작일: item.시작일 || '',
           종료일: item.종료일 || '',
           기타요구사항: item.기타요구사항 || '',
-          등록일자: item.등록일자 || ''
+          등록일자: item.등록일자 || '',
+          아이디: item.아이디
         }));
         setDemands(formattedData);
         toast({
@@ -119,7 +121,11 @@ const DemandList = () => {
         {filteredDemands.length === 0 ? (
           <DemandEmptyState hasFilters={hasActiveFilters} />
         ) : (
-          <DemandGrid demands={filteredDemands} />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDemands.map((demand) => (
+              <DemandCard key={demand.수요기관일련번호} demand={demand} onUpdate={fetchDemands} />
+            ))}
+          </div>
         )}
       </div>
       <FloatingChatBot />
