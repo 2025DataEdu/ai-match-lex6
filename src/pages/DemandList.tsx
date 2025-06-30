@@ -121,11 +121,7 @@ const DemandList = () => {
         {filteredDemands.length === 0 ? (
           <DemandEmptyState hasFilters={hasActiveFilters} />
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDemands.map((demand) => (
-              <DemandCard key={demand.수요기관일련번호} demand={demand} onUpdate={fetchDemands} />
-            ))}
-          </div>
+          <DemandGrid demands={filteredDemands} onUpdate={fetchDemands} />
         )}
       </div>
       <FloatingChatBot />
