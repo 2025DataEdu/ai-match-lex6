@@ -1,6 +1,5 @@
-
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, Users, Sparkles, Target, TrendingUp } from "lucide-react";
+import { Building2, Users, Target, TrendingUp } from "lucide-react";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
@@ -41,8 +40,8 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
       color: '#10B981'
     },
     {
-      name: '예상매칭',
-      count: stats.matchesCount,
+      name: '매칭성공률',
+      count: stats.matchingSuccessRate,
       color: '#8B5CF6'
     }
   ];
@@ -56,8 +55,8 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
       label: "수요기관",
       color: "#10B981"
     },
-    matches: {
-      label: "예상매칭",
+    successRate: {
+      label: "매칭성공률",
       color: "#8B5CF6"
     }
   };
@@ -121,7 +120,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
           <MatchingStats 
             suppliersCount={stats.suppliersCount} 
             demandsCount={stats.demandsCount} 
-            matchesCount={stats.matchesCount} 
+            matchingSuccessRate={stats.matchingSuccessRate} 
           />
         </motion.div>
 
@@ -238,7 +237,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                     <p className="text-sm text-gray-600">고품질 매칭 성공률</p>
                     <p className="text-2xl font-bold text-purple-600">{stats.matchingSuccessRate || 0}%</p>
                   </div>
-                  <Sparkles className="w-8 h-8 text-purple-500" />
+                  <Target className="w-8 h-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>

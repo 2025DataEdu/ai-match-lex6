@@ -1,14 +1,14 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, Users, Sparkles } from "lucide-react";
+import { Building2, Users, Target } from "lucide-react";
 
 interface MatchingStatsProps {
   suppliersCount: number;
   demandsCount: number;
-  matchesCount: number;
+  matchingSuccessRate: number;
 }
 
-const MatchingStats = ({ suppliersCount, demandsCount, matchesCount }: MatchingStatsProps) => {
+const MatchingStats = ({ suppliersCount, demandsCount, matchingSuccessRate }: MatchingStatsProps) => {
   return (
     <div className="grid md:grid-cols-3 gap-6 mb-8">
       <Card>
@@ -38,10 +38,10 @@ const MatchingStats = ({ suppliersCount, demandsCount, matchesCount }: MatchingS
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center">
-            <Sparkles className="w-8 h-8 text-purple-600 mr-3" />
+            <Target className="w-8 h-8 text-purple-600 mr-3" />
             <div>
-              <p className="text-2xl font-bold text-gray-900">{matchesCount}</p>
-              <p className="text-sm text-gray-600">예상 매칭 수</p>
+              <p className="text-2xl font-bold text-gray-900">{matchingSuccessRate}%</p>
+              <p className="text-sm text-gray-600">매칭 성공률</p>
             </div>
           </div>
         </CardContent>
