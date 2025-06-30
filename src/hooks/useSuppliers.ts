@@ -21,7 +21,7 @@ export const useSuppliers = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("등록일자");
+  const [sortBy, setSortBy] = useState("companyName");
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -46,11 +46,11 @@ export const useSuppliers = () => {
         let aValue, bValue;
         
         switch (sortBy) {
-          case "기업명":
+          case "companyName":
             aValue = a.기업명 || "";
             bValue = b.기업명 || "";
             break;
-          case "등록일자":
+          case "registrationDate":
             aValue = new Date(a.등록일자 || "").getTime() || 0;
             bValue = new Date(b.등록일자 || "").getTime() || 0;
             break;
@@ -58,7 +58,7 @@ export const useSuppliers = () => {
             aValue = a.유형 || "";
             bValue = b.유형 || "";
             break;
-          case "업종":
+          case "industry":
             aValue = a.업종 || "";
             bValue = b.업종 || "";
             break;
@@ -67,8 +67,8 @@ export const useSuppliers = () => {
             bValue = b.보유특허 ? 1 : 0;
             break;
           default:
-            aValue = a.등록일자 || "";
-            bValue = b.등록일자 || "";
+            aValue = a.기업명 || "";
+            bValue = b.기업명 || "";
         }
 
         if (sortOrder === "asc") {
