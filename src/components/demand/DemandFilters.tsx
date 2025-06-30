@@ -3,17 +3,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface FilterOptions {
-  selectedType: string;
-  selectedIndustry: string;
-  scoreRange: [number, number];
+interface DemandFilterOptions {
+  searchTerm: string;
+  demandType: string;
+  minBudget: string;
+  maxBudget: string;
+  organization: string;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
 }
 
 interface DemandFiltersProps {
-  filters: FilterOptions;
-  onFiltersChange: (filters: FilterOptions) => void;
+  filters: DemandFilterOptions;
+  onFiltersChange: (filters: DemandFilterOptions) => void;
   onClearFilters: () => void;
   onRefresh: () => Promise<void>;
 }
@@ -39,8 +41,8 @@ const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: 
           <div className="flex-1 space-y-2">
             <label className="text-sm font-medium">AI 서비스 유형</label>
             <Select 
-              value={filters.selectedType} 
-              onValueChange={(value) => onFiltersChange({ ...filters, selectedType: value })}
+              value={filters.demandType} 
+              onValueChange={(value) => onFiltersChange({ ...filters, demandType: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="모든 AI 서비스" />
