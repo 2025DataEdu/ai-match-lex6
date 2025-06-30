@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 interface Demand {
@@ -41,13 +40,13 @@ export const useDemandFilters = (demands: Demand[]) => {
   useEffect(() => {
     let filtered = demands;
 
-    // 검색어 필터
+    // 검색어 필터 (기관명을 우선으로 검색)
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(demand =>
         demand.수요기관?.toLowerCase().includes(searchLower) ||
-        demand.유형?.toLowerCase().includes(searchLower) ||
         demand.수요내용?.toLowerCase().includes(searchLower) ||
+        demand.유형?.toLowerCase().includes(searchLower) ||
         demand.부서명?.toLowerCase().includes(searchLower) ||
         demand.사용자명?.toLowerCase().includes(searchLower) ||
         demand.기타요구사항?.toLowerCase().includes(searchLower)
