@@ -2,12 +2,14 @@
 export interface KeywordAnalysis {
   primaryKeywords: string[];
   serviceType: string | null;
-  intent: 'search' | 'information' | 'comparison';
+  intent: 'statistics' | 'supplier_search' | 'demand_search' | 'matching_info' | 'general_info';
+  queryType: 'count' | 'search' | 'info';
   context: {
     budget?: string;
     timeline?: string;
     region?: string;
     requirements?: string[];
+    entity?: 'supplier' | 'demand' | 'both';
   };
 }
 
@@ -20,21 +22,30 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
 {
   "primaryKeywords": ["키워드1", "키워드2", "키워드3"],
   "serviceType": "AI 서비스 유형 (챗봇/대화형AI, 컴퓨터비전/이미지AI, 음성인식/음성AI, 자연어처리/텍스트AI, 예측분석/데이터AI, 추천시스템/개인화AI, 로봇/자동화AI 중 하나 또는 null)",
-  "intent": "search",
+  "intent": "statistics|supplier_search|demand_search|matching_info|general_info",
+  "queryType": "count|search|info",
   "context": {
     "budget": "예산 정보가 있다면",
     "timeline": "일정 정보가 있다면", 
     "region": "지역 정보가 있다면",
-    "requirements": ["추가 요구사항들"]
+    "requirements": ["추가 요구사항들"],
+    "entity": "supplier|demand|both"
   }
 }
 
-규칙:
-1. primaryKeywords는 3-5개의 핵심 검색 키워드
-2. serviceType은 AI 서비스 유형 중 가장 적합한 것
-3. intent는 항상 "search"
-4. context는 질의에서 언급된 추가 정보들
-5. 오직 JSON만 응답하세요`;
+의도(intent) 분류 규칙:
+- statistics: "몇 개", "수", "개수", "통계", "현황" 등이 포함된 질문
+- supplier_search: 공급기업, 업체, 회사를 찾는 질문
+- demand_search: 수요기관, 발주처를 찾는 질문  
+- matching_info: 매칭, 연결, 추천 관련 질문
+- general_info: 위에 해당하지 않는 일반적인 질문
+
+쿼리 유형(queryType):
+- count: 개수를 묻는 질문
+- search: 특정 조건의 데이터를 찾는 질문
+- info: 일반 정보를 묻는 질문
+
+오직 JSON만 응답하세요`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -49,7 +60,7 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
           { role: 'user', content: analysisPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 300,
+        max_tokens: 400,
       }),
     });
 
@@ -68,7 +79,8 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
     return {
       primaryKeywords: analysis.primaryKeywords || [],
       serviceType: analysis.serviceType || null,
-      intent: analysis.intent || 'search',
+      intent: analysis.intent || 'supplier_search',
+      queryType: analysis.queryType || 'search',
       context: analysis.context || {}
     };
   } catch (error) {
@@ -81,10 +93,22 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
       !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는'].includes(word)
     );
     
+    // 의도 추측
+    let intent = 'supplier_search';
+    let queryType = 'search';
+    
+    if (message.includes('몇') || message.includes('수') || message.includes('개수') || message.includes('통계')) {
+      intent = 'statistics';
+      queryType = 'count';
+    } else if (message.includes('수요') || message.includes('발주')) {
+      intent = 'demand_search';
+    }
+    
     return {
       primaryKeywords: keywords.slice(0, 3),
       serviceType: null,
-      intent: 'search',
+      intent: intent as any,
+      queryType: queryType as any,
       context: {}
     };
   }
