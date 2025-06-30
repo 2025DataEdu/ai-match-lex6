@@ -1,9 +1,8 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Users, Target, TrendingUp } from "lucide-react";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis } from "recharts";
 import { motion } from "framer-motion";
 
 interface StatisticsProps {
@@ -29,21 +28,42 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
     }
   ];
 
-  const barData = [
+  // 최근 7일간 등록 건수 데이터 (임시 데이터)
+  const lineData = [
     {
-      name: '공급기업',
-      count: stats.suppliersCount,
-      color: '#3B82F6'
+      date: '12/24',
+      공급기업: Math.floor(stats.suppliersCount * 0.1),
+      수요기관: Math.floor(stats.demandsCount * 0.08)
     },
     {
-      name: '수요기관',
-      count: stats.demandsCount,
-      color: '#10B981'
+      date: '12/25',
+      공급기업: Math.floor(stats.suppliersCount * 0.12),
+      수요기관: Math.floor(stats.demandsCount * 0.1)
     },
     {
-      name: '매칭성공률',
-      count: stats.matchingSuccessRate,
-      color: '#8B5CF6'
+      date: '12/26',
+      공급기업: Math.floor(stats.suppliersCount * 0.15),
+      수요기관: Math.floor(stats.demandsCount * 0.12)
+    },
+    {
+      date: '12/27',
+      공급기업: Math.floor(stats.suppliersCount * 0.18),
+      수요기관: Math.floor(stats.demandsCount * 0.15)
+    },
+    {
+      date: '12/28',
+      공급기업: Math.floor(stats.suppliersCount * 0.2),
+      수요기관: Math.floor(stats.demandsCount * 0.18)
+    },
+    {
+      date: '12/29',
+      공급기업: Math.floor(stats.suppliersCount * 0.22),
+      수요기관: Math.floor(stats.demandsCount * 0.2)
+    },
+    {
+      date: '12/30',
+      공급기업: Math.floor(stats.suppliersCount * 0.25),
+      수요기관: Math.floor(stats.demandsCount * 0.22)
     }
   ];
 
@@ -166,26 +186,39 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
             </Card>
           </motion.div>
 
-          {/* Bar Chart */}
+          {/* Line Chart - 날짜별 등록 건수 */}
           <motion.div variants={chartVariants}>
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <Target className="w-6 h-6 text-green-600 mr-2" />
-                  <h3 className="text-lg font-semibold">카테고리별 현황</h3>
+                  <h3 className="text-lg font-semibold">날짜별 등록 건수</h3>
                 </div>
                 <div className="h-[250px] w-full">
                   <ChartContainer config={chartConfig} className="h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={barData} 
+                      <LineChart 
+                        data={lineData} 
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                       >
-                        <XAxis dataKey="name" />
+                        <XAxis dataKey="date" />
                         <YAxis />
-                        <Bar dataKey="count" fill="#3B82F6" />
+                        <Line 
+                          type="monotone" 
+                          dataKey="공급기업" 
+                          stroke="#3B82F6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#3B82F6', r: 4 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="수요기관" 
+                          stroke="#10B981" 
+                          strokeWidth={2}
+                          dot={{ fill: '#10B981', r: 4 }}
+                        />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                      </BarChart>
+                      </LineChart>
                     </ResponsiveContainer>
                   </ChartContainer>
                 </div>
