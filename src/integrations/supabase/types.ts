@@ -98,39 +98,6 @@ export type Database = {
           },
         ]
       }
-      "경기도 AI 등록 현황": {
-        Row: {
-          "AI 서비스 유형": string | null
-          "도입 지자체": string | null
-          "서비스 개시일": string | null
-          "서비스 대상": string | null
-          서비스명: string | null
-          "운영 기관": string | null
-          인덱스: number
-          활용분야: string | null
-        }
-        Insert: {
-          "AI 서비스 유형"?: string | null
-          "도입 지자체"?: string | null
-          "서비스 개시일"?: string | null
-          "서비스 대상"?: string | null
-          서비스명?: string | null
-          "운영 기관"?: string | null
-          인덱스: number
-          활용분야?: string | null
-        }
-        Update: {
-          "AI 서비스 유형"?: string | null
-          "도입 지자체"?: string | null
-          "서비스 개시일"?: string | null
-          "서비스 대상"?: string | null
-          서비스명?: string | null
-          "운영 기관"?: string | null
-          인덱스?: number
-          활용분야?: string | null
-        }
-        Relationships: []
-      }
       공급기업: {
         Row: {
           공급기업일련번호: string
