@@ -107,6 +107,7 @@ const AIMatching = () => {
             onSearchTermChange={setSearchTerm}
             onClearFilters={clearFilters}
             hasActiveFilters={hasActiveFilters}
+            industries={industries}
           />
         )}
 

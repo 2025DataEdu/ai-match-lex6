@@ -3,56 +3,33 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 
 interface SupplierSearchProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
-  selectedType: string;
-  onTypeChange: (type: string) => void;
-  selectedIndustry: string;
-  onIndustryChange: (industry: string) => void;
-  onReset: () => void;
+  sortBy: string;
+  onSortByChange: (sortBy: string) => void;
+  sortOrder: 'asc' | 'desc';
+  onSortOrderChange: (sortOrder: 'asc' | 'desc') => void;
+  onRefresh: () => Promise<void>;
 }
-
-const AI_SERVICE_TYPES = [
-  "AI 챗봇/대화형AI",
-  "컴퓨터 비전/이미지AI", 
-  "자연어처리/텍스트AI",
-  "음성인식/음성AI",
-  "예측분석/데이터AI",
-  "추천시스템/개인화AI",
-  "로봇/자동화AI",
-  "AI 플랫폼/인프라",
-  "AI 교육/컨설팅",
-  "기타 AI 서비스"
-];
-
-const INDUSTRIES = [
-  "제조업",
-  "정보통신업",
-  "금융업",
-  "유통업",
-  "의료업",
-  "교육업",
-  "건설업",
-  "운송업",
-  "농업",
-  "서비스업",
-  "연구개발업",
-  "컨설팅업",
-  "기타"
-];
 
 const SupplierSearch = ({
   searchTerm,
   onSearchChange,
-  selectedType,
-  onTypeChange,
-  selectedIndustry,
-  onIndustryChange,
-  onReset
+  sortBy,
+  onSortByChange,
+  sortOrder,
+  onSortOrderChange,
+  onRefresh
 }: SupplierSearchProps) => {
+  const handleReset = () => {
+    onSearchChange("");
+    onSortByChange("registrationDate");
+    onSortOrderChange("desc");
+  };
+
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
@@ -67,37 +44,36 @@ const SupplierSearch = ({
             />
           </div>
           
-          <Select value={selectedType} onValueChange={onTypeChange}>
+          <Select value={sortBy} onValueChange={onSortByChange}>
             <SelectTrigger>
-              <SelectValue placeholder="AI 서비스 유형" />
+              <SelectValue placeholder="정렬 기준" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">모든 AI 서비스</SelectItem>
-              {AI_SERVICE_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
+              <SelectItem value="registrationDate">등록일</SelectItem>
+              <SelectItem value="companyName">기업명</SelectItem>
+              <SelectItem value="industry">업종</SelectItem>
             </SelectContent>
           </Select>
           
-          <Select value={selectedIndustry} onValueChange={onIndustryChange}>
+          <Select value={sortOrder} onValueChange={onSortOrderChange}>
             <SelectTrigger>
-              <SelectValue placeholder="업종" />
+              <SelectValue placeholder="정렬 순서" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">모든 업종</SelectItem>
-              {INDUSTRIES.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
-                </SelectItem>
-              ))}
+              <SelectItem value="desc">내림차순</SelectItem>
+              <SelectItem value="asc">오름차순</SelectItem>
             </SelectContent>
           </Select>
           
-          <Button variant="outline" onClick={onReset}>
-            초기화
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleReset} className="flex-1">
+              초기화
+            </Button>
+            <Button variant="outline" onClick={onRefresh} className="flex-1">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              새로고침
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

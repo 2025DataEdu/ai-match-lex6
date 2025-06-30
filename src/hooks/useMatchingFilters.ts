@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { DetailedMatch, groupAndSortMatches } from "@/types/matching";
+import { DetailedMatch } from "@/types/matching";
+import { groupAndSortMatches } from "@/utils/matchingAlgorithm";
 
 export const useMatchingFilters = (matches: DetailedMatch[], suppliers: any[]) => {
   const [filteredMatches, setFilteredMatches] = useState<DetailedMatch[]>([]);
@@ -47,8 +48,7 @@ export const useMatchingFilters = (matches: DetailedMatch[], suppliers: any[]) =
       });
     }
 
-    // 관점별 그룹화 및 정렬 적용 - groupAndSortMatches를 utils에서 import
-    const { groupAndSortMatches } = require("@/utils/matchingAlgorithm");
+    // 관점별 그룹화 및 정렬 적용
     const sortedAndGrouped = groupAndSortMatches(filtered, matchingPerspective, sortBy, sortOrder);
 
     console.log('필터링 완료:', {
