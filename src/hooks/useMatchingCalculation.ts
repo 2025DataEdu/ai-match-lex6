@@ -56,19 +56,37 @@ export const useMatchingCalculation = () => {
         }));
 
         // 배치로 키워드 추출 (API 비용 최소화를 위해 순차 처리)
-        await batchExtractKeywords([...supplierExtractionTasks, ...demandExtractionTasks]);
+        const extractionResults = await batchExtractKeywords([...supplierExtractionTasks, ...demandExtractionTasks]);
         
-        // 키워드 추출 완료 후 데이터 다시 로드 필요
+        console.log('키워드 추출 완료:', extractionResults);
+        
+        // 추출된 키워드를 기존 데이터에 반영
+        extractionResults.forEach(result => {
+          if (result.keywords) {
+            // 공급기업 데이터 업데이트
+            const supplier = suppliers.find(s => s.공급기업일련번호 === result.id);
+            if (supplier) {
+              supplier.추출키워드 = result.keywords;
+              supplier.키워드추출상태 = 'completed';
+            }
+            
+            // 수요기관 데이터 업데이트
+            const demand = demands.find(d => d.수요기관일련번호 === result.id);
+            if (demand) {
+              demand.추출키워드 = result.keywords;
+              demand.키워드추출상태 = 'completed';
+            }
+          }
+        });
+
         toast({
           title: "키워드 추출 완료",
-          description: "AI가 핵심 키워드를 추출했습니다. 다시 매칭을 시작해주세요.",
+          description: "AI가 핵심 키워드를 추출했습니다. 매칭을 계속 진행합니다.",
         });
-        
-        setIsMatching(false);
-        return;
       }
 
-      // 매칭 계산 실행
+      // 매칭 계산 실행 (키워드 추출 후 또는 기존 키워드가 있는 경우)
+      console.log('매칭 계산 시작...');
       const allMatches = calculateEnhancedMatching(demands, suppliers);
 
       // 점수 기준을 단계별로 적용하여 최적의 매칭 결과 선택

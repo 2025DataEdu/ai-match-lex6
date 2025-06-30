@@ -9,7 +9,6 @@ const calculateKeywordSimilarity = (keywords1: string, keywords2: string): numbe
   const keywordArray2 = keywords2.toLowerCase().split(',').map(k => k.trim());
   
   let matchScore = 0;
-  let totalPossibleMatches = Math.max(keywordArray1.length, keywordArray2.length);
   
   keywordArray1.forEach(keyword1 => {
     keywordArray2.forEach(keyword2 => {
@@ -46,7 +45,7 @@ const hasSimilarSubstring = (str1: string, str2: string): boolean => {
   return false;
 };
 
-// AI 서비스 유형 매칭 (기존 알고리즘 사용)
+// AI 서비스 유형 매칭
 const AI_SERVICE_KEYWORDS: { [key: string]: string[] } = {
   "AI 챗봇/대화형AI": ["챗봇", "대화형", "자연어", "응답", "상담", "문의", "bot", "chat", "대화", "자동응답"],
   "컴퓨터 비전/이미지AI": ["비전", "이미지", "인식", "분석", "영상", "시각", "카메라", "detection", "vision", "ocr"],
@@ -97,12 +96,11 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
   const demandKeywords = demand.추출키워드 || "";
   const supplierKeywords = supplier.추출키워드 || "";
   const demandContent = demand.수요내용 || "";
-  const supplierDescription = supplier.세부설명 || "";
   
-  // 1. 추출된 키워드 기반 매칭 (50점) - 가장 중요
+  // 1. 추출된 키워드 기반 매칭 (60점) - 가장 중요
   let keywordScore = 0;
   if (demandKeywords && supplierKeywords) {
-    keywordScore = calculateKeywordSimilarity(demandKeywords, supplierKeywords) * 0.5;
+    keywordScore = calculateKeywordSimilarity(demandKeywords, supplierKeywords) * 0.6;
   }
   
   // 2. AI 서비스 유형 매칭 (25점)
@@ -116,24 +114,8 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
   // 3. 업종 매칭 (15점)
   const industryScore = calculateIndustryScore(demand.유형 || "", supplier.업종 || "") * 0.75;
   
-  // 4. 원본 텍스트 매칭 (10점) - 키워드가 없을 때 백업
-  let textScore = 0;
-  if (!demandKeywords || !supplierKeywords) {
-    const demandWords = demandContent.toLowerCase().split(/\s+/);
-    const supplierWords = supplierDescription.toLowerCase().split(/\s+/);
-    
-    let commonWords = 0;
-    demandWords.forEach(word => {
-      if (word.length > 2 && supplierWords.some(sw => sw.includes(word) || word.includes(sw))) {
-        commonWords++;
-      }
-    });
-    
-    textScore = Math.min((commonWords / Math.max(demandWords.length, supplierWords.length)) * 100, 10);
-  }
-  
-  // 총 매칭 점수 계산
-  const totalScore = keywordScore + serviceTypeScore + industryScore + textScore;
+  // 총 매칭 점수 계산 (텍스트 백업 제거)
+  const totalScore = keywordScore + serviceTypeScore + industryScore;
   const matchScore = Math.round(Math.max(totalScore, 0));
   
   // 매칭된 키워드 분석
@@ -156,7 +138,12 @@ export const calculateEnhancedMatchingScore = (demand: Demand, supplier: Supplie
   }
   
   // 매칭 이유 생성
-  const matchReason = `키워드 매칭: ${keywordScore.toFixed(1)}점, 서비스 유형: ${serviceTypeScore.toFixed(1)}점, 업종: ${industryScore.toFixed(1)}점${textScore > 0 ? `, 텍스트: ${textScore.toFixed(1)}점` : ''}`;
+  const reasons = [];
+  if (keywordScore > 0) reasons.push(`키워드: ${keywordScore.toFixed(1)}점`);
+  if (serviceTypeScore > 0) reasons.push(`서비스유형: ${serviceTypeScore.toFixed(1)}점`);
+  if (industryScore > 0) reasons.push(`업종: ${industryScore.toFixed(1)}점`);
+  
+  const matchReason = reasons.length > 0 ? reasons.join(', ') : '기본 매칭';
   
   return {
     id: `${supplier.공급기업일련번호}_${demand.수요기관일련번호}`,
