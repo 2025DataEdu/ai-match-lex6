@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Users, Target, TrendingUp } from "lucide-react";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
@@ -127,7 +128,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                   <TrendingUp className="w-6 h-6 text-blue-600 mr-2" />
                   <h3 className="text-lg font-semibold">등록 현황 분포</h3>
                 </div>
-                <div className="h-[250px] w-full">
+                <div className="h-[300px] w-full">
                   <ChartContainer config={chartConfig} className="h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -135,9 +136,13 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                           data={pieData} 
                           cx="50%" 
                           cy="50%" 
-                          outerRadius={60} 
+                          outerRadius="80%" 
+                          innerRadius="0%"
                           dataKey="value" 
-                          label={({ name, value }) => `${name}: ${value}`}
+                          label={({ name, value, percent }) => 
+                            `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                          }
+                          labelLine={false}
                         >
                           {pieData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -160,7 +165,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                   <Target className="w-6 h-6 text-green-600 mr-2" />
                   <h3 className="text-lg font-semibold">최근 8주간 주별 등록 건수</h3>
                 </div>
-                <div className="h-[250px] w-full">
+                <div className="h-[300px] w-full">
                   <ChartContainer config={chartConfig} className="h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart 
