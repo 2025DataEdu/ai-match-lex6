@@ -50,48 +50,60 @@ serve(async (req) => {
       );
     }
 
-    // 2단계: 템플릿 기반 빠른 SQL 생성 시도
+    // 2단계: 템플릿 기반 SQL 생성 우선 시도
     let generatedSQL = generateQuickSQL(message);
-    let isTemplateGenerated = false;
+    let isTemplateGenerated = true;
 
-    if (generatedSQL) {
-      console.log('Template-based SQL generated:', generatedSQL);
-      isTemplateGenerated = true;
-    } else {
+    if (!generatedSQL) {
       // 3단계: GPT를 통한 SQL 생성
       const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
       if (!openAIApiKey) {
         throw new Error('OpenAI API key not found');
       }
 
-      generatedSQL = await generateSQLWithAI(message, openAIApiKey);
+      try {
+        generatedSQL = await generateSQLWithAI(message, openAIApiKey);
+        isTemplateGenerated = false;
+      } catch (error) {
+        console.error('AI SQL generation failed:', error);
+        // 기본 검색 쿼리로 폴백
+        generatedSQL = `
+        SELECT *, 50 as relevance_score
+        FROM 공급기업 
+        WHERE 세부설명 IS NOT NULL
+        ORDER BY relevance_score DESC, 등록일자 DESC 
+        LIMIT 10`;
+        isTemplateGenerated = true;
+      }
     }
     
     console.log('Final SQL:', generatedSQL);
 
-    // 4단계: SQL 실행
+    // 4단계: SQL 실행 (직접 쿼리 실행)
     let queryResults = [];
     let queryError = null;
 
     try {
-      const { data, error } = await supabase.rpc('execute_dynamic_query', {
-        query_text: generatedSQL
-      });
+      const { data, error } = await supabase
+        .from('공급기업')
+        .select('*')
+        .or(`유형.ilike.%${message}%,세부설명.ilike.%${message}%,기업명.ilike.%${message}%,업종.ilike.%${message}%`)
+        .limit(10);
 
       if (error) {
-        console.error('SQL execution error:', error);
+        console.error('Direct query error:', error);
         queryError = error;
       } else {
         queryResults = data || [];
-        console.log(`SQL execution successful: ${queryResults.length} results`);
+        console.log(`Direct query successful: ${queryResults.length} results`);
         
         // 결과를 캐시에 저장
         if (queryResults.length > 0) {
-          await saveToCache(supabase, message, generatedSQL, queryResults);
+          await saveToCache(supabase, message, 'direct_query', queryResults);
         }
       }
     } catch (error) {
-      console.error('SQL execution error:', error);
+      console.error('Query execution error:', error);
       queryError = error;
     }
 
@@ -99,22 +111,26 @@ serve(async (req) => {
     const aiResponse = formatResponse(message, queryResults, queryError);
 
     // 채팅 기록 저장
-    const { error: saveError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: userId,
-        message: message,
-        response: aiResponse,
-        context: {
-          sql_query: generatedSQL,
-          results_count: queryResults.length,
-          template_generated: isTemplateGenerated,
-          cached: false
-        },
-      });
+    try {
+      const { error: saveError } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: userId,
+          message: message,
+          response: aiResponse,
+          context: {
+            sql_query: generatedSQL,
+            results_count: queryResults.length,
+            template_generated: isTemplateGenerated,
+            cached: false
+          },
+        });
 
-    if (saveError) {
-      console.error('Error saving chat message:', saveError);
+      if (saveError) {
+        console.error('Error saving chat message:', saveError);
+      }
+    } catch (saveError) {
+      console.error('Chat save error:', saveError);
     }
 
     console.log('AI response generated successfully');
@@ -123,7 +139,6 @@ serve(async (req) => {
       JSON.stringify({ 
         response: aiResponse,
         context: {
-          sql_query: generatedSQL,
           results_count: queryResults.length,
           template_generated: isTemplateGenerated,
           cached: false
@@ -137,7 +152,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-chatbot function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ 
+        error: error.message,
+        response: '죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
