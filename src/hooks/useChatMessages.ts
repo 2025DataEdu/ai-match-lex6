@@ -15,7 +15,7 @@ export const useChatMessages = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: '안녕하세요! AI매치허브 챗봇입니다. 공급기업과 수요기관에 관한 질문을 해주세요.',
+      content: '안녕하세요! AI챗봇입니다. 공급기업과 수요기관에 관한 질문을 해주세요.',
       isUser: false,
       timestamp: new Date(),
     }

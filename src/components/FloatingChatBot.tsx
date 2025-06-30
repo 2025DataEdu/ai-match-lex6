@@ -34,7 +34,7 @@ const FloatingChatBot = () => {
             <div className="flex items-center justify-between">
               <DrawerTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-blue-600" />
-                AI매치허브 챗봇
+                AI챗봇
               </DrawerTitle>
               <DrawerClose asChild>
                 <Button variant="ghost" size="sm">
