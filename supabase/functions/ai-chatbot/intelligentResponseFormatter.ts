@@ -1,4 +1,3 @@
-
 import { KeywordAnalysis } from './naturalLanguageProcessor.ts';
 
 export function formatIntelligentResponse(
@@ -11,39 +10,33 @@ export function formatIntelligentResponse(
     return formatErrorResponse(originalQuery, analysis);
   }
 
-  // 의도별 응답 처리
+  // 의도별 정확한 응답 처리
   switch (analysis.intent) {
     case 'statistics':
-      return formatStatisticsResponse(originalQuery, analysis, results);
+      return formatAccurateStatisticsResponse(originalQuery, analysis, results);
     case 'supplier_search':
-      return formatSupplierSearchResponse(originalQuery, analysis, results);
+      return formatSmartSupplierResponse(originalQuery, analysis, results);
     case 'demand_search':
-      return formatDemandSearchResponse(originalQuery, analysis, results);
+      return formatSmartDemandResponse(originalQuery, analysis, results);
     case 'matching_info':
       return formatMatchingInfoResponse(originalQuery, analysis, results);
     case 'general_info':
       return formatGeneralInfoResponse(originalQuery, analysis);
     default:
-      return formatSupplierSearchResponse(originalQuery, analysis, results);
+      return formatSmartSupplierResponse(originalQuery, analysis, results);
   }
 }
 
-function formatStatisticsResponse(query: string, analysis: KeywordAnalysis, results: any[]): string {
+function formatAccurateStatisticsResponse(query: string, analysis: KeywordAnalysis, results: any[]): string {
   if (!results || results.length === 0) {
     return `📊 **통계 정보**\n\n현재 등록된 데이터가 없습니다.\n\n**이용 가능한 통계 질문**:\n• "공급기업이 총 몇 곳이야?"\n• "AI 챗봇 업체는 몇 개야?"\n• "수요기관은 총 몇 곳 등록되어 있어?"\n• "CCTV 관련 기업 수는?"`;
   }
 
-  const count = Array.isArray(results) ? results.length : (results[0]?.count || 0);
+  const statData = results[0];
+  const count = statData.count || 0;
   let responseText = `📊 **통계 결과**\n\n`;
   
-  if (query.includes('공급기업') || query.includes('업체') || query.includes('회사')) {
-    if (analysis.serviceType || analysis.primaryKeywords.length > 0) {
-      const keyword = analysis.serviceType || analysis.primaryKeywords[0];
-      responseText += `**${keyword} 관련 공급기업**: ${count}개\n\n`;
-    } else {
-      responseText += `**전체 공급기업**: ${count}개\n\n`;
-    }
-  } else if (query.includes('수요기관') || query.includes('발주')) {
+  if (statData.type === 'demand_count') {
     if (analysis.serviceType || analysis.primaryKeywords.length > 0) {
       const keyword = analysis.serviceType || analysis.primaryKeywords[0];
       responseText += `**${keyword} 관련 수요기관**: ${count}개\n\n`;
@@ -51,7 +44,12 @@ function formatStatisticsResponse(query: string, analysis: KeywordAnalysis, resu
       responseText += `**전체 수요기관**: ${count}개\n\n`;
     }
   } else {
-    responseText += `**검색 결과**: ${count}개\n\n`;
+    if (analysis.serviceType || analysis.primaryKeywords.length > 0) {
+      const keyword = analysis.serviceType || analysis.primaryKeywords[0];
+      responseText += `**${keyword} 관련 공급기업**: ${count}개\n\n`;
+    } else {
+      responseText += `**전체 공급기업**: ${count}개\n\n`;
+    }
   }
 
   responseText += `📈 **추가로 확인 가능한 통계**:\n`;
@@ -64,7 +62,7 @@ function formatStatisticsResponse(query: string, analysis: KeywordAnalysis, resu
   return responseText;
 }
 
-function formatSupplierSearchResponse(query: string, analysis: KeywordAnalysis, results: any[]): string {
+function formatSmartSupplierResponse(query: string, analysis: KeywordAnalysis, results: any[]): string {
   if (!results || results.length === 0) {
     return formatNoResultsResponse(query, analysis);
   }
@@ -79,17 +77,15 @@ function formatSupplierSearchResponse(query: string, analysis: KeywordAnalysis, 
   } else if (primaryKeywords.length > 0) {
     responseText = `🔍 **'${primaryKeywords.join(', ')}' 관련 기업**을 찾아드렸습니다!\n`;
   } else {
-    responseText = `🏢 **최신 등록 기업**을 찾아드렸습니다!\n`;
+    responseText = `🏢 **추천 기업**을 찾아드렸습니다!\n`;
   }
   
-  responseText += `총 ${results.length}개의 기업이 검색되었습니다.\n\n`;
+  responseText += `총 ${results.length}개의 관련성 높은 기업을 선별했습니다.\n\n`;
 
-  // 결과를 관련성 점수로 정렬
-  const sortedResults = results.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
-
-  sortedResults.forEach((company, index) => {
+  // 관련성 점수 기준으로 정렬된 결과 표시
+  results.forEach((company, index) => {
     const score = company.relevance_score || 50;
-    const matchIndicator = score >= 80 ? '🎯' : score >= 70 ? '✨' : score >= 60 ? '📋' : '🏢';
+    const matchIndicator = score >= 85 ? '🎯' : score >= 70 ? '✨' : score >= 60 ? '📋' : '🏢';
     
     responseText += `${matchIndicator} **${index + 1}. ${company.기업명 || '기업명 없음'}**\n`;
     
@@ -102,22 +98,24 @@ function formatSupplierSearchResponse(query: string, analysis: KeywordAnalysis, 
     }
     
     if (company.세부설명) {
-      const description = company.세부설명.length > 100 
-        ? company.세부설명.substring(0, 100) + '...' 
+      const description = company.세부설명.length > 120 
+        ? company.세부설명.substring(0, 120) + '...' 
         : company.세부설명;
       responseText += `🔸 **주요 서비스**: ${description}\n`;
     }
     
     if (company.보유특허 && company.보유특허.trim() !== '') {
-      responseText += `🔸 **보유특허**: ${company.보유특허.length > 60 ? company.보유특허.substring(0, 60) + '...' : company.보유특허}\n`;
+      responseText += `🔸 **보유특허**: ${company.보유특허.length > 80 ? company.보유특허.substring(0, 80) + '...' : company.보유특허}\n`;
     }
     
     if (company.기업홈페이지 && company.기업홈페이지.trim() !== '') {
       responseText += `🔸 **홈페이지**: ${company.기업홈페이지}\n`;
     }
     
-    if (score >= 70) {
+    if (score >= 80) {
       responseText += `💡 **매칭도**: ${Math.round(score)}% (높은 연관성)\n`;
+    } else if (score >= 60) {
+      responseText += `💡 **매칭도**: ${Math.round(score)}% (보통 연관성)\n`;
     }
     
     responseText += '\n';
@@ -130,20 +128,24 @@ function formatSupplierSearchResponse(query: string, analysis: KeywordAnalysis, 
   return responseText;
 }
 
-function formatDemandSearchResponse(query: string, analysis: KeywordAnalysis, results: any[]): string {
+function formatSmartDemandResponse(query: string, analysis: KeywordAnalysis, results: any[]): string {
   if (!results || results.length === 0) {
     return `🏛️ **수요기관 검색 결과**\n\n'${query}'와 관련된 수요기관을 찾지 못했습니다.\n\n**검색 가능한 예시**:\n• "AI 도입을 원하는 기관 찾아줘"\n• "챗봇 구축 예정인 수요기관은?"\n• "CCTV 설치 계획이 있는 기관들"\n\n더 구체적인 검색어로 다시 시도해보세요.`;
   }
 
   let responseText = `🏛️ **수요기관 검색 결과**\n\n`;
-  responseText += `총 ${results.length}개의 수요기관이 검색되었습니다.\n\n`;
+  responseText += `총 ${results.length}개의 관련 수요기관을 찾았습니다.\n\n`;
 
   results.forEach((demand, index) => {
     responseText += `📋 **${index + 1}. ${demand.수요기관 || '기관명 없음'}**\n`;
     
+    if (demand.유형) {
+      responseText += `🔸 **유형**: ${demand.유형}\n`;
+    }
+    
     if (demand.수요내용) {
-      const content = demand.수요내용.length > 100 
-        ? demand.수요내용.substring(0, 100) + '...' 
+      const content = demand.수요내용.length > 120 
+        ? demand.수요내용.substring(0, 120) + '...' 
         : demand.수요내용;
       responseText += `🔸 **수요 내용**: ${content}\n`;
     }

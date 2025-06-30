@@ -64,20 +64,20 @@ serve(async (req) => {
     const analysis = await analyzeNaturalLanguage(message, openAIApiKey);
     console.log('Analysis result:', JSON.stringify(analysis, null, 2));
 
-    // 3단계: 의도별 쿼리 실행
+    // 3단계: 의도별 정확한 쿼리 실행
     let queryResults = [];
     let queryError = null;
 
     try {
       switch (analysis.intent) {
         case 'statistics':
-          queryResults = await executeStatisticsQuery(supabase, analysis);
+          queryResults = await executeAccurateStatisticsQuery(supabase, analysis);
           break;
         case 'supplier_search':
-          queryResults = await executeSupplierSearch(supabase, analysis);
+          queryResults = await executeSmartSupplierSearch(supabase, analysis);
           break;
         case 'demand_search':
-          queryResults = await executeDemandSearch(supabase, analysis);
+          queryResults = await executeSmartDemandSearch(supabase, analysis);
           break;
         case 'matching_info':
           queryResults = []; // 매칭 정보는 별도 응답
@@ -86,7 +86,7 @@ serve(async (req) => {
           queryResults = []; // 일반 정보는 별도 응답
           break;
         default:
-          queryResults = await executeSupplierSearch(supabase, analysis);
+          queryResults = await executeSmartSupplierSearch(supabase, analysis);
       }
 
       console.log(`Query completed: ${queryResults.length} results found`);
@@ -161,25 +161,23 @@ serve(async (req) => {
   }
 });
 
-// 통계 쿼리 실행 - 개선된 버전
-async function executeStatisticsQuery(supabase: any, analysis: any) {
+// 정확한 통계 쿼리 실행 - 실제 count 값 반환
+async function executeAccurateStatisticsQuery(supabase: any, analysis: any) {
   const { primaryKeywords, serviceType, context } = analysis;
   
-  console.log('Executing statistics query with:', { primaryKeywords, serviceType, context });
+  console.log('Executing accurate statistics query with:', { primaryKeywords, serviceType, context });
   
   if (context.entity === 'demand') {
-    // 수요기관 통계
+    // 수요기관 통계 - 정확한 카운트
     let query = supabase.from('수요기관').select('*', { count: 'exact', head: true });
     
     if (serviceType) {
-      // 서비스 유형으로 필터링
       const serviceKeywords = serviceType.split(/[\/\s]+/);
       const conditions = serviceKeywords.map(keyword => 
         `수요내용.ilike.%${keyword}%,유형.ilike.%${keyword}%`
       ).join(',');
       query = query.or(conditions);
     } else if (primaryKeywords.length > 0) {
-      // 키워드로 필터링
       const keywordConditions = primaryKeywords.map(keyword => 
         `수요내용.ilike.%${keyword}%,유형.ilike.%${keyword}%,수요기관.ilike.%${keyword}%`
       ).join(',');
@@ -191,20 +189,18 @@ async function executeStatisticsQuery(supabase: any, analysis: any) {
       console.error('Statistics query error (demand):', error);
       throw error;
     }
-    return [{ count }];
+    return [{ type: 'demand_count', count: count || 0 }];
   } else {
-    // 공급기업 통계 (기본)
+    // 공급기업 통계 - 정확한 카운트
     let query = supabase.from('공급기업').select('*', { count: 'exact', head: true });
     
     if (serviceType) {
-      // 서비스 유형으로 필터링
       const serviceKeywords = serviceType.split(/[\/\s]+/);
       const conditions = serviceKeywords.map(keyword => 
         `유형.ilike.%${keyword}%,세부설명.ilike.%${keyword}%,기업명.ilike.%${keyword}%`
       ).join(',');
       query = query.or(conditions);
     } else if (primaryKeywords.length > 0) {
-      // 키워드로 필터링
       const keywordConditions = primaryKeywords.map(keyword => 
         `유형.ilike.%${keyword}%,세부설명.ilike.%${keyword}%,기업명.ilike.%${keyword}%,업종.ilike.%${keyword}%`
       ).join(',');
@@ -216,52 +212,61 @@ async function executeStatisticsQuery(supabase: any, analysis: any) {
       console.error('Statistics query error (supplier):', error);
       throw error;
     }
-    return [{ count }];
+    return [{ type: 'supplier_count', count: count || 0 }];
   }
 }
 
-// 공급기업 검색 실행 - 단계별 검색 개선
-async function executeSupplierSearch(supabase: any, analysis: any) {
+// 스마트한 공급기업 검색 - 관련성 기반 필터링
+async function executeSmartSupplierSearch(supabase: any, analysis: any) {
   const { primaryKeywords, serviceType } = analysis;
   
-  console.log('Executing supplier search with:', { primaryKeywords, serviceType });
+  console.log('Executing smart supplier search with:', { primaryKeywords, serviceType });
 
-  // 1단계: 서비스 타입 우선 검색
+  let bestResults = [];
+
+  // 1단계: 서비스 타입 우선 검색 (가장 정확한 매칭)
   if (serviceType) {
-    const results = await searchByServiceType(supabase, serviceType, primaryKeywords);
-    if (results.length > 0) {
-      console.log(`Service type search found ${results.length} results`);
-      return addRelevanceScores(results, primaryKeywords, serviceType);
+    bestResults = await searchSuppliersByServiceType(supabase, serviceType);
+    if (bestResults.length >= 3) {
+      console.log(`Service type search found ${bestResults.length} highly relevant results`);
+      return addSmartRelevanceScores(bestResults, primaryKeywords, serviceType).slice(0, 8);
     }
   }
 
   // 2단계: 정확한 키워드 매칭
   if (primaryKeywords.length > 0) {
-    const results = await searchByKeywords(supabase, primaryKeywords, true);
-    if (results.length > 0) {
-      console.log(`Exact keyword search found ${results.length} results`);
-      return addRelevanceScores(results, primaryKeywords, serviceType);
+    const keywordResults = await searchSuppliersByKeywords(supabase, primaryKeywords, true);
+    bestResults = [...bestResults, ...keywordResults];
+    
+    if (bestResults.length >= 3) {
+      console.log(`Exact keyword search found ${bestResults.length} relevant results`);
+      return removeDuplicates(addSmartRelevanceScores(bestResults, primaryKeywords, serviceType)).slice(0, 8);
     }
   }
 
-  // 3단계: 부분 키워드 매칭  
+  // 3단계: 부분 키워드 매칭
   if (primaryKeywords.length > 0) {
-    const results = await searchByKeywords(supabase, primaryKeywords, false);
-    if (results.length > 0) {
-      console.log(`Partial keyword search found ${results.length} results`);
-      return addRelevanceScores(results, primaryKeywords, serviceType);
+    const partialResults = await searchSuppliersByKeywords(supabase, primaryKeywords, false);
+    bestResults = [...bestResults, ...partialResults];
+    
+    if (bestResults.length >= 3) {
+      console.log(`Partial keyword search found ${bestResults.length} results`);
+      return removeDuplicates(addSmartRelevanceScores(bestResults, primaryKeywords, serviceType)).slice(0, 6);
     }
   }
 
-  // 4단계: 일반 AI 키워드로 검색
-  const broadResults = await searchByBroadTerms(supabase);
-  console.log(`Broad search found ${broadResults.length} results`);
-  return addRelevanceScores(broadResults, primaryKeywords, serviceType);
+  // 4단계: 광범위한 AI 관련 검색 (최후의 수단)
+  const broadResults = await searchSuppliersByBroadTerms(supabase);
+  bestResults = [...bestResults, ...broadResults];
+  
+  console.log(`Final search found ${bestResults.length} results`);
+  return removeDuplicates(addSmartRelevanceScores(bestResults, primaryKeywords, serviceType)).slice(0, 5);
 }
 
-// 서비스 타입별 검색
-async function searchByServiceType(supabase: any, serviceType: string, keywords: string[]) {
-  const serviceKeywords = serviceType.split(/[\/\s]+/);
+// 서비스 타입별 정확한 검색
+async function searchSuppliersByServiceType(supabase: any, serviceType: string) {
+  const serviceKeywords = serviceType.split(/[\/\s]+/).filter(k => k.length > 1);
+  
   const conditions = serviceKeywords.map(keyword => 
     `유형.ilike.%${keyword}%,세부설명.ilike.%${keyword}%`
   ).join(',');
@@ -270,7 +275,8 @@ async function searchByServiceType(supabase: any, serviceType: string, keywords:
     .from('공급기업')
     .select('*')
     .or(conditions)
-    .limit(15);
+    .not('세부설명', 'is', null)
+    .limit(10);
     
   if (error) {
     console.error('Service type search error:', error);
@@ -279,9 +285,9 @@ async function searchByServiceType(supabase: any, serviceType: string, keywords:
   return data || [];
 }
 
-// 키워드별 검색
-async function searchByKeywords(supabase: any, keywords: string[], exact: boolean = true) {
-  const searchKeywords = exact ? keywords : keywords.map(k => k.length > 3 ? k.substring(0, 3) : k);
+// 키워드별 정밀 검색
+async function searchSuppliersByKeywords(supabase: any, keywords: string[], exact: boolean = true) {
+  const searchKeywords = exact ? keywords : keywords.map(k => k.length > 2 ? k.substring(0, Math.max(2, k.length - 1)) : k);
   
   const conditions = searchKeywords.map(keyword => 
     `유형.ilike.%${keyword}%,세부설명.ilike.%${keyword}%,기업명.ilike.%${keyword}%,업종.ilike.%${keyword}%`
@@ -291,7 +297,8 @@ async function searchByKeywords(supabase: any, keywords: string[], exact: boolea
     .from('공급기업')
     .select('*')
     .or(conditions)
-    .limit(12);
+    .not('세부설명', 'is', null)
+    .limit(8);
     
   if (error) {
     console.error('Keyword search error:', error);
@@ -300,9 +307,9 @@ async function searchByKeywords(supabase: any, keywords: string[], exact: boolea
   return data || [];
 }
 
-// 광범위한 검색
-async function searchByBroadTerms(supabase: any) {
-  const broadTerms = ['AI', '인공지능', '스마트', '지능형', '자동화', '딥러닝', '머신러닝', '챗봇'];
+// 광범위한 AI 관련 검색
+async function searchSuppliersByBroadTerms(supabase: any) {
+  const broadTerms = ['AI', '인공지능', '스마트', '지능형', '자동화'];
   
   const conditions = broadTerms.map(term => 
     `유형.ilike.%${term}%,세부설명.ilike.%${term}%`
@@ -312,55 +319,80 @@ async function searchByBroadTerms(supabase: any) {
     .from('공급기업')
     .select('*')
     .or(conditions)
-    .limit(10);
+    .not('세부설명', 'is', null)
+    .order('등록일자', { ascending: false })
+    .limit(5);
     
   if (error) {
     console.error('Broad search error:', error);
-    // 폴백으로 최신 기업 반환
-    const { data: fallbackData } = await supabase
-      .from('공급기업')
-      .select('*')
-      .not('세부설명', 'is', null)
-      .order('등록일자', { ascending: false })
-      .limit(8);
-    return fallbackData || [];
+    return [];
   }
   return data || [];
 }
 
-// 관련성 점수 추가
-function addRelevanceScores(results: any[], keywords: string[], serviceType: string | null) {
+// 스마트한 관련성 점수 계산
+function addSmartRelevanceScores(results: any[], keywords: string[], serviceType: string | null) {
   return results.map(company => {
-    let score = 50;
+    let score = 30; // 기본 점수
     const companyText = `${company.유형 || ''} ${company.기업명 || ''} ${company.세부설명 || ''} ${company.업종 || ''}`.toLowerCase();
     
-    // 서비스 타입 매칭
-    if (serviceType && companyText.includes(serviceType.toLowerCase())) {
-      score += 40;
+    // 서비스 타입 완전 매칭 (최고 점수)
+    if (serviceType) {
+      const serviceWords = serviceType.toLowerCase().split(/[\/\s]+/);
+      const perfectMatch = serviceWords.some(word => companyText.includes(word));
+      if (perfectMatch) score += 50;
     }
     
-    // 키워드 매칭
+    // 키워드 정확도별 가중치
     keywords.forEach((keyword, index) => {
-      const weight = Math.max(25 - (index * 5), 10);
-      if (companyText.includes(keyword.toLowerCase())) {
+      const weight = Math.max(30 - (index * 8), 10);
+      const keywordLower = keyword.toLowerCase();
+      
+      if (companyText.includes(keywordLower)) {
         score += weight;
+        
+        // 제목이나 유형에 포함된 경우 추가 점수
+        if ((company.유형 || '').toLowerCase().includes(keywordLower)) {
+          score += 15;
+        }
+        if ((company.기업명 || '').toLowerCase().includes(keywordLower)) {
+          score += 10;
+        }
       }
     });
+    
+    // 세부설명 충실도 보너스
+    if (company.세부설명 && company.세부설명.length > 50) {
+      score += 5;
+    }
     
     return { ...company, relevance_score: Math.min(score, 100) };
   }).sort((a, b) => b.relevance_score - a.relevance_score);
 }
 
-// 수요기관 검색 실행
-async function executeDemandSearch(supabase: any, analysis: any) {
+// 중복 제거 함수
+function removeDuplicates(results: any[]) {
+  const seen = new Set();
+  return results.filter(item => {
+    const key = item.공급기업일련번호 || item.기업명;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+// 스마트한 수요기관 검색
+async function executeSmartDemandSearch(supabase: any, analysis: any) {
   const { primaryKeywords, serviceType } = analysis;
   
-  console.log('Executing demand search with:', { primaryKeywords, serviceType });
+  console.log('Executing smart demand search with:', { primaryKeywords, serviceType });
   
   let query = supabase.from('수요기관').select('*');
   
   if (serviceType) {
-    const serviceKeywords = serviceType.split(/[\/\s]+/);
+    const serviceKeywords = serviceType.split(/[\/\s]+/).filter(k => k.length > 1);
     const serviceConditions = serviceKeywords.map(keyword => 
       `수요내용.ilike.%${keyword}%,유형.ilike.%${keyword}%`
     ).join(',');
@@ -372,7 +404,11 @@ async function executeDemandSearch(supabase: any, analysis: any) {
     query = query.or(keywordConditions);
   }
   
-  const { data, error } = await query.limit(10);
+  const { data, error } = await query
+    .not('수요내용', 'is', null)
+    .order('등록일자', { ascending: false })
+    .limit(8);
+    
   if (error) {
     console.error('Demand search error:', error);
     throw error;
