@@ -36,39 +36,6 @@ export type Database = {
         }
         Relationships: []
       }
-      embeddings: {
-        Row: {
-          content: string
-          created_at: string | null
-          embedding: string | null
-          id: string
-          metadata: Json | null
-          record_id: string
-          table_name: string
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          embedding?: string | null
-          id?: string
-          metadata?: Json | null
-          record_id: string
-          table_name: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          embedding?: string | null
-          id?: string
-          metadata?: Json | null
-          record_id?: string
-          table_name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       query_cache: {
         Row: {
           created_at: string | null

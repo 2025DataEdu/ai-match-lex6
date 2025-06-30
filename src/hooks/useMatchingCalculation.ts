@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Supplier, Demand } from "@/types/matching";
-import { calculateMatchingScore, DetailedMatch } from "@/utils/matchingAlgorithm";
+import { Supplier, Demand, DetailedMatch } from "@/types/matching";
+import { calculateMatchingScore } from "@/utils/matchingAlgorithm";
 
 export const useMatchingCalculation = () => {
   const [matches, setMatches] = useState<DetailedMatch[]>([]);

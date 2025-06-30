@@ -1,3 +1,6 @@
+
+import { Supplier, Demand, DetailedMatch } from "@/types/matching";
+
 const AI_SERVICE_KEYWORDS: { [key: string]: string[] } = {
   "AI 챗봇/대화형AI": ["챗봇", "대화형 AI", "자연어 이해", "자동 응답", "가상 비서"],
   "컴퓨터 비전/이미지AI": ["컴퓨터 비전", "이미지 인식", "객체 탐지", "얼굴 인식", "영상 분석"],
@@ -24,79 +27,92 @@ const calculateSimilarity = (demand: string, supplierKeywords: string[]): number
   return matchedKeywords / demandWords.length;
 };
 
-export const calculateMatching = (demands: any[], suppliers: any[]): any[] => {
-  const matches: any[] = [];
+export const calculateMatchingScore = (demand: Demand, supplier: Supplier): DetailedMatch => {
+  let keywordScore = 0;
+  let matchedKeywords: string[] = [];
+
+  // AI 서비스 유형 키워드 매칭
+  const aiServiceType = supplier.유형 || "";
+  const aiServiceKeywords = AI_SERVICE_KEYWORDS[aiServiceType] || [];
+  const demandDescription = demand.수요내용 || "";
+
+  if (aiServiceKeywords.length > 0) {
+    const similarity = calculateSimilarity(demandDescription, aiServiceKeywords);
+    keywordScore = similarity * 100;
+
+    demandDescription.toLowerCase().split(/\s+/).forEach(word => {
+      if (aiServiceKeywords.some(keyword => keyword.toLowerCase().includes(word))) {
+        matchedKeywords.push(word);
+      }
+    });
+  }
+
+  // 업종 매칭
+  const industryMatch = demand.유형 === supplier.업종 ? 30 : 0;
+
+  // 점수 조합
+  const capabilityScore = keywordScore * 0.7 + industryMatch * 0.3;
+  const matchScore = Math.round(capabilityScore);
+
+  return {
+    id: `${supplier.공급기업일련번호}_${demand.수요기관일련번호}`,
+    companyName: supplier.기업명,
+    type: supplier.유형,
+    industry: supplier.업종,
+    description: supplier.세부설명,
+    patents: supplier.보유특허,
+    website: supplier.기업홈페이지,
+    youtubeLinks: supplier.유튜브링크,
+    username: supplier.사용자명,
+    registrationDate: supplier.등록일자,
+    isInterested: supplier.관심여부 === 'Y',
+    hasInquiry: supplier.문의여부 === 'Y',
+    score: matchScore,
+    matchedKeywords: matchedKeywords,
+    keywordScore: keywordScore,
+    capabilityScore: capabilityScore,
+    matchScore: matchScore,
+    matchReason: `키워드 점수: ${keywordScore.toFixed(2)}%, 업종 매칭: ${industryMatch > 0 ? 'Yes' : 'No'}`,
+    supplier: supplier,
+    demand: demand
+  };
+};
+
+export const calculateMatching = (demands: Demand[], suppliers: Supplier[]): DetailedMatch[] => {
+  const matches: DetailedMatch[] = [];
 
   demands.forEach(demand => {
     suppliers.forEach(supplier => {
-      let keywordScore = 0;
-      let matchedKeywords: string[] = [];
-
-      // AI 서비스 유형 키워드 매칭
-      const aiServiceType = supplier.유형 || "";
-      const aiServiceKeywords = AI_SERVICE_KEYWORDS[aiServiceType] || [];
-      const demandDescription = demand.세부설명 || "";
-
-      if (aiServiceKeywords.length > 0) {
-        const similarity = calculateSimilarity(demandDescription, aiServiceKeywords);
-        keywordScore = similarity;
-
-        demandDescription.toLowerCase().split(/\s+/).forEach(word => {
-          if (aiServiceKeywords.some(keyword => keyword.toLowerCase().includes(word))) {
-            matchedKeywords.push(word);
-          }
-        });
-      }
-
-      // 업종 매칭 (간단하게 완전 일치로 처리)
-      const industryMatch = demand.업종 === supplier.업종 ? 1 : 0;
-
-      // 점수 조합 (가중치 적용 가능)
-      const capabilityScore = (keywordScore * 0.7) + (industryMatch * 0.3);
-
-      // 매칭 데이터 생성
-      matches.push({
-        demandId: demand.수요기관일련번호,
-        supplierId: supplier.공급기업일련번호,
-        companyName: supplier.기업명,
-        type: supplier.유형,
-        industry: supplier.업종,
-        description: supplier.세부설명,
-        patents: supplier.보유특허,
-        website: supplier.기업홈페이지,
-        youtubeLinks: supplier.유튜브링크,
-        username: supplier.사용자명,
-        registrationDate: supplier.등록일자,
-        isInterested: supplier.관심여부 === 'Y',
-        hasInquiry: supplier.문의여부 === 'Y',
-        score: capabilityScore,
-        matchedKeywords: matchedKeywords,
-        keywordScore: keywordScore,
-        capabilityScore: capabilityScore,
-        matchReason: `키워드 점수: ${keywordScore.toFixed(2)}, 업종 일치: ${industryMatch ? 'Yes' : 'No'}`
-      });
+      const match = calculateMatchingScore(demand, supplier);
+      matches.push(match);
     });
   });
 
   return matches;
 };
 
-export const groupAndSortMatches = (matches: any[], sortBy: string = 'score', sortOrder: 'asc' | 'desc' = 'desc') => {
+export const groupAndSortMatches = (
+  matches: DetailedMatch[], 
+  perspective: 'demand' | 'supplier' = 'demand',
+  sortBy: string = 'matchScore', 
+  sortOrder: 'asc' | 'desc' = 'desc'
+) => {
   const sortedMatches = [...matches].sort((a, b) => {
     let compareValue = 0;
     
     switch (sortBy) {
+      case 'matchScore':
       case 'score':
-        compareValue = a.score - b.score;
+        compareValue = a.matchScore - b.matchScore;
         break;
       case 'company':
-        compareValue = a.companyName.localeCompare(b.companyName);
+        compareValue = a.supplier.기업명.localeCompare(b.supplier.기업명);
         break;
       case 'date':
-        compareValue = new Date(a.registrationDate).getTime() - new Date(b.registrationDate).getTime();
+        compareValue = new Date(a.supplier.등록일자).getTime() - new Date(b.supplier.등록일자).getTime();
         break;
       default:
-        compareValue = a.score - b.score;
+        compareValue = a.matchScore - b.matchScore;
     }
     
     return sortOrder === 'desc' ? -compareValue : compareValue;
