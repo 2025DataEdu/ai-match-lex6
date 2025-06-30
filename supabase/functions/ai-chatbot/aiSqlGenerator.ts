@@ -34,7 +34,7 @@ export async function generateSQLWithAI(message: string, openAIApiKey: string): 
   
   AI 서비스 유형별 우선순위:
   - "AI 챗봇/대화형AI": 챗봇, 대화형AI, 자연어처리 관련
-  - "컴퓨터 비전/이미지AI": 이미지 인식, 영상 분석, OCR 관련
+  - "컴퓨터 비전/이미지AI": 이미지 인식, 영상 분석, OCR, CCTV, 감시, 모니터링 관련
   - "자연어처리/텍스트AI": 텍스트 분석, 번역, 문서 처리 관련
   - "음성인식/음성AI": 음성 처리, STT, TTS 관련
   - "예측분석/데이터AI": 데이터 분석, 머신러닝, 예측 모델 관련
@@ -45,6 +45,7 @@ export async function generateSQLWithAI(message: string, openAIApiKey: string): 
   - 금액은 만원 단위 (1억원 = 10,000)
   - CASE문을 사용하여 관련성 점수 계산 후 정렬
   - LIMIT으로 결과 제한 (기본 20개)
+  - 특수문자 및 SQL 인젝션 방지를 위해 안전한 문자만 사용
   `;
 
   const sqlGenerationPrompt = `당신은 PostgreSQL SQL 생성 전문가입니다.
@@ -55,7 +56,7 @@ export async function generateSQLWithAI(message: string, openAIApiKey: string): 
   사용자 질의: "${message}"
 
   규칙:
-  1. SELECT 쿼리만 생성
+  1. SELECT 쿼리만 생성 (다른 SQL 명령어 사용 금지)
   2. AI 서비스 관련 질의의 경우 '유형' 컬럼을 최우선으로 매칭
   3. CASE문을 사용하여 관련성 점수(relevance_score) 계산
   4. 서비스 유형 매칭 > 세부설명 매칭 > 업종 매칭 순으로 우선순위 부여
@@ -63,29 +64,58 @@ export async function generateSQLWithAI(message: string, openAIApiKey: string): 
   6. 금액 관련 질의시 만원 단위 고려
   7. ORDER BY relevance_score DESC, 등록일자 DESC
   8. LIMIT으로 결과 제한 (기본 20개)
+  9. SQL 인젝션 방지를 위해 특수문자 제거
+  10. 반드시 WHERE 조건 포함
+
+  특별 키워드 처리:
+  - "AI CCTV", "CCTV", "감시", "모니터링" → 컴퓨터 비전/이미지AI 유형으로 처리
+  - "챗봇", "대화형" → AI 챗봇/대화형AI 유형으로 처리
+  - "음성", "STT", "TTS" → 음성인식/음성AI 유형으로 처리
 
   예시:
+  - "AI CCTV" → 유형에서 '비전' 또는 '이미지' 매칭 + 세부설명에서 'CCTV', '감시' 매칭을 최우선으로 처리
   - "AI 챗봇 개발" → 유형에서 '챗봇' 매칭을 최우선으로 처리
-  - "이미지 인식" → 유형에서 '비전' 또는 '이미지' 매칭을 최우선으로 처리
 
-  오직 SQL 쿼리만 응답하세요.`;
+  오직 유효한 SELECT SQL 쿼리만 응답하세요.`;
 
-  const sqlResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'user', content: sqlGenerationPrompt }
-      ],
-      temperature: 0.1,
-      max_tokens: 300,
-    }),
-  });
+  try {
+    const sqlResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'user', content: sqlGenerationPrompt }
+        ],
+        temperature: 0.1,
+        max_tokens: 400,
+      }),
+    });
 
-  const sqlData = await sqlResponse.json();
-  return sqlData.choices[0].message.content.trim();
+    if (!sqlResponse.ok) {
+      throw new Error(`OpenAI API error: ${sqlResponse.status}`);
+    }
+
+    const sqlData = await sqlResponse.json();
+    const generatedSQL = sqlData.choices[0].message.content.trim();
+    
+    // SQL 쿼리 검증 및 정제
+    const cleanSQL = generatedSQL
+      .replace(/```sql/g, '')
+      .replace(/```/g, '')
+      .trim();
+    
+    // SELECT로 시작하는지 확인
+    if (!cleanSQL.toUpperCase().startsWith('SELECT')) {
+      throw new Error('Generated query is not a SELECT statement');
+    }
+    
+    return cleanSQL;
+  } catch (error) {
+    console.error('Error generating SQL with AI:', error);
+    throw error;
+  }
 }

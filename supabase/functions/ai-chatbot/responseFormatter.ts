@@ -1,7 +1,8 @@
 
 export function formatResponse(query: string, results: any[], error: any = null): string {
   if (error) {
-    return `죄송합니다. 검색 중 오류가 발생했습니다: ${error.message}`;
+    console.error('Response formatting error:', error);
+    return `죄송합니다. 검색 중 오류가 발생했습니다. 다른 키워드로 다시 검색해보시거나 더 구체적인 질문을 해주세요.`;
   }
 
   if (!results || results.length === 0) {
@@ -14,8 +15,9 @@ export function formatResponse(query: string, results: any[], error: any = null)
   // AI 서비스 유형별 맞춤 응답 생성
   if (queryLower.includes('챗봇') || queryLower.includes('대화형')) {
     responseText = `AI 챗봇 개발이 가능한 공급기업을 찾았습니다 (총 ${results.length}개):\n\n`;
-  } else if (queryLower.includes('비전') || queryLower.includes('이미지') || queryLower.includes('영상')) {
-    responseText = `컴퓨터 비전/이미지 AI 개발이 가능한 공급기업을 찾았습니다 (총 ${results.length}개):\n\n`;
+  } else if (queryLower.includes('비전') || queryLower.includes('이미지') || queryLower.includes('영상') || 
+             queryLower.includes('cctv') || queryLower.includes('감시') || queryLower.includes('모니터링')) {
+    responseText = `컴퓨터 비전/이미지 AI 및 CCTV 관련 서비스를 제공하는 공급기업을 찾았습니다 (총 ${results.length}개):\n\n`;
   } else if (queryLower.includes('음성') || queryLower.includes('stt') || queryLower.includes('tts')) {
     responseText = `음성인식/음성 AI 개발이 가능한 공급기업을 찾았습니다 (총 ${results.length}개):\n\n`;
   } else if (queryLower.includes('자연어') || queryLower.includes('텍스트')) {
@@ -61,7 +63,13 @@ export function formatResponse(query: string, results: any[], error: any = null)
   });
 
   // 추가 안내 메시지
-  if (queryLower.includes('챗봇')) {
+  if (queryLower.includes('cctv') || queryLower.includes('감시') || queryLower.includes('모니터링')) {
+    responseText += '\n💡 **AI CCTV/영상감시 시스템 개발 시 고려사항:**\n';
+    responseText += '- 실시간 영상처리 기술 수준\n';
+    responseText += '- 객체 인식 및 추적 기능\n';
+    responseText += '- 이상상황 자동 감지 알고리즘\n';
+    responseText += '- 시스템 통합 및 확장성\n';
+  } else if (queryLower.includes('챗봇')) {
     responseText += '\n💡 **AI 챗봇 개발 시 고려사항:**\n';
     responseText += '- 자연어 처리 기술 수준\n';
     responseText += '- 도메인별 특화 기능\n';

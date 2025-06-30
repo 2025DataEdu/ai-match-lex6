@@ -23,19 +23,25 @@ export function generateQuickSQL(message: string): string | null {
     LIMIT 20`;
   }
   
-  // 컴퓨터 비전/이미지 AI 관련
-  if (lowerMessage.includes('비전') || lowerMessage.includes('이미지') || lowerMessage.includes('영상') || lowerMessage.includes('ocr')) {
+  // 컴퓨터 비전/이미지 AI 관련 (CCTV 포함)
+  if (lowerMessage.includes('비전') || lowerMessage.includes('이미지') || lowerMessage.includes('영상') || 
+      lowerMessage.includes('ocr') || lowerMessage.includes('cctv') || lowerMessage.includes('감시') || 
+      lowerMessage.includes('모니터링') || lowerMessage.includes('객체인식')) {
     return `
     SELECT *, 
            CASE 
-             WHEN 유형 ILIKE '%비전%' OR 유형 ILIKE '%이미지%' THEN 100
-             WHEN 세부설명 ILIKE '%비전%' OR 세부설명 ILIKE '%이미지%' OR 세부설명 ILIKE '%영상%' OR 세부설명 ILIKE '%OCR%' THEN 80
+             WHEN 유형 ILIKE '%비전%' OR 유형 ILIKE '%이미지%' OR 유형 ILIKE '%영상%' THEN 100
+             WHEN 세부설명 ILIKE '%비전%' OR 세부설명 ILIKE '%이미지%' OR 세부설명 ILIKE '%영상%' OR 
+                  세부설명 ILIKE '%OCR%' OR 세부설명 ILIKE '%CCTV%' OR 세부설명 ILIKE '%감시%' OR 
+                  세부설명 ILIKE '%모니터링%' OR 세부설명 ILIKE '%객체인식%' THEN 80
              WHEN 업종 ILIKE '%AI%' OR 업종 ILIKE '%인공지능%' THEN 60
              ELSE 40
            END as relevance_score
     FROM 공급기업 
-    WHERE (유형 ILIKE '%비전%' OR 유형 ILIKE '%이미지%' 
-           OR 세부설명 ILIKE '%비전%' OR 세부설명 ILIKE '%이미지%' OR 세부설명 ILIKE '%영상%' OR 세부설명 ILIKE '%OCR%'
+    WHERE (유형 ILIKE '%비전%' OR 유형 ILIKE '%이미지%' OR 유형 ILIKE '%영상%'
+           OR 세부설명 ILIKE '%비전%' OR 세부설명 ILIKE '%이미지%' OR 세부설명 ILIKE '%영상%' 
+           OR 세부설명 ILIKE '%OCR%' OR 세부설명 ILIKE '%CCTV%' OR 세부설명 ILIKE '%감시%'
+           OR 세부설명 ILIKE '%모니터링%' OR 세부설명 ILIKE '%객체인식%'
            OR 세부설명 ILIKE '%AI%' OR 세부설명 ILIKE '%인공지능%')
     ORDER BY relevance_score DESC, 등록일자 DESC 
     LIMIT 20`;
@@ -100,14 +106,21 @@ export function generateQuickSQL(message: string): string | null {
     LIMIT 20`;
   }
   
-  // 일반적인 키워드 검색 템플릿 - 서비스 유형 우선
+  // 일반적인 키워드 검색 템플릿 - 서비스 유형 우선, SQL 인젝션 방지
   const keywords = lowerMessage.split(' ').filter(word => word.length > 1);
   if (keywords.length > 0) {
-    const typeConditions = keywords.map(keyword => 
+    // 특수문자 제거 및 안전한 키워드만 사용
+    const safeKeywords = keywords.map(keyword => 
+      keyword.replace(/[^a-zA-Z0-9가-힣]/g, '')
+    ).filter(keyword => keyword.length > 0);
+    
+    if (safeKeywords.length === 0) return null;
+    
+    const typeConditions = safeKeywords.map(keyword => 
       `유형 ILIKE '%${keyword}%'`
     ).join(' OR ');
     
-    const descriptionConditions = keywords.map(keyword => 
+    const descriptionConditions = safeKeywords.map(keyword => 
       `(기업명 ILIKE '%${keyword}%' OR 업종 ILIKE '%${keyword}%' OR 세부설명 ILIKE '%${keyword}%')`
     ).join(' OR ');
     
