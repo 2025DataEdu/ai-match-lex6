@@ -74,7 +74,7 @@ export const useStats = () => {
         // 매칭 수는 현재는 임시로 계산 (나중에 실제 매칭 테이블이 생기면 수정)
         const matchesCount = Math.floor((suppliersCount || 0) * (demandsCount || 0) * 0.1);
         
-        // localStorage에서 마지막 매칭 성공률 불러오기
+        // localStorage에서 마지막 매칭 성공률 불러오기 (메인 페이지용)
         const savedSuccessRate = localStorage.getItem('lastMatchingSuccessRate');
         const matchingSuccessRate = savedSuccessRate ? parseInt(savedSuccessRate, 10) : 0;
         
@@ -138,7 +138,7 @@ export const useStats = () => {
     return weeklyData;
   };
 
-  // 실제 매칭 결과를 반영하여 성공률 업데이트
+  // 실제 매칭 결과를 반영하여 성공률 업데이트 (메인 페이지 통계용)
   const updateMatchingSuccessRate = (actualMatchesCount: number, qualityMatchesCount: number) => {
     if (actualMatchesCount > 0) {
       const newSuccessRate = Math.round((qualityMatchesCount / actualMatchesCount) * 100);

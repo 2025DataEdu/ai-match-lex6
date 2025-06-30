@@ -10,7 +10,7 @@ import MatchingEmptyState from "@/components/ai-matching/MatchingEmptyState";
 import { useAIMatching } from "@/hooks/useAIMatching";
 import { useStats } from "@/hooks/useStats";
 import { DetailedMatch } from "@/types/matching";
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 
 const AIMatching = () => {
   const {
@@ -41,13 +41,21 @@ const AIMatching = () => {
   const { stats, updateMatchingSuccessRate } = useStats();
   const { toast } = useToast();
   const lastMatchesLength = useRef(0);
+  
+  // AI 매칭 페이지에서의 매칭 성공률 (0%에서 시작)
+  const [currentMatchingSuccessRate, setCurrentMatchingSuccessRate] = useState(0);
 
   // useCallback을 사용하여 함수 재생성 방지
   const handleMatchingSuccessRateUpdate = useCallback((totalMatches: number, qualityMatches: number) => {
+    const successRate = totalMatches > 0 ? Math.round((qualityMatches / totalMatches) * 100) : 0;
+    
+    // AI 매칭 페이지의 현재 성공률 업데이트
+    setCurrentMatchingSuccessRate(successRate);
+    
+    // 전역 통계 업데이트 (메인 페이지용)
     updateMatchingSuccessRate(totalMatches, qualityMatches);
     
-    // localStorage에 매칭 성공률 저장
-    const successRate = totalMatches > 0 ? Math.round((qualityMatches / totalMatches) * 100) : 0;
+    // localStorage에 매칭 성공률 저장 (메인 페이지에서 사용)
     localStorage.setItem('lastMatchingSuccessRate', successRate.toString());
   }, [updateMatchingSuccessRate]);
 
@@ -81,6 +89,7 @@ const AIMatching = () => {
     } else if (matches.length === 0 && lastMatchesLength.current > 0) {
       // 매칭이 초기화된 경우
       lastMatchesLength.current = 0;
+      setCurrentMatchingSuccessRate(0);
     }
   }, [matches.length, handleMatchingSuccessRateUpdate]);
 
@@ -107,11 +116,11 @@ const AIMatching = () => {
           </p>
         </div>
 
-        {/* 통계 카드 */}
+        {/* 통계 카드 - AI 매칭 페이지에서는 현재 매칭 성공률 표시 */}
         <MatchingStats 
           suppliersCount={suppliers.length}
           demandsCount={demands.length}
-          matchingSuccessRate={stats.matchingSuccessRate}
+          matchingSuccessRate={currentMatchingSuccessRate}
         />
 
         {/* 매칭 시작 버튼 */}
