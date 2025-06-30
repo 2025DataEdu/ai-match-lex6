@@ -9,21 +9,46 @@ import { Session } from "@supabase/supabase-js";
 const Navbar = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session?.user?.email) {
+        fetchUserName(session.user.email.split('@')[0]);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      if (session?.user?.email) {
+        fetchUserName(session.user.email.split('@')[0]);
+      } else {
+        setUserName("");
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserName = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('회원관리')
+        .select('이름')
+        .eq('아이디', userId)
+        .single();
+
+      if (!error && data) {
+        setUserName(data.이름 || "");
+      }
+    } catch (error) {
+      console.error('Error fetching user name:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -67,16 +92,16 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {session ? (
               <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <User className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm text-gray-700">{userName || session.user.email}</span>
+                </div>
                 <Link to="/mypage">
                   <Button variant="ghost" size="sm" className="flex items-center space-x-1">
                     <UserCircle className="w-4 h-4" />
                     <span>마이페이지</span>
                   </Button>
                 </Link>
-                <div className="flex items-center space-x-2">
-                  <User className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm text-gray-700">{session.user.email}</span>
-                </div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -132,6 +157,10 @@ const Navbar = () => {
             </Link>
             {session ? (
               <div className="px-4 pt-2 border-t">
+                <div className="flex items-center space-x-2 mb-2">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm text-gray-700">{userName || session.user.email}</span>
+                </div>
                 <Link
                   to="/mypage"
                   className="block py-2 text-gray-700 hover:bg-gray-50 rounded-md mb-2"
@@ -142,10 +171,6 @@ const Navbar = () => {
                     <span>마이페이지</span>
                   </div>
                 </Link>
-                <div className="flex items-center space-x-2 mb-2">
-                  <User className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm text-gray-700">{session.user.email}</span>
-                </div>
                 <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
                   로그아웃
                 </Button>

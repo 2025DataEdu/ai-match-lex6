@@ -152,7 +152,7 @@ const MyPage = () => {
       } else {
         toast({
           title: "삭제 완료",
-          description: "수요기관이 성공적으로 삭제되었습니다.",
+          description: "수요내용이 성공적으로 삭제되었습니다.",
         });
         fetchMyData();
       }
@@ -182,7 +182,7 @@ const MyPage = () => {
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">마이페이지</h1>
-          <p className="text-gray-600 mt-2">내가 등록한 공급기업과 수요기관을 관리하세요</p>
+          <p className="text-gray-600 mt-2">내가 등록한 공급기업과 수요내용을 관리하세요</p>
         </div>
 
         <Tabs defaultValue="suppliers" className="space-y-6">
@@ -193,7 +193,7 @@ const MyPage = () => {
             </TabsTrigger>
             <TabsTrigger value="demands" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              수요기관 ({demands.length})
+              수요내용 ({demands.length})
             </TabsTrigger>
           </TabsList>
 
@@ -252,7 +252,7 @@ const MyPage = () => {
               <Card>
                 <CardContent className="text-center py-8">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">등록한 수요기관이 없습니다.</p>
+                  <p className="text-gray-500">등록한 수요내용이 없습니다.</p>
                 </CardContent>
               </Card>
             ) : (
