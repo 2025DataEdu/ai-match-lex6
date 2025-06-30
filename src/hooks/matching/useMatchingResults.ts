@@ -8,9 +8,15 @@ export const useMatchingResults = () => {
   const processMatchingResults = (allMatches: DetailedMatch[]): DetailedMatch[] => {
     console.log('매칭 결과 처리 시작:', { totalMatches: allMatches.length });
 
-    // 1단계: 기본 품질 필터링 (0점 초과만)
-    const validMatches = allMatches.filter(match => match.matchScore > 0);
+    // 1단계: 품질 필터링 (60점 이상만)
+    const validMatches = allMatches.filter(match => match.matchScore >= 60);
     
+    console.log('60점 이상 매칭 필터링:', {
+      원본매칭수: allMatches.length,
+      유효매칭수: validMatches.length,
+      제외된매칭수: allMatches.length - validMatches.length
+    });
+
     // 2단계: 수요기관별로 그룹화하고 상위 5개만 선택
     const demandGroups = new Map<string, DetailedMatch[]>();
     validMatches.forEach(match => {
@@ -79,7 +85,7 @@ export const useMatchingResults = () => {
     
     toast({
       title: "AI 매칭 완료",
-      description: `${sortedMatches.length}개 매칭 (수요기관 ${uniqueDemands}개, 공급기업 ${uniqueSuppliers}개, 각각 최대 5개씩)`,
+      description: `${sortedMatches.length}개 고품질 매칭 (60점 이상, 수요기관 ${uniqueDemands}개, 공급기업 ${uniqueSuppliers}개)`,
     });
   };
 
