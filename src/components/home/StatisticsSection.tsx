@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Users, Target, TrendingUp } from "lucide-react";
 import MatchingStats from "@/components/ai-matching/MatchingStats";
@@ -11,6 +12,11 @@ interface StatisticsProps {
     demandsCount: number;
     matchesCount: number;
     matchingSuccessRate: number;
+    dailyRegistrations: Array<{
+      date: string;
+      공급기업: number;
+      수요기관: number;
+    }>;
   };
 }
 
@@ -198,7 +204,7 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
                   <ChartContainer config={chartConfig} className="h-full w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart 
-                        data={lineData} 
+                        data={stats.dailyRegistrations} 
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                       >
                         <XAxis dataKey="date" />

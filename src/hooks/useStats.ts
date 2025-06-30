@@ -3,11 +3,18 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+interface DailyRegistration {
+  date: string;
+  공급기업: number;
+  수요기관: number;
+}
+
 interface Stats {
   suppliersCount: number;
   demandsCount: number;
   matchesCount: number;
   matchingSuccessRate: number;
+  dailyRegistrations: DailyRegistration[];
 }
 
 export const useStats = () => {
@@ -15,7 +22,8 @@ export const useStats = () => {
     suppliersCount: 0,
     demandsCount: 0,
     matchesCount: 0,
-    matchingSuccessRate: 0
+    matchingSuccessRate: 0,
+    dailyRegistrations: []
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -38,14 +46,31 @@ export const useStats = () => {
         .from('수요기관')
         .select('*', { count: 'exact', head: true });
 
-      if (suppliersError || demandsError) {
-        console.error('Stats fetch error:', suppliersError || demandsError);
+      // 최근 7일간 공급기업 등록 건수 조회
+      const { data: suppliersByDate, error: suppliersDateError } = await supabase
+        .from('공급기업')
+        .select('등록일자')
+        .not('등록일자', 'is', null)
+        .order('등록일자', { ascending: false });
+
+      // 최근 7일간 수요기관 등록 건수 조회
+      const { data: demandsByDate, error: demandsDateError } = await supabase
+        .from('수요기관')
+        .select('등록일자')
+        .not('등록일자', 'is', null)
+        .order('등록일자', { ascending: false });
+
+      if (suppliersError || demandsError || suppliersDateError || demandsDateError) {
+        console.error('Stats fetch error:', suppliersError || demandsError || suppliersDateError || demandsDateError);
         toast({
           title: "통계 로드 실패",
           description: "통계 데이터를 불러오는 중 오류가 발생했습니다.",
           variant: "destructive",
         });
       } else {
+        // 날짜별 등록 건수 계산
+        const dailyRegistrations = calculateDailyRegistrations(suppliersByDate || [], demandsByDate || []);
+        
         // 매칭 수는 현재는 임시로 계산 (나중에 실제 매칭 테이블이 생기면 수정)
         const matchesCount = Math.floor((suppliersCount || 0) * (demandsCount || 0) * 0.1);
         
@@ -56,7 +81,8 @@ export const useStats = () => {
           suppliersCount: suppliersCount || 0,
           demandsCount: demandsCount || 0,
           matchesCount: matchesCount,
-          matchingSuccessRate: matchingSuccessRate
+          matchingSuccessRate: matchingSuccessRate,
+          dailyRegistrations: dailyRegistrations
         });
       }
     } catch (error) {
@@ -69,6 +95,41 @@ export const useStats = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const calculateDailyRegistrations = (suppliers: any[], demands: any[]): DailyRegistration[] => {
+    // 최근 7일 날짜 생성
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      last7Days.push(date.toISOString().split('T')[0]);
+    }
+
+    // 날짜별 카운트 계산
+    const dailyData = last7Days.map(date => {
+      const supplierCount = suppliers.filter(s => {
+        if (!s.등록일자) return false;
+        // 날짜 형식이 다를 수 있으므로 확인
+        const regDate = typeof s.등록일자 === 'string' ? s.등록일자.split('T')[0] : s.등록일자;
+        return regDate === date;
+      }).length;
+
+      const demandCount = demands.filter(d => {
+        if (!d.등록일자) return false;
+        // 날짜 형식이 다를 수 있으므로 확인
+        const regDate = typeof d.등록일자 === 'string' ? d.등록일자.split('T')[0] : d.등록일자;
+        return regDate === date;
+      }).length;
+
+      return {
+        date: new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+        공급기업: supplierCount,
+        수요기관: demandCount
+      };
+    });
+
+    return dailyData;
   };
 
   const calculateMatchingSuccessRate = (suppliersCount: number, demandsCount: number): number => {
