@@ -37,9 +37,9 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
 
 분석 규칙:
 1. 의도(intent) 분류 - 하나만 선택:
-   - statistics: "몇 개", "수", "개수", "통계", "현황", "총 몇", "얼마나" 등
+   - statistics: "몇 개", "수", "개수", "통계", "현황", "총 몇", "얼마나" 등 - 단순히 숫자만 묻는 경우
    - supplier_search: 공급기업, 업체, 회사, 기술보유기업, 개발업체 등을 찾는 질문
-   - demand_search: 수요기관, 발주처, 도입예정기관을 찾는 질문  
+   - demand_search: "수요"가 포함되고 구체적인 기관/업체를 찾는 질문 (예: "AI 챗봇 개발 수요", "챗봇 도입 수요", "개발 수요기관")
    - matching_info: 매칭, 연결, 추천 관련 질문
    - general_info: 위에 해당하지 않는 일반적인 질문
 
@@ -124,15 +124,24 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
       !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘', '찾아줘', '추천'].includes(word)
     );
     
-    // 의도 추측
+    // 의도 추측 - 개선된 로직
     let intent = 'supplier_search';
     let queryType = 'search';
     let entity = 'supplier';
     
-    if (message.includes('몇') || message.includes('수') || message.includes('개수') || message.includes('통계') || message.includes('총')) {
+    // 통계 관련 키워드 체크 (단순 개수만 물어보는 경우)
+    if ((message.includes('몇') || message.includes('수') || message.includes('개수') || message.includes('통계') || message.includes('총')) 
+        && !message.includes('수요')) {
       intent = 'statistics';
       queryType = 'count';
-    } else if (message.includes('수요') || message.includes('발주') || message.includes('도입')) {
+    } 
+    // 수요 관련 키워드가 있고 구체적인 기관을 찾는 경우
+    else if (message.includes('수요') && (message.includes('기관') || message.includes('도입') || message.includes('원하는') || message.includes('필요한'))) {
+      intent = 'demand_search';
+      entity = 'demand';
+    } 
+    // 일반적인 수요 관련 질문도 수요기관 검색으로 분류
+    else if (message.includes('수요')) {
       intent = 'demand_search';
       entity = 'demand';
     }
