@@ -8,7 +8,9 @@ import MatchingFilters from "@/components/ai-matching/MatchingFilters";
 import MatchingResults from "@/components/ai-matching/MatchingResults";
 import MatchingEmptyState from "@/components/ai-matching/MatchingEmptyState";
 import { useAIMatching } from "@/hooks/useAIMatching";
+import { useStats } from "@/hooks/useStats";
 import { DetailedMatch } from "@/types/matching";
+import { useEffect } from "react";
 
 const AIMatching = () => {
   const {
@@ -36,7 +38,17 @@ const AIMatching = () => {
     industries
   } = useAIMatching();
 
+  const { stats, updateMatchingSuccessRate } = useStats();
   const { toast } = useToast();
+
+  // 매칭 결과가 변경될 때마다 실제 성공률 계산
+  useEffect(() => {
+    if (matches.length > 0) {
+      // 60점 이상을 고품질 매칭으로 간주
+      const qualityMatches = matches.filter(match => match.matchScore >= 60);
+      updateMatchingSuccessRate(matches.length, qualityMatches.length);
+    }
+  }, [matches, updateMatchingSuccessRate]);
 
   const handleInterestClick = (match: DetailedMatch) => {
     // 관심표시는 카드 내부에서 처리됨
@@ -48,13 +60,6 @@ const AIMatching = () => {
       title: "문의 전송",
       description: `${match.supplier.기업명}에 문의를 전송했습니다.`,
     });
-  };
-
-  // 매칭 성공률 계산 (60점 이상 매칭의 비율)
-  const calculateMatchingSuccessRate = () => {
-    if (matches.length === 0) return 0;
-    const qualityMatches = matches.filter(match => match.matchScore >= 60);
-    return Math.round((qualityMatches.length / matches.length) * 100);
   };
 
   return (
@@ -72,7 +77,7 @@ const AIMatching = () => {
         <MatchingStats 
           suppliersCount={suppliers.length}
           demandsCount={demands.length}
-          matchingSuccessRate={calculateMatchingSuccessRate()}
+          matchingSuccessRate={stats.matchingSuccessRate}
         />
 
         {/* 매칭 시작 버튼 */}
