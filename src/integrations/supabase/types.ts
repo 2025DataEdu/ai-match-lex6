@@ -69,6 +69,39 @@ export type Database = {
         }
         Relationships: []
       }
+      query_cache: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          generated_sql: string
+          hit_count: number | null
+          id: string
+          original_query: string
+          query_hash: string
+          result_data: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          generated_sql: string
+          hit_count?: number | null
+          id?: string
+          original_query: string
+          query_hash: string
+          result_data?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          generated_sql?: string
+          hit_count?: number | null
+          id?: string
+          original_query?: string
+          query_hash?: string
+          result_data?: Json | null
+        }
+        Relationships: []
+      }
       "경기도 AI 등록 현황": {
         Row: {
           "AI 서비스 유형": string | null
@@ -377,6 +410,10 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      clean_expired_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       execute_dynamic_query: {
         Args: { query_text: string }
