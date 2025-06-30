@@ -12,7 +12,7 @@ export const useMatchingCalculation = () => {
   const calculateMatches = (suppliers: Supplier[], demands: Demand[]) => {
     setIsMatching(true);
     
-    console.log('매칭 계산 시작:', { 
+    console.log('개선된 매칭 계산 시작:', { 
       suppliers: suppliers.length, 
       demands: demands.length,
       samplesSuppliers: suppliers.slice(0, 2),
@@ -20,56 +20,85 @@ export const useMatchingCalculation = () => {
     });
     
     setTimeout(() => {
-      const newMatches: DetailedMatch[] = [];
+      const allMatches: DetailedMatch[] = [];
       
       demands.forEach(demand => {
         suppliers.forEach(supplier => {
           const match = calculateMatchingScore(demand, supplier);
-          
-          // 60점 이상일 때만 매칭 결과에 포함 (기준 상향)
-          if (match.matchScore >= 60) {
-            newMatches.push(match);
-          }
+          allMatches.push(match);
         });
       });
 
-      console.log('매칭 계산 완료:', { 
-        totalMatches: newMatches.length,
-        sampleMatches: newMatches.slice(0, 3).map(m => ({
-          기업명: m.supplier.기업명,
-          수요기관: m.demand.수요기관,
-          매칭점수: m.matchScore
-        }))
+      console.log('전체 매칭 결과 분석:', {
+        totalCalculated: allMatches.length,
+        scoreDistribution: {
+          over30: allMatches.filter(m => m.matchScore >= 30).length,
+          over20: allMatches.filter(m => m.matchScore >= 20).length,
+          over10: allMatches.filter(m => m.matchScore >= 10).length,
+          over5: allMatches.filter(m => m.matchScore >= 5).length,
+          over0: allMatches.filter(m => m.matchScore > 0).length
+        },
+        topScores: allMatches
+          .sort((a, b) => b.matchScore - a.matchScore)
+          .slice(0, 5)
+          .map(m => ({ score: m.matchScore, company: m.supplier.기업명, demand: m.demand.수요기관 }))
       });
 
-      // 60점 이상의 매칭이 없을 경우 기준을 40점으로 낮춰서 재시도
-      let finalMatches = newMatches;
-      if (newMatches.length === 0) {
-        console.log('60점 이상 매칭이 없어 기준을 40점으로 낮춤');
-        demands.forEach(demand => {
-          suppliers.forEach(supplier => {
-            const match = calculateMatchingScore(demand, supplier);
-            if (match.matchScore >= 40) {
-              finalMatches.push(match);
-            }
-          });
-        });
+      // 점수 기준을 단계별로 적용하여 최적의 매칭 결과 선택
+      let finalMatches: DetailedMatch[] = [];
+      
+      // 1차: 30점 이상
+      finalMatches = allMatches.filter(match => match.matchScore >= 30);
+      
+      // 2차: 20점 이상 (30점 이상이 부족할 경우)
+      if (finalMatches.length < 20) {
+        finalMatches = allMatches.filter(match => match.matchScore >= 20);
+      }
+      
+      // 3차: 10점 이상 (20점 이상이 부족할 경우)
+      if (finalMatches.length < 10) {
+        finalMatches = allMatches.filter(match => match.matchScore >= 10);
+      }
+      
+      // 4차: 5점 이상 (10점 이상이 부족할 경우)
+      if (finalMatches.length < 5) {
+        finalMatches = allMatches.filter(match => match.matchScore >= 5);
+      }
+      
+      // 5차: 0점 초과 (모든 점수가 낮을 경우)
+      if (finalMatches.length === 0) {
+        finalMatches = allMatches.filter(match => match.matchScore > 0);
+      }
+      
+      // 최종적으로 매칭이 없으면 상위 20개라도 표시
+      if (finalMatches.length === 0) {
+        finalMatches = allMatches
+          .sort((a, b) => b.matchScore - a.matchScore)
+          .slice(0, 20);
       }
 
-      // 점수 순으로 정렬하고 상위 50개로 제한 (100개에서 50개로 축소)
+      // 점수 순으로 정렬하고 상위 100개로 제한
       const sortedMatches = finalMatches
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 50);
+        .slice(0, 100);
+
+      console.log('최종 매칭 결과:', {
+        selectedMatches: sortedMatches.length,
+        minScore: sortedMatches.length > 0 ? Math.min(...sortedMatches.map(m => m.matchScore)) : 0,
+        maxScore: sortedMatches.length > 0 ? Math.max(...sortedMatches.map(m => m.matchScore)) : 0,
+        avgScore: sortedMatches.length > 0 ? 
+          (sortedMatches.reduce((sum, m) => sum + m.matchScore, 0) / sortedMatches.length).toFixed(1) : 0
+      });
 
       setMatches(sortedMatches);
       setIsMatching(false);
       
-      const minScore = finalMatches.length > 0 ? Math.min(...finalMatches.map(m => m.matchScore)) : 0;
-      const maxScore = finalMatches.length > 0 ? Math.max(...finalMatches.map(m => m.matchScore)) : 0;
+      const minScore = sortedMatches.length > 0 ? Math.min(...sortedMatches.map(m => m.matchScore)) : 0;
+      const maxScore = sortedMatches.length > 0 ? Math.max(...sortedMatches.map(m => m.matchScore)) : 0;
       
       toast({
-        title: "AI 매칭 완료",
-        description: `${sortedMatches.length}개의 고품질 매칭 결과를 찾았습니다. (점수 범위: ${minScore}~${maxScore}점)`,
+        title: "개선된 AI 매칭 완료",
+        description: `${sortedMatches.length}개의 매칭 결과를 찾았습니다. (점수 범위: ${minScore}~${maxScore}점)`,
       });
     }, 2000);
   };

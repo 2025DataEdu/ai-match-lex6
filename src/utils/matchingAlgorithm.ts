@@ -1,59 +1,165 @@
 
 import { Supplier, Demand, DetailedMatch } from "@/types/matching";
 
+// AI 서비스 유형별 키워드 매핑
 const AI_SERVICE_KEYWORDS: { [key: string]: string[] } = {
-  "AI 챗봇/대화형AI": ["챗봇", "대화형 AI", "자연어 이해", "자동 응답", "가상 비서"],
-  "컴퓨터 비전/이미지AI": ["컴퓨터 비전", "이미지 인식", "객체 탐지", "얼굴 인식", "영상 분석"],
-  "자연어처리/텍스트AI": ["자연어 처리", "텍스트 분석", "감성 분석", "문서 요약", "텍스트 생성"],
-  "음성인식/음성AI": ["음성 인식", "음성 합성", "화자 인식", "음성 분석", "STT", "TTS"],
-  "예측분석/데이터AI": ["예측 분석", "데이터 마이닝", "통계 분석", "머신러닝", "데이터 시각화"],
-  "추천시스템/개인화AI": ["추천 시스템", "개인화 추천", "협업 필터링", "콘텐츠 기반 추천", "사용자 행동 분석"],
-  "로봇/자동화AI": ["로봇", "자동화", "RPA", "스마트 팩토리", "자동 제어"],
-  "AI 플랫폼/인프라": ["AI 플랫폼", "AI 인프라", "클라우드 AI", "AI 개발 환경", "GPU 서버"],
-  "AI 교육/컨설팅": ["AI 교육", "AI 컨설팅", "AI 워크숍", "AI 솔루션", "AI 도입"],
-  "기타 AI 서비스": ["인공지능", "AI", "머신러닝", "딥러닝", "지능형"],
+  "AI 챗봇/대화형AI": ["챗봇", "대화형", "자연어", "응답", "상담", "문의", "bot", "chat", "대화", "자동응답"],
+  "컴퓨터 비전/이미지AI": ["비전", "이미지", "인식", "분석", "영상", "시각", "카메라", "detection", "vision", "ocr"],
+  "자연어처리/텍스트AI": ["자연어", "텍스트", "언어", "번역", "요약", "분석", "문서", "nlp", "text", "언어처리"],
+  "음성인식/음성AI": ["음성", "voice", "speech", "stt", "tts", "인식", "합성", "발음", "소리"],
+  "예측분석/데이터AI": ["예측", "분석", "데이터", "통계", "머신러닝", "learning", "예측모델", "빅데이터", "analytics"],
+  "추천시스템/개인화AI": ["추천", "개인화", "맞춤", "추천시스템", "협업필터링", "개인화서비스", "recommendation"],
+  "로봇/자동화AI": ["로봇", "자동화", "automation", "robot", "제어", "자동", "무인", "스마트팩토리"],
+  "AI 플랫폼/인프라": ["플랫폼", "인프라", "클라우드", "서버", "gpu", "개발환경", "infrastructure"],
+  "AI 교육/컨설팅": ["교육", "컨설팅", "워크숍", "교육과정", "consulting", "training", "학습"],
+  "기타 AI 서비스": ["ai", "인공지능", "딥러닝", "머신러닝", "지능형", "스마트", "intelligent"]
 };
 
-const calculateSimilarity = (demand: string, supplierKeywords: string[]): number => {
-  const demandWords = demand.toLowerCase().split(/\s+/);
-  let matchedKeywords = 0;
+// 공통 기술 키워드
+const COMMON_TECH_KEYWORDS = [
+  "ai", "인공지능", "머신러닝", "딥러닝", "빅데이터", "클라우드", "iot", "블록체인",
+  "소프트웨어", "시스템", "플랫폼", "솔루션", "서비스", "개발", "구축", "운영",
+  "분석", "진단", "예측", "관리", "모니터링", "최적화", "자동화", "효율화"
+];
 
-  demandWords.forEach(word => {
-    if (supplierKeywords.some(keyword => keyword.toLowerCase().includes(word))) {
-      matchedKeywords++;
+// 텍스트에서 키워드 추출 함수
+const extractKeywords = (text: string): string[] => {
+  if (!text) return [];
+  
+  const cleanText = text.toLowerCase()
+    .replace(/[^\w\s가-힣]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  const words = cleanText.split(' ').filter(word => word.length > 1);
+  const keywords = new Set<string>();
+  
+  // 단어별로 키워드 추출
+  words.forEach(word => {
+    keywords.add(word);
+    
+    // 부분 매칭도 고려
+    if (word.length > 3) {
+      for (let i = 0; i <= word.length - 3; i++) {
+        const substring = word.substring(i, i + 3);
+        if (substring.length === 3) {
+          keywords.add(substring);
+        }
+      }
     }
   });
+  
+  return Array.from(keywords);
+};
 
-  return matchedKeywords / demandWords.length;
+// 키워드 유사도 계산
+const calculateKeywordSimilarity = (keywords1: string[], keywords2: string[]): number => {
+  if (keywords1.length === 0 || keywords2.length === 0) return 0;
+  
+  let matchCount = 0;
+  const totalKeywords = Math.max(keywords1.length, keywords2.length);
+  
+  keywords1.forEach(keyword1 => {
+    keywords2.forEach(keyword2 => {
+      // 완전 일치
+      if (keyword1 === keyword2) {
+        matchCount += 1;
+      }
+      // 부분 일치 (3글자 이상)
+      else if (keyword1.length >= 3 && keyword2.length >= 3) {
+        if (keyword1.includes(keyword2) || keyword2.includes(keyword1)) {
+          matchCount += 0.7;
+        }
+      }
+    });
+  });
+  
+  return Math.min((matchCount / totalKeywords) * 100, 100);
+};
+
+// AI 서비스 유형 매칭 점수
+const calculateServiceTypeScore = (demandContent: string, supplierType: string): number => {
+  if (!demandContent || !supplierType) return 0;
+  
+  const serviceKeywords = AI_SERVICE_KEYWORDS[supplierType] || [];
+  if (serviceKeywords.length === 0) return 0;
+  
+  const demandKeywords = extractKeywords(demandContent);
+  let matchScore = 0;
+  
+  serviceKeywords.forEach(serviceKeyword => {
+    demandKeywords.forEach(demandKeyword => {
+      if (demandKeyword.includes(serviceKeyword) || serviceKeyword.includes(demandKeyword)) {
+        matchScore += 10;
+      }
+    });
+  });
+  
+  return Math.min(matchScore, 50);
+};
+
+// 업종 매칭 점수
+const calculateIndustryScore = (demandType: string, supplierIndustry: string): number => {
+  if (!demandType || !supplierIndustry) return 0;
+  
+  const demandKeywords = extractKeywords(demandType);
+  const industryKeywords = extractKeywords(supplierIndustry);
+  
+  return calculateKeywordSimilarity(demandKeywords, industryKeywords) * 0.3;
 };
 
 export const calculateMatchingScore = (demand: Demand, supplier: Supplier): DetailedMatch => {
-  let keywordScore = 0;
-  let matchedKeywords: string[] = [];
-
-  // AI 서비스 유형 키워드 매칭
-  const aiServiceType = supplier.유형 || "";
-  const aiServiceKeywords = AI_SERVICE_KEYWORDS[aiServiceType] || [];
-  const demandDescription = demand.수요내용 || "";
-
-  if (aiServiceKeywords.length > 0) {
-    const similarity = calculateSimilarity(demandDescription, aiServiceKeywords);
-    keywordScore = similarity * 100;
-
-    demandDescription.toLowerCase().split(/\s+/).forEach(word => {
-      if (aiServiceKeywords.some(keyword => keyword.toLowerCase().includes(word))) {
-        matchedKeywords.push(word);
+  // 키워드 추출
+  const demandKeywords = extractKeywords(demand.수요내용 || "");
+  const supplierKeywords = extractKeywords(supplier.세부설명 || "");
+  
+  // 추가 키워드 (기업명, 업종 등)
+  const supplierAllKeywords = [
+    ...supplierKeywords,
+    ...extractKeywords(supplier.기업명 || ""),
+    ...extractKeywords(supplier.업종 || ""),
+    ...extractKeywords(supplier.유형 || "")
+  ];
+  
+  const demandAllKeywords = [
+    ...demandKeywords,
+    ...extractKeywords(demand.수요기관 || ""),
+    ...extractKeywords(demand.유형 || "")
+  ];
+  
+  // 1. 핵심 키워드 매칭 점수 (40점)
+  const keywordScore = calculateKeywordSimilarity(demandKeywords, supplierKeywords);
+  
+  // 2. AI 서비스 유형 매칭 점수 (30점)
+  const serviceTypeScore = calculateServiceTypeScore(demand.수요내용 || "", supplier.유형 || "");
+  
+  // 3. 업종 매칭 점수 (20점)
+  const industryScore = calculateIndustryScore(demand.유형 || "", supplier.업종 || "");
+  
+  // 4. 전체 키워드 매칭 점수 (10점)
+  const overallKeywordScore = calculateKeywordSimilarity(demandAllKeywords, supplierAllKeywords) * 0.1;
+  
+  // 총 매칭 점수 계산
+  const totalScore = (keywordScore * 0.4) + (serviceTypeScore * 0.3) + (industryScore * 0.2) + (overallKeywordScore * 0.1);
+  const matchScore = Math.round(Math.max(totalScore, 0));
+  
+  // 매칭된 키워드 찾기
+  const matchedKeywords: string[] = [];
+  demandKeywords.forEach(dKeyword => {
+    supplierKeywords.forEach(sKeyword => {
+      if (dKeyword === sKeyword || 
+          (dKeyword.length >= 3 && sKeyword.length >= 3 && 
+           (dKeyword.includes(sKeyword) || sKeyword.includes(dKeyword)))) {
+        if (!matchedKeywords.includes(dKeyword)) {
+          matchedKeywords.push(dKeyword);
+        }
       }
     });
-  }
-
-  // 업종 매칭
-  const industryMatch = demand.유형 === supplier.업종 ? 30 : 0;
-
-  // 점수 조합
-  const capabilityScore = keywordScore * 0.7 + industryMatch * 0.3;
-  const matchScore = Math.round(capabilityScore);
-
+  });
+  
+  // 매칭 이유 생성
+  const matchReason = `키워드 매칭: ${keywordScore.toFixed(1)}점, 서비스 유형: ${serviceTypeScore.toFixed(1)}점, 업종: ${industryScore.toFixed(1)}점`;
+  
   return {
     id: `${supplier.공급기업일련번호}_${demand.수요기관일련번호}`,
     companyName: supplier.기업명,
@@ -70,9 +176,9 @@ export const calculateMatchingScore = (demand: Demand, supplier: Supplier): Deta
     score: matchScore,
     matchedKeywords: matchedKeywords,
     keywordScore: keywordScore,
-    capabilityScore: capabilityScore,
+    capabilityScore: totalScore,
     matchScore: matchScore,
-    matchReason: `키워드 점수: ${keywordScore.toFixed(2)}%, 업종 매칭: ${industryMatch > 0 ? 'Yes' : 'No'}`,
+    matchReason: matchReason,
     supplier: supplier,
     demand: demand
   };
@@ -80,12 +186,22 @@ export const calculateMatchingScore = (demand: Demand, supplier: Supplier): Deta
 
 export const calculateMatching = (demands: Demand[], suppliers: Supplier[]): DetailedMatch[] => {
   const matches: DetailedMatch[] = [];
+  
+  console.log('매칭 계산 시작:', { demands: demands.length, suppliers: suppliers.length });
 
   demands.forEach(demand => {
     suppliers.forEach(supplier => {
       const match = calculateMatchingScore(demand, supplier);
       matches.push(match);
     });
+  });
+
+  console.log('전체 매칭 결과:', matches.length);
+  console.log('점수 분포:', {
+    over50: matches.filter(m => m.matchScore >= 50).length,
+    over30: matches.filter(m => m.matchScore >= 30).length,
+    over10: matches.filter(m => m.matchScore >= 10).length,
+    over0: matches.filter(m => m.matchScore > 0).length
   });
 
   return matches;
