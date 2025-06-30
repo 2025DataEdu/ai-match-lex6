@@ -10,6 +10,7 @@ export interface KeywordAnalysis {
     region?: string;
     requirements?: string[];
     entity?: 'supplier' | 'demand' | 'both';
+    specificField?: string;
   };
 }
 
@@ -20,7 +21,7 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
 
 다음 JSON 형식으로 응답하세요:
 {
-  "primaryKeywords": ["키워드1", "키워드2", "키워드3"],
+  "primaryKeywords": ["핵심키워드1", "핵심키워드2", "핵심키워드3"],
   "serviceType": "AI 서비스 유형 (챗봇/대화형AI, 컴퓨터비전/이미지AI, 음성인식/음성AI, 자연어처리/텍스트AI, 예측분석/데이터AI, 추천시스템/개인화AI, 로봇/자동화AI 중 하나 또는 null)",
   "intent": "statistics|supplier_search|demand_search|matching_info|general_info",
   "queryType": "count|search|info",
@@ -29,23 +30,36 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
     "timeline": "일정 정보가 있다면", 
     "region": "지역 정보가 있다면",
     "requirements": ["추가 요구사항들"],
-    "entity": "supplier|demand|both"
+    "entity": "supplier|demand|both",
+    "specificField": "특정 검색 필드가 명시된 경우 (유형, 특허, 키워드 등)"
   }
 }
 
-의도(intent) 분류 규칙 - 하나만 선택:
-- statistics: "몇 개", "수", "개수", "통계", "현황", "총 몇", "얼마나" 등이 포함된 질문
-- supplier_search: 공급기업, 업체, 회사, 기술보유기업을 찾는 질문
-- demand_search: 수요기관, 발주처, 도입예정기관을 찾는 질문  
-- matching_info: 매칭, 연결, 추천 관련 질문
-- general_info: 위에 해당하지 않는 일반적인 질문
+분석 규칙:
+1. 의도(intent) 분류 - 하나만 선택:
+   - statistics: "몇 개", "수", "개수", "통계", "현황", "총 몇", "얼마나" 등
+   - supplier_search: 공급기업, 업체, 회사, 기술보유기업, 개발업체 등을 찾는 질문
+   - demand_search: 수요기관, 발주처, 도입예정기관을 찾는 질문  
+   - matching_info: 매칭, 연결, 추천 관련 질문
+   - general_info: 위에 해당하지 않는 일반적인 질문
 
-쿼리 유형(queryType):
-- count: 개수를 묻는 질문
-- search: 특정 조건의 데이터를 찾는 질문
-- info: 일반 정보를 묻는 질문
+2. 키워드 추출:
+   - 기술 관련 키워드 우선 (AI, 챗봇, CCTV, 음성인식 등)
+   - 업종/유형 키워드 (개발, 분석, 인식, 처리 등)
+   - 부가 키워드 (솔루션, 시스템, 플랫폼 등)
 
-중요: intent는 반드시 하나만 선택하세요. 복합적인 질문도 가장 주된 의도 하나만 선택해주세요.
+3. 서비스 타입 매핑:
+   - 챗봇, 대화형, 상담 → "챗봇/대화형AI"
+   - CCTV, 영상, 이미지, 비전 → "컴퓨터비전/이미지AI"
+   - 음성, STT, TTS, 음성인식 → "음성인식/음성AI"
+   - 자연어, 텍스트, 언어처리 → "자연어처리/텍스트AI"
+   - 예측, 분석, 데이터 → "예측분석/데이터AI"
+   - 추천, 개인화 → "추천시스템/개인화AI"
+   - 로봇, 자동화, RPA → "로봇/자동화AI"
+
+4. 맥락 정보:
+   - entity: supplier (공급기업 대상), demand (수요기관 대상), both (둘 다)
+   - specificField: 특정 필드 언급시 해당 필드명
 
 오직 JSON만 응답하세요`;
 
@@ -62,7 +76,7 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
           { role: 'user', content: analysisPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 400,
+        max_tokens: 500,
       }),
     });
 
@@ -81,16 +95,24 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
     // intent 검증 및 정리
     let cleanIntent = analysis.intent;
     if (typeof cleanIntent === 'string' && cleanIntent.includes('|')) {
-      // 복합 의도인 경우 첫 번째 것을 선택
       cleanIntent = cleanIntent.split('|')[0];
     }
     
+    // 키워드 정제 - 불용어 제거 및 중요 키워드 추출
+    const cleanKeywords = (analysis.primaryKeywords || [])
+      .filter(keyword => keyword && keyword.length > 1)
+      .filter(keyword => !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘', '찾아줘', '추천'].includes(keyword.toLowerCase()))
+      .slice(0, 5); // 최대 5개 키워드로 제한
+    
     return {
-      primaryKeywords: analysis.primaryKeywords || [],
+      primaryKeywords: cleanKeywords,
       serviceType: analysis.serviceType || null,
       intent: cleanIntent || 'supplier_search',
       queryType: analysis.queryType || 'search',
-      context: analysis.context || {}
+      context: {
+        ...analysis.context,
+        entity: analysis.context?.entity || 'supplier'
+      }
     };
   } catch (error) {
     console.error('자연어 분석 오류:', error);
@@ -99,7 +121,7 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
     const words = message.toLowerCase().split(/\s+/);
     const keywords = words.filter(word => 
       word.length > 1 && 
-      !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘'].includes(word)
+      !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘', '찾아줘', '추천'].includes(word)
     );
     
     // 의도 추측
