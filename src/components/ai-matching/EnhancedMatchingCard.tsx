@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import MatchingCardHeader from "./card/MatchingCardHeader";
 import MatchingCardDescription from "./card/MatchingCardDescription";
 import MatchingScoreDisplay from "./card/MatchingScoreDisplay";
-import MatchingKeywordSection from "./card/MatchingKeywordSection";
 import MatchingDescriptionSection from "./card/MatchingDescriptionSection";
 import MatchingFeatureIcons from "./card/MatchingFeatureIcons";
 import MatchingContextSection from "./card/MatchingContextSection";
@@ -76,9 +75,6 @@ const EnhancedMatchingCard = ({
       <CardContent className="space-y-4">
         {/* 매칭 점수 구성 요소 */}
         <MatchingScoreDisplay match={match} />
-
-        {/* 매칭된 키워드 하이라이트 */}
-        <MatchingKeywordSection matchedKeywords={match.matchedKeywords} />
 
         {/* 주요 엔티티 설명 */}
         <MatchingDescriptionSection match={match} perspective={perspective} />
