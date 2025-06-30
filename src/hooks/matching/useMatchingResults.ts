@@ -39,10 +39,9 @@ export const useMatchingResults = () => {
         .slice(0, 20);
     }
 
-    // 점수 순으로 정렬하고 상위 100개로 제한
+    // 점수 순으로 정렬 (100개 제한 제거)
     const sortedMatches = finalMatches
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 100);
+      .sort((a, b) => b.matchScore - a.matchScore);
 
     console.log('개선된 매칭 최종 결과:', {
       selectedMatches: sortedMatches.length,
