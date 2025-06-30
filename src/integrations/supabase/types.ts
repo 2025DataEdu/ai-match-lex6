@@ -117,6 +117,8 @@ export type Database = {
           업종: string | null
           유튜브링크: string | null
           유형: string | null
+          추출키워드: string | null
+          키워드추출상태: string | null
         }
         Insert: {
           공급기업일련번호: string
@@ -132,6 +134,8 @@ export type Database = {
           업종?: string | null
           유튜브링크?: string | null
           유형?: string | null
+          추출키워드?: string | null
+          키워드추출상태?: string | null
         }
         Update: {
           공급기업일련번호?: string
@@ -147,6 +151,8 @@ export type Database = {
           업종?: string | null
           유튜브링크?: string | null
           유형?: string | null
+          추출키워드?: string | null
+          키워드추출상태?: string | null
         }
         Relationships: []
       }
@@ -243,6 +249,8 @@ export type Database = {
           아이디: string | null
           유형: string | null
           종료일: string | null
+          추출키워드: string | null
+          키워드추출상태: string | null
         }
         Insert: {
           관심여부?: string | null
@@ -259,6 +267,8 @@ export type Database = {
           아이디?: string | null
           유형?: string | null
           종료일?: string | null
+          추출키워드?: string | null
+          키워드추출상태?: string | null
         }
         Update: {
           관심여부?: string | null
@@ -275,6 +285,8 @@ export type Database = {
           아이디?: string | null
           유형?: string | null
           종료일?: string | null
+          추출키워드?: string | null
+          키워드추출상태?: string | null
         }
         Relationships: []
       }

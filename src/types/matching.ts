@@ -1,4 +1,3 @@
-
 export interface BaseMatch {
   id: string;
   companyName: string;
@@ -41,16 +40,18 @@ export interface Supplier {
   유형: string;
   업종: string;
   세부설명: string;
-  보유특허?: string;
   기업홈페이지?: string;
   유튜브링크?: string;
-  사용자명: string;
-  등록일자: string;
-  관심여부: string;
-  문의여부: string;
-  아이디: string;
+  보유특허?: string;
+  사용자명?: string;
+  등록일자?: string;
+  아이디?: string;
+  관심여부?: string;
+  문의여부?: string;
   이메일?: string;
   연락처?: string;
+  추출키워드?: string;
+  키워드추출상태?: string;
 }
 
 export interface Demand {
@@ -58,13 +59,18 @@ export interface Demand {
   수요기관: string;
   유형: string;
   수요내용: string;
-  금액?: number;
+  부서명?: string;
+  사용자명?: string;
   시작일?: string;
   종료일?: string;
-  부서명?: string;
-  사용자명: string;
-  등록일자: string;
-  아이디: string;
+  금액?: number;
+  기타요구사항?: string;
+  등록일자?: string;
+  아이디?: string;
+  관심여부?: string;
+  문의일자?: string;
+  추출키워드?: string;
+  키워드추출상태?: string;
 }
 
 export interface MatchingData {
