@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 interface Demand {
@@ -59,11 +60,6 @@ export const useDemandFilters = (demands: Demand[]) => {
       filtered = filtered.filter(demand =>
         demand.수요기관?.toLowerCase().includes(orgLower)
       );
-    }
-
-    // 수요 유형 필터 (all이 아닌 경우에만 필터링)
-    if (filters.demandType && filters.demandType !== "all") {
-      filtered = filtered.filter(demand => demand.유형 === filters.demandType);
     }
 
     // 예산 필터

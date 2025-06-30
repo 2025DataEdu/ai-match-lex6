@@ -22,19 +22,6 @@ interface DemandFiltersProps {
   onRefresh: () => Promise<void>;
 }
 
-const AI_SERVICE_TYPES = [
-  "AI 챗봇/대화형AI",
-  "컴퓨터 비전/이미지AI", 
-  "자연어처리/텍스트AI",
-  "음성인식/음성AI",
-  "예측분석/데이터AI",
-  "추천시스템/개인화AI",
-  "로봇/자동화AI",
-  "AI 플랫폼/인프라",
-  "AI 교육/컨설팅",
-  "기타 AI 서비스"
-];
-
 const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: DemandFiltersProps) => {
   const handleReset = () => {
     onClearFilters();
@@ -47,7 +34,7 @@ const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: 
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="수요기관명 또는 수요내용 검색..."
+              placeholder="기관명 또는 수요내용 검색..."
               value={filters.searchTerm}
               onChange={(e) => onFiltersChange({ ...filters, searchTerm: e.target.value })}
               className="pl-10"
@@ -64,7 +51,7 @@ const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: 
             <SelectContent>
               <SelectItem value="등록일자">등록일</SelectItem>
               <SelectItem value="수요기관">기관명</SelectItem>
-              <SelectItem value="유형">AI 서비스 유형</SelectItem>
+              <SelectItem value="유형">수요 유형</SelectItem>
               <SelectItem value="금액">예산</SelectItem>
             </SelectContent>
           </Select>
@@ -91,25 +78,6 @@ const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: 
               새로고침
             </Button>
           </div>
-        </div>
-        
-        <div className="mt-4">
-          <Select 
-            value={filters.demandType} 
-            onValueChange={(value) => onFiltersChange({ ...filters, demandType: value })}
-          >
-            <SelectTrigger className="w-full md:w-64">
-              <SelectValue placeholder="모든 AI 서비스" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">모든 AI 서비스</SelectItem>
-              {AI_SERVICE_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </CardContent>
     </Card>
