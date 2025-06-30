@@ -26,8 +26,8 @@ export const useMatchingCalculation = () => {
         suppliers.forEach(supplier => {
           const match = calculateMatchingScore(demand, supplier);
           
-          // 20점 이상일 때만 매칭 결과에 포함
-          if (match.matchScore >= 20) {
+          // 60점 이상일 때만 매칭 결과에 포함 (기준 상향)
+          if (match.matchScore >= 60) {
             newMatches.push(match);
           }
         });
@@ -42,17 +42,34 @@ export const useMatchingCalculation = () => {
         }))
       });
 
-      // 점수 순으로 정렬하고 상위 100개 표시
-      const sortedMatches = newMatches
+      // 60점 이상의 매칭이 없을 경우 기준을 40점으로 낮춰서 재시도
+      let finalMatches = newMatches;
+      if (newMatches.length === 0) {
+        console.log('60점 이상 매칭이 없어 기준을 40점으로 낮춤');
+        demands.forEach(demand => {
+          suppliers.forEach(supplier => {
+            const match = calculateMatchingScore(demand, supplier);
+            if (match.matchScore >= 40) {
+              finalMatches.push(match);
+            }
+          });
+        });
+      }
+
+      // 점수 순으로 정렬하고 상위 50개로 제한 (100개에서 50개로 축소)
+      const sortedMatches = finalMatches
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 100);
+        .slice(0, 50);
 
       setMatches(sortedMatches);
       setIsMatching(false);
       
+      const minScore = finalMatches.length > 0 ? Math.min(...finalMatches.map(m => m.matchScore)) : 0;
+      const maxScore = finalMatches.length > 0 ? Math.max(...finalMatches.map(m => m.matchScore)) : 0;
+      
       toast({
         title: "AI 매칭 완료",
-        description: `${sortedMatches.length}개의 매칭 결과를 찾았습니다.`,
+        description: `${sortedMatches.length}개의 고품질 매칭 결과를 찾았습니다. (점수 범위: ${minScore}~${maxScore}점)`,
       });
     }, 2000);
   };
