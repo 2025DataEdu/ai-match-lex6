@@ -6,45 +6,58 @@ export const useMatchingResults = () => {
   const { toast } = useToast();
 
   const processMatchingResults = (allMatches: DetailedMatch[]): DetailedMatch[] => {
-    // 점수 기준을 단계별로 적용하여 최적의 매칭 결과 선택
-    let finalMatches: DetailedMatch[] = [];
-    
-    // 1차: 30점 이상
-    finalMatches = allMatches.filter(match => match.matchScore >= 30);
-    
-    // 2차: 20점 이상 (30점 이상이 부족할 경우)
-    if (finalMatches.length < 20) {
-      finalMatches = allMatches.filter(match => match.matchScore >= 20);
-    }
-    
-    // 3차: 10점 이상 (20점 이상이 부족할 경우)
-    if (finalMatches.length < 10) {
-      finalMatches = allMatches.filter(match => match.matchScore >= 10);
-    }
-    
-    // 4차: 5점 이상 (10점 이상이 부족할 경우)
-    if (finalMatches.length < 5) {
-      finalMatches = allMatches.filter(match => match.matchScore >= 5);
-    }
-    
-    // 5차: 0점 초과 (모든 점수가 낮을 경우)
-    if (finalMatches.length === 0) {
-      finalMatches = allMatches.filter(match => match.matchScore > 0);
-    }
-    
-    // 최종적으로 매칭이 없으면 상위 20개라도 표시
-    if (finalMatches.length === 0) {
-      finalMatches = allMatches
-        .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 20);
-    }
+    console.log('매칭 결과 처리 시작:', { totalMatches: allMatches.length });
 
-    // 점수 순으로 정렬 (100개 제한 제거)
-    const sortedMatches = finalMatches
-      .sort((a, b) => b.matchScore - a.matchScore);
+    // 1단계: 기본 품질 필터링 (0점 초과만)
+    const validMatches = allMatches.filter(match => match.matchScore > 0);
+    
+    // 2단계: 수요기관별로 그룹화하고 상위 5개만 선택
+    const demandGroups = new Map<string, DetailedMatch[]>();
+    validMatches.forEach(match => {
+      const demandId = match.demand.수요기관일련번호;
+      if (!demandGroups.has(demandId)) {
+        demandGroups.set(demandId, []);
+      }
+      demandGroups.get(demandId)!.push(match);
+    });
+
+    // 각 수요기관별로 상위 5개 매칭만 선택
+    const demandFilteredMatches: DetailedMatch[] = [];
+    demandGroups.forEach((matches, demandId) => {
+      const sortedMatches = matches
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, 5); // 상위 5개만
+      demandFilteredMatches.push(...sortedMatches);
+    });
+
+    // 3단계: 공급기업별로 그룹화하고 상위 5개만 선택
+    const supplierGroups = new Map<string, DetailedMatch[]>();
+    demandFilteredMatches.forEach(match => {
+      const supplierId = match.supplier.공급기업일련번호;
+      if (!supplierGroups.has(supplierId)) {
+        supplierGroups.set(supplierId, []);
+      }
+      supplierGroups.get(supplierId)!.push(match);
+    });
+
+    // 각 공급기업별로 상위 5개 매칭만 선택
+    const finalMatches: DetailedMatch[] = [];
+    supplierGroups.forEach((matches, supplierId) => {
+      const sortedMatches = matches
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, 5); // 상위 5개만
+      finalMatches.push(...sortedMatches);
+    });
+
+    // 4단계: 최종 정렬
+    const sortedMatches = finalMatches.sort((a, b) => b.matchScore - a.matchScore);
 
     console.log('개선된 매칭 최종 결과:', {
-      selectedMatches: sortedMatches.length,
+      원본매칭수: allMatches.length,
+      유효매칭수: validMatches.length,
+      수요기관수: demandGroups.size,
+      공급기업수: supplierGroups.size,
+      최종매칭수: sortedMatches.length,
       minScore: sortedMatches.length > 0 ? Math.min(...sortedMatches.map(m => m.matchScore)) : 0,
       maxScore: sortedMatches.length > 0 ? Math.max(...sortedMatches.map(m => m.matchScore)) : 0,
       avgScore: sortedMatches.length > 0 ? 
@@ -60,9 +73,13 @@ export const useMatchingResults = () => {
     const maxScore = sortedMatches.length > 0 ? Math.max(...sortedMatches.map(m => m.matchScore)) : 0;
     const keywordMatches = sortedMatches.filter(m => m.matchedKeywords.length > 0).length;
     
+    // 수요기관과 공급기업 수 계산
+    const uniqueDemands = new Set(sortedMatches.map(m => m.demand.수요기관일련번호)).size;
+    const uniqueSuppliers = new Set(sortedMatches.map(m => m.supplier.공급기업일련번호)).size;
+    
     toast({
-      title: "AI 키워드 매칭 완료",
-      description: `${sortedMatches.length}개의 매칭 결과 (키워드 기반: ${keywordMatches}개, 점수 범위: ${minScore}~${maxScore}점)`,
+      title: "AI 매칭 완료",
+      description: `${sortedMatches.length}개 매칭 (수요기관 ${uniqueDemands}개, 공급기업 ${uniqueSuppliers}개, 각각 최대 5개씩)`,
     });
   };
 
