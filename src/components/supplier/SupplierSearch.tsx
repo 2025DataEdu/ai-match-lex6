@@ -26,7 +26,7 @@ const SupplierSearch = ({
 }: SupplierSearchProps) => {
   const handleReset = () => {
     onSearchChange("");
-    onSortByChange("registrationDate");
+    onSortByChange("companyName");
     onSortOrderChange("desc");
   };
 
@@ -49,8 +49,8 @@ const SupplierSearch = ({
               <SelectValue placeholder="정렬 기준" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="registrationDate">등록일</SelectItem>
               <SelectItem value="companyName">기업명</SelectItem>
+              <SelectItem value="registrationDate">등록일</SelectItem>
               <SelectItem value="industry">업종</SelectItem>
             </SelectContent>
           </Select>

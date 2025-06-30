@@ -32,7 +32,7 @@ export const useDemandFilters = (demands: Demand[]) => {
     minBudget: "",
     maxBudget: "",
     organization: "",
-    sortBy: "등록일자",
+    sortBy: "수요기관",
     sortOrder: "desc"
   });
 
@@ -119,7 +119,7 @@ export const useDemandFilters = (demands: Demand[]) => {
       minBudget: "",
       maxBudget: "",
       organization: "",
-      sortBy: "등록일자",
+      sortBy: "수요기관",
       sortOrder: "desc"
     });
   };

@@ -49,8 +49,8 @@ const DemandFilters = ({ filters, onFiltersChange, onClearFilters, onRefresh }: 
               <SelectValue placeholder="정렬 기준" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="등록일자">등록일</SelectItem>
               <SelectItem value="수요기관">기관명</SelectItem>
+              <SelectItem value="등록일자">등록일</SelectItem>
               <SelectItem value="유형">수요 유형</SelectItem>
               <SelectItem value="금액">예산</SelectItem>
             </SelectContent>
