@@ -37,16 +37,14 @@ serve(async (req) => {
 
     console.log('Processing natural language query:', message);
 
-    // 1단계: 캐시 확인
+    // 1단계: 캐시 확인 (더 엄격한 조건)
     const cacheResult = await checkCache(supabase, message);
     if (cacheResult.found) {
-      console.log('Cache hit! Returning cached result');
-      
       const cachedResponse = formatIntelligentResponse(
         message, 
         { primaryKeywords: [], serviceType: null, intent: 'supplier_search', queryType: 'search', context: {} }, 
         cacheResult.data
-      ) + '\n\n⚡ (빠른 검색 결과)';
+      ) + '\n\n⚡ (캐시된 결과)';
       
       return new Response(
         JSON.stringify({ 
@@ -60,10 +58,10 @@ serve(async (req) => {
       );
     }
 
-    // 2단계: 자연어 분석 (ChatGPT API 사용)
-    console.log('Analyzing natural language query...');
+    // 2단계: ChatGPT를 활용한 자연어 분석
+    console.log('Analyzing with ChatGPT...');
     const analysis = await analyzeNaturalLanguage(message, openAIApiKey);
-    console.log('Analysis result:', JSON.stringify(analysis, null, 2));
+    console.log('ChatGPT Analysis result:', JSON.stringify(analysis, null, 2));
 
     // 3단계: 의도별 정확한 쿼리 실행
     let queryResults = [];
@@ -80,20 +78,14 @@ serve(async (req) => {
         case 'demand_search':
           queryResults = await executeEnhancedDemandSearch(supabase, analysis);
           break;
-        case 'matching_info':
-          queryResults = []; // 매칭 정보는 별도 응답
-          break;
-        case 'general_info':
-          queryResults = []; // 일반 정보는 별도 응답
-          break;
         default:
           queryResults = await executeEnhancedSupplierSearch(supabase, analysis);
       }
 
       console.log(`Query completed: ${queryResults.length} results found`);
       
-      // 결과를 캐시에 저장 (통계나 정보성 질문 제외)
-      if (queryResults.length > 0 && analysis.intent !== 'general_info') {
+      // 결과를 캐시에 저장 (개선된 로직)
+      if (queryResults.length > 0) {
         await saveToCache(supabase, message, analysis.intent, queryResults);
       }
       
