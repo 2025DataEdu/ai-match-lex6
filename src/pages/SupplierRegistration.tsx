@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -150,7 +149,7 @@ const SupplierRegistration = () => {
           <CardHeader>
             <CardTitle className="text-2xl font-bold">공급기업 등록</CardTitle>
             <CardDescription>
-              기술 서비스를 제공하는 기업 정보를 등록해주세요
+              AI 기술 서비스를 제공하는 기업 정보를 등록해주세요
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -180,22 +179,26 @@ const SupplierRegistration = () => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="type">서비스 유형 *</Label>
+                  <Label htmlFor="type">AI 서비스 유형 *</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(value) => setFormData({ ...formData, type: value })}
                     required
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="서비스 유형을 선택하세요" />
+                      <SelectValue placeholder="AI 서비스 유형을 선택하세요" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="AI개발">AI개발</SelectItem>
-                      <SelectItem value="컨설팅">컨설팅</SelectItem>
-                      <SelectItem value="교육/강의">교육/강의</SelectItem>
-                      <SelectItem value="솔루션">솔루션</SelectItem>
-                      <SelectItem value="용역">용역</SelectItem>
-                      <SelectItem value="기타">기타</SelectItem>
+                      <SelectItem value="AI 챗봇/대화형AI">AI 챗봇/대화형AI</SelectItem>
+                      <SelectItem value="컴퓨터 비전/이미지AI">컴퓨터 비전/이미지AI</SelectItem>
+                      <SelectItem value="자연어처리/텍스트AI">자연어처리/텍스트AI</SelectItem>
+                      <SelectItem value="음성인식/음성AI">음성인식/음성AI</SelectItem>
+                      <SelectItem value="예측분석/데이터AI">예측분석/데이터AI</SelectItem>
+                      <SelectItem value="추천시스템/개인화AI">추천시스템/개인화AI</SelectItem>
+                      <SelectItem value="로봇/자동화AI">로봇/자동화AI</SelectItem>
+                      <SelectItem value="AI 플랫폼/인프라">AI 플랫폼/인프라</SelectItem>
+                      <SelectItem value="AI 교육/컨설팅">AI 교육/컨설팅</SelectItem>
+                      <SelectItem value="기타 AI 서비스">기타 AI 서비스</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
