@@ -1,7 +1,20 @@
 
-// 정확한 유형 매칭
+// 정확한 유형 매칭 - CCTV 관련 검색 강화
 export async function searchByExactType(supabase: any, searchTerms: string[]) {
-  const typeConditions = searchTerms.map(term => `유형.ilike.%${term}%`).join(',');
+  // CCTV 관련 검색어 확장
+  const expandedTerms = [...searchTerms];
+  searchTerms.forEach(term => {
+    const lowerTerm = term.toLowerCase();
+    if (lowerTerm.includes('cctv')) {
+      expandedTerms.push('비전', '영상', '객체인식', '감시', '모니터링', '이미지');
+    } else if (lowerTerm.includes('비전') || lowerTerm.includes('영상')) {
+      expandedTerms.push('CCTV', '객체인식', '이미지', '감시');
+    } else if (lowerTerm.includes('로봇')) {
+      expandedTerms.push('자동화', 'RPA', '로봇');
+    }
+  });
+  
+  const typeConditions = expandedTerms.map(term => `유형.ilike.%${term}%`).join(',');
   
   const { data, error } = await supabase
     .from('공급기업')
@@ -17,9 +30,22 @@ export async function searchByExactType(supabase: any, searchTerms: string[]) {
   return data || [];
 }
 
-// 모든 필드 통합 검색
+// 모든 필드 통합 검색 - CCTV 관련 키워드 확장
 export async function searchAllFields(supabase: any, searchTerms: string[]) {
-  const allFieldConditions = searchTerms.map(term => 
+  // 키워드 확장
+  const expandedTerms = [...searchTerms];
+  searchTerms.forEach(term => {
+    const lowerTerm = term.toLowerCase();
+    if (lowerTerm.includes('cctv')) {
+      expandedTerms.push('비전', '영상분석', '객체인식', '감시시스템', '모니터링', '이미지처리', '컴퓨터비전');
+    } else if (lowerTerm.includes('비전') || lowerTerm.includes('영상')) {
+      expandedTerms.push('CCTV', '객체인식', '이미지분석', '감시', '카메라');
+    } else if (lowerTerm.includes('로봇')) {
+      expandedTerms.push('자동화', 'RPA', '로봇제어', '무인화');
+    }
+  });
+  
+  const allFieldConditions = expandedTerms.map(term => 
     `유형.ilike.%${term}%,세부설명.ilike.%${term}%,기업명.ilike.%${term}%,업종.ilike.%${term}%,보유특허.ilike.%${term}%,추출키워드.ilike.%${term}%`
   ).join(',');
   
@@ -61,7 +87,7 @@ export async function searchPartialMatch(supabase: any, searchTerms: string[]) {
   return data || [];
 }
 
-// 향상된 관련성 점수 계산
+// 향상된 관련성 점수 계산 - CCTV 관련 키워드 가중치 강화
 export function addEnhancedRelevanceScores(results: any[], searchTerms: string[]) {
   return results.map(company => {
     let score = 20; // 기본 점수
@@ -79,24 +105,36 @@ export function addEnhancedRelevanceScores(results: any[], searchTerms: string[]
       const termLower = term.toLowerCase();
       const baseWeight = Math.max(25 - (index * 3), 10);
       
+      // CCTV 관련 키워드 특별 가중치
+      const cctvRelatedKeywords = ['cctv', '비전', '영상', '객체인식', '감시', '모니터링', '이미지', '카메라', '컴퓨터비전'];
+      const iscctvRelated = cctvRelatedKeywords.some(keyword => 
+        termLower.includes(keyword) || allCompanyText.includes(keyword)
+      );
+      
       // 필드별 가중치 적용
       if ((company.유형 || '').toLowerCase().includes(termLower)) {
         score += baseWeight + 15; // 유형 필드 최고 가중치
+        if (iscctvRelated) score += 10; // CCTV 관련 추가 가중치
       }
       if ((company.기업명 || '').toLowerCase().includes(termLower)) {
         score += baseWeight + 10;
+        if (iscctvRelated) score += 5;
       }
       if ((company.세부설명 || '').toLowerCase().includes(termLower)) {
         score += baseWeight + 5;
+        if (iscctvRelated) score += 8;
       }
       if ((company.보유특허 || '').toLowerCase().includes(termLower)) {
         score += baseWeight + 8;
+        if (iscctvRelated) score += 5;
       }
       if ((company.추출키워드 || '').toLowerCase().includes(termLower)) {
         score += baseWeight + 12;
+        if (iscctvRelated) score += 8;
       }
       if ((company.업종 || '').toLowerCase().includes(termLower)) {
         score += baseWeight;
+        if (iscctvRelated) score += 3;
       }
     });
     

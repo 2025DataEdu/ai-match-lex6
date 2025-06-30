@@ -44,13 +44,13 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
    - general_info: 위에 해당하지 않는 일반적인 질문
 
 2. 키워드 추출:
-   - 기술 관련 키워드 우선 (AI, 챗봇, CCTV, 음성인식 등)
+   - 기술 관련 키워드 우선 (AI, 챗봇, CCTV, 음성인식, 비전, 영상, 이미지, 객체인식, 감시, 모니터링 등)
    - 업종/유형 키워드 (개발, 분석, 인식, 처리 등)
    - 부가 키워드 (솔루션, 시스템, 플랫폼 등)
 
 3. 서비스 타입 매핑:
    - 챗봇, 대화형, 상담 → "챗봇/대화형AI"
-   - CCTV, 영상, 이미지, 비전 → "컴퓨터비전/이미지AI"
+   - CCTV, 영상, 이미지, 비전, 객체인식, 감시, 모니터링, 카메라, 영상분석 → "컴퓨터비전/이미지AI"
    - 음성, STT, TTS, 음성인식 → "음성인식/음성AI"
    - 자연어, 텍스트, 언어처리 → "자연어처리/텍스트AI"
    - 예측, 분석, 데이터 → "예측분석/데이터AI"
@@ -117,12 +117,24 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
   } catch (error) {
     console.error('자연어 분석 오류:', error);
     
-    // 간단한 키워드 추출 폴백
+    // 간단한 키워드 추출 폴백 - CCTV 관련 키워드 강화
     const words = message.toLowerCase().split(/\s+/);
     const keywords = words.filter(word => 
       word.length > 1 && 
       !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘', '찾아줘', '추천'].includes(word)
     );
+    
+    // 서비스 타입 추론 강화
+    let serviceType = null;
+    if (message.includes('cctv') || message.includes('CCTV') || message.includes('영상') || message.includes('비전') || message.includes('이미지') || message.includes('객체인식') || message.includes('감시') || message.includes('모니터링')) {
+      serviceType = '컴퓨터비전/이미지AI';
+    } else if (message.includes('챗봇') || message.includes('대화형')) {
+      serviceType = '챗봇/대화형AI';
+    } else if (message.includes('음성') || message.includes('stt') || message.includes('tts')) {
+      serviceType = '음성인식/음성AI';
+    } else if (message.includes('로봇') || message.includes('자동화')) {
+      serviceType = '로봇/자동화AI';
+    }
     
     // 의도 추측 - 개선된 로직
     let intent = 'supplier_search';
@@ -148,7 +160,7 @@ export async function analyzeNaturalLanguage(message: string, openAIApiKey: stri
     
     return {
       primaryKeywords: keywords.slice(0, 3),
-      serviceType: null,
+      serviceType: serviceType,
       intent: intent as any,
       queryType: queryType as any,
       context: { entity: entity as any }
