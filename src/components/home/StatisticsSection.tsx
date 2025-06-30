@@ -11,6 +11,7 @@ interface StatisticsProps {
     suppliersCount: number;
     demandsCount: number;
     matchesCount: number;
+    matchingSuccessRate: number;
   };
 }
 

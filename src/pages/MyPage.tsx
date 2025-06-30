@@ -2,14 +2,19 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, FileText, User } from "lucide-react";
+import { Building2, FileText, User, Shield } from "lucide-react";
 import { SupplierEditModal } from "@/components/supplier/SupplierEditModal";
 import { DemandEditModal } from "@/components/demand/DemandEditModal";
 import { MyPageHeader } from "@/components/mypage/MyPageHeader";
 import { SupplierTab } from "@/components/mypage/SupplierTab";
 import { DemandTab } from "@/components/mypage/DemandTab";
 import { ProfileTab } from "@/components/mypage/ProfileTab";
+import { AdminSupplierTab } from "@/components/admin/AdminSupplierTab";
+import { AdminDemandTab } from "@/components/admin/AdminDemandTab";
+import { AdminUserTab } from "@/components/admin/AdminUserTab";
 import { useMyPageData } from "@/hooks/useMyPageData";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useAdminData } from "@/hooks/useAdminData";
 
 interface Supplier {
   공급기업일련번호: string;
@@ -36,6 +41,8 @@ interface Demand {
 }
 
 const MyPage = () => {
+  const { isAdmin } = useAdminCheck();
+  
   const {
     suppliers,
     demands,
@@ -44,6 +51,16 @@ const MyPage = () => {
     handleSupplierDelete,
     handleDemandDelete
   } = useMyPageData();
+
+  const {
+    suppliers: adminSuppliers,
+    demands: adminDemands,
+    users: adminUsers,
+    isLoading: adminLoading,
+    handleSupplierDelete: adminHandleSupplierDelete,
+    handleDemandDelete: adminHandleDemandDelete,
+    handleUserDelete: adminHandleUserDelete
+  } = useAdminData();
 
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
@@ -60,7 +77,7 @@ const MyPage = () => {
     setIsDemandModalOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
@@ -81,19 +98,35 @@ const MyPage = () => {
         />
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-6' : 'grid-cols-3'}`}>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               내 정보
             </TabsTrigger>
             <TabsTrigger value="suppliers" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
-              공급기업 ({suppliers.length})
+              내 공급기업 ({suppliers.length})
             </TabsTrigger>
             <TabsTrigger value="demands" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              수요내용 ({demands.length})
+              내 수요내용 ({demands.length})
             </TabsTrigger>
+            {isAdmin && (
+              <>
+                <TabsTrigger value="admin-suppliers" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  전체 공급기업
+                </TabsTrigger>
+                <TabsTrigger value="admin-demands" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  전체 수요내용
+                </TabsTrigger>
+                <TabsTrigger value="admin-users" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  사용자 관리
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
@@ -115,6 +148,33 @@ const MyPage = () => {
               onDelete={handleDemandDelete}
             />
           </TabsContent>
+
+          {isAdmin && (
+            <>
+              <TabsContent value="admin-suppliers" className="space-y-4">
+                <AdminSupplierTab
+                  suppliers={adminSuppliers}
+                  onEdit={handleSupplierEdit}
+                  onDelete={adminHandleSupplierDelete}
+                />
+              </TabsContent>
+
+              <TabsContent value="admin-demands" className="space-y-4">
+                <AdminDemandTab
+                  demands={adminDemands}
+                  onEdit={handleDemandEdit}
+                  onDelete={adminHandleDemandDelete}
+                />
+              </TabsContent>
+
+              <TabsContent value="admin-users" className="space-y-4">
+                <AdminUserTab
+                  users={adminUsers}
+                  onDelete={adminHandleUserDelete}
+                />
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </div>
 
