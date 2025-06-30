@@ -10,7 +10,7 @@ import MatchingEmptyState from "@/components/ai-matching/MatchingEmptyState";
 import { useAIMatching } from "@/hooks/useAIMatching";
 import { useStats } from "@/hooks/useStats";
 import { DetailedMatch } from "@/types/matching";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 const AIMatching = () => {
   const {
@@ -41,6 +41,11 @@ const AIMatching = () => {
   const { stats, updateMatchingSuccessRate } = useStats();
   const { toast } = useToast();
 
+  // useCallback을 사용하여 함수 재생성 방지
+  const handleMatchingSuccessRateUpdate = useCallback((totalMatches: number, qualityMatches: number) => {
+    updateMatchingSuccessRate(totalMatches, qualityMatches);
+  }, [updateMatchingSuccessRate]);
+
   // 매칭 결과가 변경될 때마다 실제 성공률 계산
   useEffect(() => {
     if (matches.length > 0) {
@@ -70,9 +75,9 @@ const AIMatching = () => {
       console.log('중품질 매칭 (50점 이상):', mediumQualityMatches.length);
       
       // 실제로 의미있는 매칭만 성공으로 간주 (70점 이상)
-      updateMatchingSuccessRate(matches.length, highQualityMatches.length);
+      handleMatchingSuccessRateUpdate(matches.length, highQualityMatches.length);
     }
-  }, [matches, updateMatchingSuccessRate]);
+  }, [matches, handleMatchingSuccessRateUpdate]);
 
   const handleInterestClick = (match: DetailedMatch) => {
     // 관심표시는 카드 내부에서 처리됨
