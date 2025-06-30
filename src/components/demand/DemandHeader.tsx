@@ -19,7 +19,7 @@ const DemandHeader = () => {
         className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
       >
         <Plus className="w-4 h-4" />
-        수요등록
+        수요내용 등록하기
       </Button>
     </div>
   );
