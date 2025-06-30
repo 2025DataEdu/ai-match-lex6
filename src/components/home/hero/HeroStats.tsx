@@ -20,7 +20,7 @@ const HeroStats = () => {
       color: "from-purple-400 to-pink-400"
     }, 
     {
-      number: isLoading ? "..." : `${Math.round((stats.matchesCount / Math.max(stats.suppliersCount, 1)) * 100)}%`,
+      number: isLoading ? "..." : `${stats.matchingSuccessRate}%`,
       label: "매칭 성공률",
       icon: Sparkles,
       color: "from-yellow-400 to-orange-400"

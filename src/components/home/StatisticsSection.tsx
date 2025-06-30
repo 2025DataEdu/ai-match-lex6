@@ -234,8 +234,8 @@ const StatisticsSection = ({ stats }: StatisticsProps) => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">예상 매칭 수</p>
-                    <p className="text-2xl font-bold text-purple-600">{stats.matchesCount}</p>
+                    <p className="text-sm text-gray-600">고품질 매칭 성공률</p>
+                    <p className="text-2xl font-bold text-purple-600">{stats.matchingSuccessRate || 0}%</p>
                   </div>
                   <Sparkles className="w-8 h-8 text-purple-500" />
                 </div>
