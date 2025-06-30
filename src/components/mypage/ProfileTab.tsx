@@ -26,6 +26,7 @@ export const ProfileTab = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -34,6 +35,32 @@ export const ProfileTab = () => {
 
   const fetchProfile = async () => {
     try {
+      // 관리자 세션 확인
+      const adminSession = localStorage.getItem('admin_session');
+      if (adminSession) {
+        try {
+          const parsedSession = JSON.parse(adminSession);
+          if (parsedSession.user?.email === 'admin@system.com') {
+            setIsAdmin(true);
+            // 관리자 계정의 경우 회원관리 테이블에서 직접 조회
+            const { data, error } = await supabase
+              .from('회원관리')
+              .select('*')
+              .eq('이메일', 'admin@system.com')
+              .single();
+
+            if (!error && data) {
+              setProfile(data);
+            }
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          localStorage.removeItem('admin_session');
+        }
+      }
+
+      // 일반 사용자 처리
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user?.email) return;
 
@@ -174,7 +201,7 @@ export const ProfileTab = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
-            기본 정보
+            기본 정보 {isAdmin && <span className="text-sm text-red-600">(관리자)</span>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -251,46 +278,48 @@ export const ProfileTab = () => {
         </CardContent>
       </Card>
 
-      {/* 비밀번호 변경 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>비밀번호 변경</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="newPassword">새 비밀번호</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="새 비밀번호를 입력하세요"
-              />
+      {/* 관리자가 아닌 경우에만 비밀번호 변경 섹션 표시 */}
+      {!isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>비밀번호 변경</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="newPassword">새 비밀번호</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="새 비밀번호를 입력하세요"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="비밀번호를 다시 입력하세요"
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="confirmPassword">비밀번호 확인</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="비밀번호를 다시 입력하세요"
-              />
-            </div>
-          </div>
-
-          <Button 
-            onClick={handlePasswordChange} 
-            disabled={isChangingPassword || !newPassword || !confirmPassword}
-            variant="outline"
-            className="w-full md:w-auto"
-          >
-            {isChangingPassword ? "변경 중..." : "비밀번호 변경"}
-          </Button>
-        </CardContent>
-      </Card>
+            <Button 
+              onClick={handlePasswordChange} 
+              disabled={isChangingPassword || !newPassword || !confirmPassword}
+              variant="outline"
+              className="w-full md:w-auto"
+            >
+              {isChangingPassword ? "변경 중..." : "비밀번호 변경"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
