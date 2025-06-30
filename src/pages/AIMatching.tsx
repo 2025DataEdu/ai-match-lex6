@@ -44,9 +44,33 @@ const AIMatching = () => {
   // 매칭 결과가 변경될 때마다 실제 성공률 계산
   useEffect(() => {
     if (matches.length > 0) {
-      // 60점 이상을 고품질 매칭으로 간주
-      const qualityMatches = matches.filter(match => match.matchScore >= 60);
-      updateMatchingSuccessRate(matches.length, qualityMatches.length);
+      // 점수 분포 분석을 위한 디버깅 정보
+      const scoreDistribution = {
+        over80: matches.filter(match => match.matchScore >= 80).length,
+        over70: matches.filter(match => match.matchScore >= 70).length,
+        over60: matches.filter(match => match.matchScore >= 60).length,
+        over50: matches.filter(match => match.matchScore >= 50).length,
+        over40: matches.filter(match => match.matchScore >= 40).length,
+        over30: matches.filter(match => match.matchScore >= 30).length,
+        over20: matches.filter(match => match.matchScore >= 20).length,
+        over10: matches.filter(match => match.matchScore >= 10).length,
+        total: matches.length
+      };
+      
+      console.log('매칭 점수 분포:', scoreDistribution);
+      console.log('평균 점수:', matches.reduce((sum, match) => sum + match.matchScore, 0) / matches.length);
+      console.log('최고 점수:', Math.max(...matches.map(match => match.matchScore)));
+      console.log('최저 점수:', Math.min(...matches.map(match => match.matchScore)));
+      
+      // 더 엄격한 기준으로 고품질 매칭 판단 (70점 이상)
+      const highQualityMatches = matches.filter(match => match.matchScore >= 70);
+      const mediumQualityMatches = matches.filter(match => match.matchScore >= 50);
+      
+      console.log('고품질 매칭 (70점 이상):', highQualityMatches.length);
+      console.log('중품질 매칭 (50점 이상):', mediumQualityMatches.length);
+      
+      // 실제로 의미있는 매칭만 성공으로 간주 (70점 이상)
+      updateMatchingSuccessRate(matches.length, highQualityMatches.length);
     }
   }, [matches, updateMatchingSuccessRate]);
 
