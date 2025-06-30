@@ -99,27 +99,27 @@ const Navbar = () => {
                       {userName || session.user.email?.split('@')[0] || "사용자"}
                     </span>
                   </div>
+                  <Link to="/mypage">
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+                      <UserCircle className="w-4 h-4" />
+                      <span>MY</span>
+                    </Button>
+                  </Link>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link to="/mypage">
-                        <Button variant="ghost" size="sm" className="p-2">
-                          <UserCircle className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSignOut}
+                        className="p-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>마이페이지</p>
+                      <p>로그아웃</p>
                     </TooltipContent>
                   </Tooltip>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSignOut}
-                    className="flex items-center space-x-1"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>로그아웃</span>
-                  </Button>
                 </div>
               ) : (
                 <Button asChild>
@@ -179,11 +179,11 @@ const Navbar = () => {
                   >
                     <div className="flex items-center space-x-2">
                       <UserCircle className="w-4 h-4" />
-                      <span>마이페이지</span>
+                      <span>MY</span>
                     </div>
                   </Link>
-                  <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
-                    로그아웃
+                  <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full flex items-center justify-center">
+                    <LogOut className="w-4 h-4" />
                   </Button>
                 </div>
               ) : (
