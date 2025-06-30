@@ -2,12 +2,13 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, FileText } from "lucide-react";
+import { Building2, FileText, User } from "lucide-react";
 import { SupplierEditModal } from "@/components/supplier/SupplierEditModal";
 import { DemandEditModal } from "@/components/demand/DemandEditModal";
 import { MyPageHeader } from "@/components/mypage/MyPageHeader";
 import { SupplierTab } from "@/components/mypage/SupplierTab";
 import { DemandTab } from "@/components/mypage/DemandTab";
+import { ProfileTab } from "@/components/mypage/ProfileTab";
 import { useMyPageData } from "@/hooks/useMyPageData";
 
 interface Supplier {
@@ -79,8 +80,12 @@ const MyPage = () => {
           demandsCount={demands.length} 
         />
 
-        <Tabs defaultValue="suppliers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              내 정보
+            </TabsTrigger>
             <TabsTrigger value="suppliers" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
               공급기업 ({suppliers.length})
@@ -90,6 +95,10 @@ const MyPage = () => {
               수요내용 ({demands.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="profile" className="space-y-4">
+            <ProfileTab />
+          </TabsContent>
 
           <TabsContent value="suppliers" className="space-y-4">
             <SupplierTab
