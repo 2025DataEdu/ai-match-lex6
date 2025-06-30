@@ -10,7 +10,7 @@ import MatchingEmptyState from "@/components/ai-matching/MatchingEmptyState";
 import { useAIMatching } from "@/hooks/useAIMatching";
 import { useStats } from "@/hooks/useStats";
 import { DetailedMatch } from "@/types/matching";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 
 const AIMatching = () => {
   const {
@@ -40,25 +40,25 @@ const AIMatching = () => {
 
   const { stats, updateMatchingSuccessRate } = useStats();
   const { toast } = useToast();
+  const lastMatchesLength = useRef(0);
 
   // useCallback을 사용하여 함수 재생성 방지
   const handleMatchingSuccessRateUpdate = useCallback((totalMatches: number, qualityMatches: number) => {
     updateMatchingSuccessRate(totalMatches, qualityMatches);
   }, [updateMatchingSuccessRate]);
 
-  // 매칭 결과가 변경될 때마다 실제 성공률 계산
+  // 매칭 결과가 변경될 때마다 실제 성공률 계산 (한 번만 실행되도록 개선)
   useEffect(() => {
-    if (matches.length > 0) {
-      // 점수 분포 분석을 위한 디버깅 정보
+    // 매칭 결과가 실제로 변경되었을 때만 실행
+    if (matches.length > 0 && matches.length !== lastMatchesLength.current) {
+      lastMatchesLength.current = matches.length;
+      
+      // 점수 분포 분석을 위한 디버깅 정보 (한 번만 출력)
       const scoreDistribution = {
         over80: matches.filter(match => match.matchScore >= 80).length,
         over70: matches.filter(match => match.matchScore >= 70).length,
         over60: matches.filter(match => match.matchScore >= 60).length,
         over50: matches.filter(match => match.matchScore >= 50).length,
-        over40: matches.filter(match => match.matchScore >= 40).length,
-        over30: matches.filter(match => match.matchScore >= 30).length,
-        over20: matches.filter(match => match.matchScore >= 20).length,
-        over10: matches.filter(match => match.matchScore >= 10).length,
         total: matches.length
       };
       
@@ -69,15 +69,16 @@ const AIMatching = () => {
       
       // 더 엄격한 기준으로 고품질 매칭 판단 (70점 이상)
       const highQualityMatches = matches.filter(match => match.matchScore >= 70);
-      const mediumQualityMatches = matches.filter(match => match.matchScore >= 50);
       
       console.log('고품질 매칭 (70점 이상):', highQualityMatches.length);
-      console.log('중품질 매칭 (50점 이상):', mediumQualityMatches.length);
       
       // 실제로 의미있는 매칭만 성공으로 간주 (70점 이상)
       handleMatchingSuccessRateUpdate(matches.length, highQualityMatches.length);
+    } else if (matches.length === 0 && lastMatchesLength.current > 0) {
+      // 매칭이 초기화된 경우
+      lastMatchesLength.current = 0;
     }
-  }, [matches, handleMatchingSuccessRateUpdate]);
+  }, [matches.length, handleMatchingSuccessRateUpdate]);
 
   const handleInterestClick = (match: DetailedMatch) => {
     // 관심표시는 카드 내부에서 처리됨
