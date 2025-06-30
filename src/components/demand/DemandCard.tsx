@@ -100,7 +100,7 @@ const DemandCard = ({ demand, onUpdate }: DemandCardProps) => {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex flex-col gap-2 items-end">
-                {demand.유형 && (
+                {demand.유형 && demand.유형 !== '일반' && (
                   <Badge variant="secondary">{demand.유형}</Badge>
                 )}
                 {isHighBudget && (
