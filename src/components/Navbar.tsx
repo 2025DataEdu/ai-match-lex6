@@ -43,7 +43,7 @@ const Navbar = () => {
         .single();
 
       if (!error && data) {
-        setUserName(data.이름 || "");
+        setUserName(data['이름'] || "");
       }
     } catch (error) {
       console.error('Error fetching user name:', error);
