@@ -9,24 +9,82 @@ export interface KeywordAnalysis {
   };
 }
 
+// 백업 분석 로직 강화
+function performBackupAnalysis(message: string): KeywordAnalysis {
+  const lowerMessage = message.toLowerCase();
+  
+  // 수요 관련 키워드 확인
+  const demandKeywords = ['수요', '도입', '필요', '구매', '발주', '예정', '계획', '원해', '원함', '찾고'];
+  const isDemandRelated = demandKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // 공급 관련 키워드 확인
+  const supplierKeywords = ['공급', '업체', '기업', '회사', '개발사', '제공', '판매'];
+  const isSupplierRelated = supplierKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // 통계 관련 키워드 확인
+  const statisticsKeywords = ['몇', '총', '개수', '수량', '통계', '얼마나'];
+  const isStatistics = statisticsKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // 키워드 추출 (불용어 제거)
+  const stopWords = ['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘', '찾아줘', '추천', '수요가', '있나', '있어?'];
+  const words = lowerMessage.split(/\s+/);
+  const keywords = words.filter(word => 
+    word.length > 1 && 
+    !stopWords.includes(word) &&
+    !['?', '!', '.', ','].includes(word)
+  ).slice(0, 3);
+  
+  // 의도 결정 로직 개선
+  let intent: KeywordAnalysis['intent'] = 'supplier_search';
+  let entity: 'supplier' | 'demand' = 'supplier';
+  
+  if (isStatistics && !isDemandRelated && !isSupplierRelated) {
+    intent = 'statistics';
+  } else if (isDemandRelated || lowerMessage.includes('수요기관')) {
+    intent = 'demand_search';
+    entity = 'demand';
+  } else if (isSupplierRelated || lowerMessage.includes('공급기업')) {
+    intent = 'supplier_search';
+    entity = 'supplier';
+  } else {
+    // 문맥으로 판단
+    if (lowerMessage.includes('필요') || lowerMessage.includes('원해') || lowerMessage.includes('도입')) {
+      intent = 'demand_search';
+      entity = 'demand';
+    }
+  }
+  
+  return {
+    primaryKeywords: keywords,
+    serviceType: null,
+    intent,
+    queryType: intent === 'statistics' ? 'count' : 'search',
+    context: { entity }
+  };
+}
+
 export async function analyzeNaturalLanguage(message: string, openAIApiKey: string): Promise<KeywordAnalysis> {
   try {
-    const analysisPrompt = `다음 사용자 질문을 분석해서 JSON 형태로 응답해주세요:
+    const analysisPrompt = `다음 사용자 질문을 분석해서 JSON 형태로만 응답해주세요 (다른 텍스트 없이):
 
 사용자 질문: "${message}"
 
-분석 기준:
-1. primaryKeywords: 핵심 검색 키워드 3개 이하 (예: ["AI", "챗봇", "개발"])
-2. serviceType: AI 서비스 유형 (예: "챗봇/대화형AI", "컴퓨터비전/이미지AI", "음성인식/음성AI", "로봇/자동화AI" 등)
-3. intent: 의도 분류
-   - "statistics": 개수, 통계 질문 (예: "몇 개", "총 얼마나")
-   - "supplier_search": 공급기업 검색 (기본값)
-   - "demand_search": 수요기관 검색 (예: "수요기관", "도입 예정")
-   - "general_info": 일반 정보 질문
-4. queryType: "count" (통계), "search" (검색), "info" (정보)
-5. context.entity: "supplier" 또는 "demand"
+분석 규칙:
+1. "수요", "도입", "필요", "구매" 등이 포함되면 → intent: "demand_search", entity: "demand"
+2. "공급", "업체", "기업", "회사" 등이 포함되면 → intent: "supplier_search", entity: "supplier"  
+3. "몇 개", "총", "개수", "통계"만 물어보면 → intent: "statistics"
+4. primaryKeywords는 핵심 키워드 2-3개만 (불용어 제외)
 
-JSON 응답만 해주세요:`;
+응답 형식:
+{
+  "primaryKeywords": ["키워드1", "키워드2"],
+  "serviceType": "AI서비스유형",
+  "intent": "demand_search|supplier_search|statistics",
+  "queryType": "search|count",
+  "context": {
+    "entity": "demand|supplier"
+  }
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -40,7 +98,7 @@ JSON 응답만 해주세요:`;
           { role: 'user', content: analysisPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 300,
+        max_tokens: 200,
       }),
     });
 
@@ -49,7 +107,12 @@ JSON 응답만 해주세요:`;
     }
 
     const data = await response.json();
-    const analysisResult = JSON.parse(data.choices[0].message.content.trim());
+    let content = data.choices[0].message.content.trim();
+    
+    // JSON 마크다운 제거
+    content = content.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+    
+    const analysisResult = JSON.parse(content);
     
     console.log('ChatGPT Analysis Result:', JSON.stringify(analysisResult, null, 2));
     
@@ -65,29 +128,8 @@ JSON 응답만 해주세요:`;
   } catch (error) {
     console.error('ChatGPT analysis error:', error);
     
-    // 실패 시 간단한 백업 분석
-    const lowerMessage = message.toLowerCase();
-    const words = lowerMessage.split(/\s+/);
-    const keywords = words.filter(word => 
-      word.length > 1 && 
-      !['은', '는', '이', '가', '을', '를', '에', '의', '과', '와', '하고', '그리고', '또는', '있어', '있는', '해줘', '알려줘', '찾아줘', '추천'].includes(word)
-    ).slice(0, 3);
-    
-    let intent = 'supplier_search';
-    if (lowerMessage.includes('몇') || lowerMessage.includes('수') || lowerMessage.includes('개수')) {
-      intent = 'statistics';
-    } else if (lowerMessage.includes('수요')) {
-      intent = 'demand_search';
-    }
-    
-    return {
-      primaryKeywords: keywords,
-      serviceType: null,
-      intent: intent as any,
-      queryType: intent === 'statistics' ? 'count' : 'search',
-      context: {
-        entity: intent === 'demand_search' ? 'demand' : 'supplier'
-      }
-    };
+    // 백업 분석 사용
+    console.log('Using backup analysis...');
+    return performBackupAnalysis(message);
   }
 }
